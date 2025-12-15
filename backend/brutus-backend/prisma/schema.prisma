@@ -1,0 +1,126 @@
+// Prisma schema for Brutus.ai
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUMS ====================
+
+enum SubscriptionStatus {
+  trial
+  active
+  cancelled
+}
+
+enum SessionStatus {
+  active
+  completed
+  cancelled
+}
+
+enum MomentType {
+  objection
+  pricing
+  discovery
+  closing
+  introduction
+  rapport
+  negotiation
+  other
+}
+
+// ==================== MODELS ====================
+
+model User {
+  id                 String             @id @default(uuid())
+  email              String             @unique
+  passwordHash       String             @map("password_hash")
+  name               String
+  createdAt          DateTime           @default(now()) @map("created_at")
+  subscriptionStatus SubscriptionStatus @default(trial) @map("subscription_status")
+  settings           Json               @default("{\"brutalHonestyMode\": true, \"realTimeInterrupts\": false, \"dailyRoastSummary\": true, \"improvementAlerts\": true}")
+  
+  // Relations
+  profile            UserProfile?
+  calls              Call[]
+  callMoments        CallMoment[]
+  sessions           Session[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique @map("user_id")
+  talkRatioAvg       Decimal  @default(0) @map("talk_ratio_avg") @db.Decimal(5, 2)
+  closeRate          Decimal  @default(0) @map("close_rate") @db.Decimal(5, 2)
+  badHabits          Json     @default("[]") @map("bad_habits")
+  strengths          Json     @default("[]")
+  areasImproving     Json     @default("[]") @map("areas_improving")
+  totalCallsAnalyzed Int      @default(0) @map("total_calls_analyzed")
+  summary            String   @default("New user - no calls analyzed yet.")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model Call {
+  id                String       @id @default(uuid())
+  userId            String       @map("user_id")
+  recordedAt        DateTime     @default(now()) @map("recorded_at")
+  durationSeconds   Int          @default(0) @map("duration_seconds")
+  transcript        String       @db.Text
+  talkRatio         Decimal      @default(0) @map("talk_ratio") @db.Decimal(5, 2)
+  interruptionCount Int          @default(0) @map("interruption_count")
+  brutusFeedback    Json         @default("[]") @map("brutus_feedback")
+  overallScore      Int          @default(0) @map("overall_score")
+  tags              Json         @default("[]")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  
+  // Relations
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moments           CallMoment[]
+
+  @@map("calls")
+}
+
+model CallMoment {
+  id               String     @id @default(uuid())
+  callId           String     @map("call_id")
+  userId           String     @map("user_id")
+  timestampInCall  Int        @map("timestamp_in_call") // seconds into the call
+  transcriptChunk  String     @map("transcript_chunk") @db.Text
+  momentType       MomentType @default(other) @map("moment_type")
+  embedding        Json?      // Store as JSON array until you add pgvector
+  brutusFeedback   String?    @map("brutus_feedback") @db.Text
+  createdAt        DateTime   @default(now()) @map("created_at")
+  
+  // Relations
+  call             Call       @relation(fields: [callId], references: [id], onDelete: Cascade)
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("call_moments")
+}
+
+model Session {
+  id              String        @id @default(uuid())
+  userId          String        @map("user_id")
+  startedAt       DateTime      @default(now()) @map("started_at")
+  endedAt         DateTime?     @map("ended_at")
+  transcriptSoFar String        @default("") @map("transcript_so_far") @db.Text
+  feedbackGiven   Json          @default("[]") @map("feedback_given")
+  status          SessionStatus @default(active)
+  
+  // Relations
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}

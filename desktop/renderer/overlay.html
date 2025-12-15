@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brutus Live Coaching</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Outfit', -apple-system, sans-serif;
+      background: transparent;
+      color: #fff;
+      overflow: hidden;
+      user-select: none;
+    }
+    
+    .overlay-container {
+      width: 100%;
+      height: 100vh;
+      background: rgba(10, 10, 18, 0.92);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 80, 80, 0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Header */
+    .overlay-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      -webkit-app-region: drag;
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .brutus-avatar {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #ff5050, #ff7850);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    
+    .header-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      text-transform: lowercase;
+      color: rgba(255, 80, 80, 0.9);
+      letter-spacing: 1px;
+    }
+    
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      -webkit-app-region: no-drag;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #50ff80;
+      box-shadow: 0 0 10px #50ff80;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .close-btn {
+      width: 24px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 6px;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-app-region: no-drag;
+    }
+    
+    .close-btn:hover {
+      background: rgba(255, 80, 80, 0.3);
+      color: #fff;
+    }
+    
+    /* Feedback List */
+    .feedback-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+    
+    .feedback-container::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    .feedback-container::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 2px;
+    }
+    
+    .feedback-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 80, 80, 0.3);
+      border-radius: 2px;
+    }
+    
+    .feedback-item {
+      background: rgba(255, 80, 80, 0.08);
+      border: 1px solid rgba(255, 80, 80, 0.15);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    .feedback-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .feedback-type {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    
+    .type-warning {
+      background: rgba(255, 176, 80, 0.2);
+      color: #ffb050;
+    }
+    
+    .type-critical {
+      background: rgba(255, 80, 80, 0.2);
+      color: #ff5050;
+    }
+    
+    .type-insight {
+      background: rgba(80, 150, 255, 0.2);
+      color: #5096ff;
+    }
+    
+    .type-good {
+      background: rgba(80, 255, 128, 0.2);
+      color: #50ff80;
+    }
+    
+    .feedback-time {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.4);
+      font-family: 'Space Mono', monospace;
+    }
+    
+    .feedback-text {
+      font-size: 14px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: rgba(255, 255, 255, 0.4);
+    }
+    
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    .empty-state-text {
+      font-size: 14px;
+    }
+    
+    /* Metrics Bar */
+    .metrics-bar {
+      padding: 16px 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    
+    .metric-item {
+      text-align: center;
+    }
+    
+    .metric-label {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.4);
+      text-transform: lowercase;
+      margin-bottom: 4px;
+    }
+    
+    .metric-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    
+    .metric-value.good { color: #50ff80; }
+    .metric-value.warning { color: #ffb050; }
+    .metric-value.bad { color: #ff5050; }
+
+    /* Quick Actions */
+    .quick-actions {
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-transform: lowercase;
+      font-family: inherit;
+    }
+
+    .action-btn span {
+      font-size: 14px;
+    }
+
+    .action-btn:hover {
+      background: rgba(255, 80, 80, 0.1);
+      border-color: rgba(255, 80, 80, 0.3);
+      color: #fff;
+    }
+
+    .action-btn.active {
+      background: rgba(255, 80, 80, 0.15);
+      border-color: rgba(255, 80, 80, 0.4);
+      color: #ff5050;
+    }
+
+    /* Note/Research Input */
+    .note-input-container,
+    .research-input-container {
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      gap: 8px;
+      animation: slideDown 0.2s ease;
+    }
+
+    .note-input-container.hidden,
+    .research-input-container.hidden {
+      display: none;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .note-input,
+    .research-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .note-input:focus,
+    .research-input:focus {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 80, 80, 0.4);
+    }
+
+    .note-input::placeholder,
+    .research-input::placeholder {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .note-send-btn,
+    .research-send-btn {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #ff5050, #ff7850);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .note-send-btn:hover,
+    .research-send-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(255, 80, 80, 0.3);
+    }
+
+    .note-send-btn:disabled,
+    .research-send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Screen Capture Toggle */
+    .screen-capture-toggle {
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+    }
+
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .toggle-label input[type="checkbox"] {
+      display: none;
+    }
+
+    .toggle-slider {
+      width: 40px;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 11px;
+      position: relative;
+      transition: background 0.3s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      top: 3px;
+      left: 3px;
+      transition: all 0.3s;
+    }
+
+    .toggle-label input[type="checkbox"]:checked + .toggle-slider {
+      background: linear-gradient(135deg, #50ff80, #50ffa0);
+    }
+
+    .toggle-label input[type="checkbox"]:checked + .toggle-slider::before {
+      transform: translateX(18px);
+      background: #fff;
+    }
+
+    .toggle-text {
+      flex: 1;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 500;
+    }
+
+    .toggle-label input[type="checkbox"]:checked ~ .toggle-text {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* Audio Visualizer */
+    .audio-visualizer {
+      height: 40px;
+      padding: 0 20px 16px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 3px;
+    }
+    
+    .audio-bar {
+      width: 4px;
+      height: 4px;
+      background: linear-gradient(to top, #ff5050, #ff7850);
+      border-radius: 2px;
+      transition: height 0.05s ease;
+    }
+    
+    /* Resize Handle */
+    .resize-handle {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 20px;
+      height: 20px;
+      cursor: se-resize;
+      -webkit-app-region: no-drag;
+    }
+    
+    .resize-handle::after {
+      content: '';
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid rgba(255, 255, 255, 0.2);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay-container">
+    <!-- Header -->
+    <div class="overlay-header">
+      <div class="header-left">
+        <div class="brutus-avatar">B</div>
+        <div class="header-title">brutus live coaching</div>
+      </div>
+      <div class="header-status">
+        <div class="status-dot"></div>
+        <button class="close-btn" id="close-btn">×</button>
+      </div>
+    </div>
+    
+    <!-- Audio Visualizer -->
+    <div class="audio-visualizer" id="audio-visualizer">
+      <!-- Bars generated by JS -->
+    </div>
+    
+    <!-- Feedback List -->
+    <div class="feedback-container" id="feedback-container">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-state-icon">🎯</div>
+        <div class="empty-state-text">listening for your sales call...</div>
+      </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <button class="action-btn note-btn" id="note-btn" title="Take a quick note">
+        <span>📝</span> note
+      </button>
+      <button class="action-btn research-btn" id="research-btn" title="Request research">
+        <span>🔍</span> research
+      </button>
+    </div>
+
+    <!-- Screen Capture Toggle -->
+    <div class="screen-capture-toggle">
+      <label class="toggle-label">
+        <input type="checkbox" id="screen-capture-toggle" checked>
+        <span class="toggle-slider"></span>
+        <span class="toggle-text">📷 screen capture</span>
+      </label>
+    </div>
+
+    <!-- AI Notes Toggle -->
+    <div class="screen-capture-toggle">
+      <label class="toggle-label">
+        <input type="checkbox" id="ai-notes-toggle">
+        <span class="toggle-slider"></span>
+        <span class="toggle-text">🤖 ai notes</span>
+      </label>
+    </div>
+
+    <!-- Note Input (Hidden by default) -->
+    <div class="note-input-container hidden" id="note-input-container">
+      <input type="text" class="note-input" id="note-input" placeholder="quick note...">
+      <button class="note-send-btn" id="note-send-btn">→</button>
+    </div>
+
+    <!-- Research Input (Hidden by default) -->
+    <div class="research-input-container hidden" id="research-input-container">
+      <input type="text" class="research-input" id="research-input" placeholder="company or prospect name...">
+      <button class="research-send-btn" id="research-send-btn">→</button>
+    </div>
+
+    <!-- Metrics Bar -->
+    <div class="metrics-bar">
+      <div class="metric-item">
+        <div class="metric-label">talk ratio</div>
+        <div class="metric-value" id="talk-ratio">--%</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label">interrupts</div>
+        <div class="metric-value good" id="interrupt-count">0</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-label">duration</div>
+        <div class="metric-value" id="duration">00:00</div>
+      </div>
+    </div>
+
+    <div class="resize-handle" id="resize-handle"></div>
+  </div>
+  
+  <script>
+    // ==================== CONFIG ====================
+    let API_URL = 'http://localhost:3001';
+    let WS_URL = 'ws://localhost:3001/ws';
+    let authToken = null;
+    
+    let ws = null;
+    let isConnected = false;
+    let sessionId = null;
+    let startTime = null;
+    let durationInterval = null;
+    let audioContext = null;
+    let analyser = null;
+    let mediaStream = null;
+    let mediaRecorder = null;
+    let recordingInterval = null;
+    let screenshotInterval = null;
+    let screenStream = null;
+    let lastScreenshot = null;
+
+    let feedbackItems = [];
+    let interruptCount = 0;
+    let talkRatio = 0;
+
+    // ==================== SCREEN CAPTURE TOGGLE ====================
+    const screenCaptureToggle = document.getElementById('screen-capture-toggle');
+    let isScreenCaptureEnabled = true;
+
+    // Handle screen capture toggle changes
+    screenCaptureToggle.addEventListener('change', async (e) => {
+      isScreenCaptureEnabled = e.target.checked;
+      console.log('[Screen Capture Toggle] Screen capture', isScreenCaptureEnabled ? 'enabled' : 'disabled');
+
+      // If session is active, stop or start screen capture based on toggle
+      if (sessionId) {
+        if (isScreenCaptureEnabled) {
+          await startScreenCapture();
+          addFeedback('insight', 'screen capture enabled');
+        } else {
+          stopScreenCapture();
+          addFeedback('insight', 'screen capture disabled');
+        }
+      }
+    });
+
+    // ==================== AI NOTES TOGGLE ====================
+    const aiNotesToggle = document.getElementById('ai-notes-toggle');
+    let isAiNotesEnabled = false;
+
+    // Handle AI notes toggle changes
+    aiNotesToggle.addEventListener('change', (e) => {
+      isAiNotesEnabled = e.target.checked;
+      console.log('[AI Notes Toggle] AI notes', isAiNotesEnabled ? 'enabled' : 'disabled');
+
+      if (sessionId) {
+        if (isAiNotesEnabled) {
+          addFeedback('insight', 'ai note-taking enabled');
+        } else {
+          addFeedback('insight', 'ai note-taking disabled');
+        }
+      }
+    });
+
+    // ==================== NOTES & RESEARCH ====================
+    const noteBtn = document.getElementById('note-btn');
+    const researchBtn = document.getElementById('research-btn');
+    const noteInputContainer = document.getElementById('note-input-container');
+    const researchInputContainer = document.getElementById('research-input-container');
+    const noteInput = document.getElementById('note-input');
+    const researchInput = document.getElementById('research-input');
+    const noteSendBtn = document.getElementById('note-send-btn');
+    const researchSendBtn = document.getElementById('research-send-btn');
+
+    // Toggle note input
+    noteBtn.addEventListener('click', () => {
+      const isActive = noteInputContainer.classList.contains('hidden');
+
+      // Hide research input
+      researchInputContainer.classList.add('hidden');
+      researchBtn.classList.remove('active');
+
+      // Toggle note input
+      if (isActive) {
+        noteInputContainer.classList.remove('hidden');
+        noteBtn.classList.add('active');
+        noteInput.focus();
+      } else {
+        noteInputContainer.classList.add('hidden');
+        noteBtn.classList.remove('active');
+      }
+    });
+
+    // Toggle research input
+    researchBtn.addEventListener('click', () => {
+      const isActive = researchInputContainer.classList.contains('hidden');
+
+      // Hide note input
+      noteInputContainer.classList.add('hidden');
+      noteBtn.classList.remove('active');
+
+      // Toggle research input
+      if (isActive) {
+        researchInputContainer.classList.remove('hidden');
+        researchBtn.classList.add('active');
+        researchInput.focus();
+      } else {
+        researchInputContainer.classList.add('hidden');
+        researchBtn.classList.remove('active');
+      }
+    });
+
+    // Send note
+    async function sendNote() {
+      const text = noteInput.value.trim();
+      if (!text || !sessionId) return;
+
+      noteSendBtn.disabled = true;
+
+      try {
+        await fetch(`${API_URL}/notes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            sessionId,
+            content: text,
+            type: 'manual',
+            timestamp: Date.now()
+          })
+        });
+
+        // Clear input and hide
+        noteInput.value = '';
+        noteInputContainer.classList.add('hidden');
+        noteBtn.classList.remove('active');
+
+        // Show confirmation feedback
+        addFeedback('good', 'note saved ✓');
+      } catch (error) {
+        console.error('Failed to save note:', error);
+        addFeedback('warning', 'failed to save note');
+      } finally {
+        noteSendBtn.disabled = false;
+      }
+    }
+
+    noteSendBtn.addEventListener('click', sendNote);
+    noteInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendNote();
+    });
+
+    // Send research request
+    async function sendResearchRequest() {
+      const query = researchInput.value.trim();
+      if (!query || !sessionId) return;
+
+      researchSendBtn.disabled = true;
+
+      try {
+        await fetch(`${API_URL}/research`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            sessionId,
+            query,
+            requestedAt: Date.now()
+          })
+        });
+
+        // Clear input and hide
+        researchInput.value = '';
+        researchInputContainer.classList.add('hidden');
+        researchBtn.classList.remove('active');
+
+        // Show confirmation feedback
+        addFeedback('insight', `researching "${query}"... results will appear in dashboard`);
+      } catch (error) {
+        console.error('Failed to request research:', error);
+        addFeedback('warning', 'failed to request research');
+      } finally {
+        researchSendBtn.disabled = false;
+      }
+    }
+
+    researchSendBtn.addEventListener('click', sendResearchRequest);
+    researchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendResearchRequest();
+    });
+
+    // ==================== INIT ====================
+    async function init() {
+      // Get settings and auth
+      const settings = await window.brutus.getSettings();
+      API_URL = settings.apiUrl || API_URL;
+      WS_URL = API_URL.replace('http', 'ws') + '/ws';
+      
+      const auth = await window.brutus.getAuth();
+      authToken = auth.token;
+      
+      // Init audio visualizer bars
+      initAudioBars();
+      
+      // Listen for monitoring events
+      window.brutus.onMonitoringStarted(() => {
+        startSession();
+      });
+      
+      window.brutus.onMonitoringStopped(() => {
+        stopSession();
+      });
+      
+      // Start immediately if monitoring is active
+      const isMonitoring = await window.brutus.isMonitoring();
+      if (isMonitoring) {
+        startSession();
+      }
+    }
+    
+    // ==================== AUDIO VISUALIZER ====================
+    function initAudioBars() {
+      const visualizer = document.getElementById('audio-visualizer');
+      visualizer.innerHTML = '';
+      for (let i = 0; i < 32; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'audio-bar';
+        visualizer.appendChild(bar);
+      }
+    }
+    
+    function updateAudioBars(dataArray) {
+      const bars = document.querySelectorAll('.audio-bar');
+      bars.forEach((bar, i) => {
+        const value = dataArray[i] || 0;
+        const height = Math.max(4, (value / 255) * 35);
+        bar.style.height = height + 'px';
+      });
+    }
+    
+    // ==================== SESSION MANAGEMENT ====================
+    async function startSession() {
+      try {
+        // Start session on backend
+        const response = await fetch(`${API_URL}/live/start`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+        
+        const data = await response.json();
+        sessionId = data.session.id;
+        
+        // Connect WebSocket
+        connectWebSocket();
+
+        // Start audio capture
+        await startAudioCapture();
+
+        // Start screen capture (only if enabled)
+        if (isScreenCaptureEnabled) {
+          await startScreenCapture();
+        } else {
+          console.log('[Session] Screen capture disabled by toggle - skipping');
+        }
+
+        // Start duration timer
+        startTime = Date.now();
+        durationInterval = setInterval(updateDuration, 1000);
+        
+        // Clear empty state
+        document.getElementById('empty-state').style.display = 'none';
+        
+        // Add initial feedback
+        addFeedback('insight', 'monitoring started. let\'s see what you\'ve got.');
+        
+      } catch (error) {
+        console.error('Failed to start session:', error);
+        addFeedback('critical', 'failed to connect. check your backend.');
+      }
+    }
+    
+    async function stopSession() {
+      // Stop audio capture
+      stopAudioCapture();
+
+      // Stop screen capture
+      stopScreenCapture();
+
+      // Stop duration timer
+      if (durationInterval) {
+        clearInterval(durationInterval);
+        durationInterval = null;
+      }
+      
+      // End session on backend
+      if (sessionId) {
+        try {
+          await fetch(`${API_URL}/live/end`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ sessionId })
+          });
+        } catch (e) {
+          console.error('Failed to end session:', e);
+        }
+      }
+      
+      // Disconnect WebSocket
+      if (ws) {
+        ws.close();
+        ws = null;
+      }
+      
+      sessionId = null;
+      startTime = null;
+      
+      addFeedback('insight', 'session ended. review your results.');
+    }
+    
+    // ==================== WEBSOCKET ====================
+    function connectWebSocket() {
+      ws = new WebSocket(`${WS_URL}?token=${authToken}`);
+      
+      ws.onopen = () => {
+        isConnected = true;
+        console.log('WebSocket connected');
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          
+          if (message.type === 'brutus_feedback') {
+            addFeedback(message.payload.type, message.payload.text);
+            
+            // Update metrics if included
+            if (message.payload.talkRatio !== undefined) {
+              updateTalkRatio(message.payload.talkRatio);
+            }
+            if (message.payload.type === 'critical' && message.payload.text.includes('interrupt')) {
+              interruptCount++;
+              document.getElementById('interrupt-count').textContent = interruptCount;
+              document.getElementById('interrupt-count').className = 'metric-value bad';
+            }
+          }
+        } catch (e) {
+          console.error('Failed to parse message:', e);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+      
+      ws.onclose = () => {
+        isConnected = false;
+        console.log('WebSocket disconnected');
+        
+        // Attempt to reconnect
+        if (sessionId) {
+          setTimeout(connectWebSocket, 3000);
+        }
+      };
+    }
+    
+    function sendToBackend(type, payload) {
+      if (ws && isConnected) {
+        ws.send(JSON.stringify({ type, payload }));
+      }
+    }
+    
+    // ==================== AUDIO CAPTURE ====================
+    async function startAudioCapture() {
+      try {
+        console.log('[Audio Capture] Starting audio capture (mic + system audio)...');
+
+        // Step 1: Get microphone stream
+        console.log('[Audio Capture] Requesting microphone access...');
+        const micStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,  // Disable to preserve both voices
+            noiseSuppression: false,  // Disable to preserve both voices
+            autoGainControl: false,   // Disable to preserve natural levels
+            sampleRate: 16000
+          }
+        });
+        console.log('[Audio Capture] Microphone access granted');
+
+        // Step 2: Get system audio (loopback) - what's playing through speakers/headphones
+        console.log('[Audio Capture] Requesting system audio sources...');
+        let systemAudioStream = null;
+
+        try {
+          const sources = await window.brutus.getScreenSources();
+          console.log(`[Audio Capture] Found ${sources.length} sources`);
+
+          // Look for audio sources (loopback audio)
+          // On Windows, this might be labeled as speakers/system audio
+          const audioSource = sources.find(source =>
+            source.id.includes('screen') && source.name.toLowerCase().includes('entire')
+          );
+
+          if (audioSource) {
+            console.log('[Audio Capture] Found system audio source:', audioSource.name);
+
+            systemAudioStream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                mandatory: {
+                  chromeMediaSource: 'desktop',
+                  chromeMediaSourceId: audioSource.id
+                }
+              },
+              video: {
+                mandatory: {
+                  chromeMediaSource: 'desktop',
+                  chromeMediaSourceId: audioSource.id
+                }
+              }
+            });
+
+            console.log('[Audio Capture] System audio stream created');
+          } else {
+            console.warn('[Audio Capture] No system audio source found - will use microphone only');
+          }
+        } catch (sysAudioError) {
+          console.warn('[Audio Capture] Failed to capture system audio:', sysAudioError);
+          console.warn('[Audio Capture] Continuing with microphone only...');
+        }
+
+        // Step 3: Mix microphone and system audio using Web Audio API
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const destination = audioContext.createMediaStreamDestination();
+
+        // Connect microphone
+        const micSource = audioContext.createMediaStreamSource(micStream);
+        const micGain = audioContext.createGain();
+        micGain.gain.value = 1.0;  // Full volume for mic
+        micSource.connect(micGain);
+        micGain.connect(destination);
+
+        // Connect system audio if available
+        if (systemAudioStream) {
+          const systemSource = audioContext.createMediaStreamSource(systemAudioStream);
+          const systemGain = audioContext.createGain();
+          systemGain.gain.value = 1.0;  // Full volume for system audio
+          systemSource.connect(systemGain);
+          systemGain.connect(destination);
+          console.log('[Audio Capture] Both microphone and system audio mixed together');
+        } else {
+          console.log('[Audio Capture] Using microphone only');
+        }
+
+        // The mixed stream
+        mediaStream = destination.stream;
+
+        // Set up audio visualization (from mic only for visual feedback)
+        analyser = audioContext.createAnalyser();
+        micSource.connect(analyser);  // Visualize mic input
+        analyser.fftSize = 64;
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        // Update visualization
+        function updateVisualization() {
+          if (!analyser) return;
+
+          analyser.getByteFrequencyData(dataArray);
+          updateAudioBars(dataArray);
+
+          requestAnimationFrame(updateVisualization);
+        }
+        updateVisualization();
+
+        // Set up media recorder to send chunks (records the MIXED stream)
+        mediaRecorder = new MediaRecorder(mediaStream, {
+          mimeType: 'audio/webm;codecs=opus'
+        });
+
+        let chunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            chunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          if (chunks.length === 0) return;
+
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          chunks = [];
+
+          // Convert to base64 and send
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const audioBase64 = reader.result.split(',')[1];
+
+            sendToBackend('monitoring_data', {
+              sessionId,
+              audioData: audioBase64,
+              screenshot: (isScreenCaptureEnabled && lastScreenshot) ? lastScreenshot : null,
+              timestamp: Date.now(),
+              timeIntoCall: Math.floor((Date.now() - startTime) / 1000),
+              mimeType: 'audio/webm',
+              aiNotesEnabled: isAiNotesEnabled
+            });
+          };
+          reader.readAsDataURL(blob);
+        };
+
+        // Record in 5 second chunks
+        mediaRecorder.start();
+        recordingInterval = setInterval(() => {
+          if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+            mediaRecorder.start();
+          }
+        }, 5000);
+
+        console.log('[Audio Capture] Audio capture started successfully');
+        addFeedback('insight', systemAudioStream ?
+          'capturing both sides of the conversation.' :
+          'capturing your voice only (system audio unavailable).');
+
+      } catch (error) {
+        console.error('[Audio Capture] ERROR: Failed to capture audio');
+        console.error('[Audio Capture] Error name:', error.name);
+        console.error('[Audio Capture] Error message:', error.message);
+        console.error('[Audio Capture] Error stack:', error.stack);
+        addFeedback('critical', 'microphone access denied. enable it to get coaching.');
+      }
+    }
+    
+    function stopAudioCapture() {
+      // Stop recording interval
+      if (recordingInterval) {
+        clearInterval(recordingInterval);
+        recordingInterval = null;
+      }
+      
+      // Stop media recorder
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        mediaRecorder = null;
+      }
+      
+      // Stop media stream
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+      }
+      
+      // Close audio context
+      if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+        analyser = null;
+      }
+      
+      // Reset audio bars
+      const bars = document.querySelectorAll('.audio-bar');
+      bars.forEach(bar => bar.style.height = '4px');
+    }
+
+    // ==================== SCREEN CAPTURE ====================
+    async function startScreenCapture() {
+      try {
+        console.log('[Screen Capture] Attempting to start screen capture...');
+
+        // Get screen sources using desktopCapturer
+        console.log('[Screen Capture] Requesting screen sources from desktopCapturer...');
+        const sources = await window.brutus.getScreenSources();
+        console.log(`[Screen Capture] Found ${sources.length} screen sources:`, sources);
+
+        if (sources.length === 0) {
+          console.error('[Screen Capture] ERROR: No screen sources available');
+          addFeedback('warning', 'screen capture unavailable. audio-only mode.');
+          return;
+        }
+
+        // Use the first screen (primary display)
+        const primarySource = sources[0];
+        console.log('[Screen Capture] Using primary source:', {
+          id: primarySource.id,
+          name: primarySource.name,
+          thumbnailSize: primarySource.thumbnail ? `${primarySource.thumbnail.getSize().width}x${primarySource.thumbnail.getSize().height}` : 'N/A'
+        });
+
+        // Create media stream from screen
+        console.log('[Screen Capture] Creating media stream with constraints:', {
+          chromeMediaSourceId: primarySource.id,
+          resolution: '1280-1920x720-1080'
+        });
+
+        screenStream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            mandatory: {
+              chromeMediaSource: 'desktop',
+              chromeMediaSourceId: primarySource.id,
+              minWidth: 1280,
+              maxWidth: 1920,
+              minHeight: 720,
+              maxHeight: 1080
+            }
+          }
+        });
+
+        console.log('[Screen Capture] Media stream created successfully:', {
+          active: screenStream.active,
+          tracks: screenStream.getTracks().length,
+          videoTrack: screenStream.getVideoTracks()[0]?.getSettings()
+        });
+
+        // Capture screenshot every 5 seconds
+        screenshotInterval = setInterval(captureScreenshot, 5000);
+
+        // Capture initial screenshot
+        captureScreenshot();
+
+        console.log('[Screen Capture] Screen capture started successfully');
+
+      } catch (error) {
+        console.error('[Screen Capture] ERROR: Failed to capture screen');
+        console.error('[Screen Capture] Error name:', error.name);
+        console.error('[Screen Capture] Error message:', error.message);
+        console.error('[Screen Capture] Error stack:', error.stack);
+        console.error('[Screen Capture] Full error object:', error);
+        addFeedback('warning', `screen capture failed: ${error.message}. continuing with audio only.`);
+      }
+    }
+
+    async function captureScreenshot() {
+      if (!screenStream) {
+        console.warn('[Screenshot] Cannot capture: screenStream is null');
+        return;
+      }
+
+      try {
+        console.log('[Screenshot] Capturing screenshot...');
+
+        const video = document.createElement('video');
+        video.srcObject = screenStream;
+        video.autoplay = true;
+
+        // Wait for video to be ready
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Video metadata load timeout after 5 seconds'));
+          }, 5000);
+
+          video.onloadedmetadata = () => {
+            clearTimeout(timeout);
+            console.log('[Screenshot] Video metadata loaded:', {
+              width: video.videoWidth,
+              height: video.videoHeight,
+              duration: video.duration,
+              readyState: video.readyState
+            });
+            video.play();
+            resolve();
+          };
+        });
+
+        // Create canvas and capture frame
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        console.log('[Screenshot] Created canvas:', {
+          width: canvas.width,
+          height: canvas.height
+        });
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+
+        // Convert to base64
+        lastScreenshot = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+        console.log('[Screenshot] Screenshot captured successfully, size:', lastScreenshot.length, 'characters');
+
+        // Clean up
+        video.srcObject = null;
+
+      } catch (error) {
+        console.error('[Screenshot] ERROR: Failed to capture screenshot');
+        console.error('[Screenshot] Error name:', error.name);
+        console.error('[Screenshot] Error message:', error.message);
+        console.error('[Screenshot] Error stack:', error.stack);
+        console.error('[Screenshot] Full error object:', error);
+      }
+    }
+
+    function stopScreenCapture() {
+      // Stop screenshot interval
+      if (screenshotInterval) {
+        clearInterval(screenshotInterval);
+        screenshotInterval = null;
+      }
+
+      // Stop screen stream
+      if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+        screenStream = null;
+      }
+
+      lastScreenshot = null;
+    }
+
+    // ==================== UI UPDATES ====================
+    function addFeedback(type, text) {
+      const container = document.getElementById('feedback-container');
+      const emptyState = document.getElementById('empty-state');
+      
+      if (emptyState) {
+        emptyState.style.display = 'none';
+      }
+      
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      
+      const item = document.createElement('div');
+      item.className = 'feedback-item';
+      item.innerHTML = `
+        <div class="feedback-header">
+          <span class="feedback-type type-${type}">${type}</span>
+          <span class="feedback-time">${timeStr}</span>
+        </div>
+        <div class="feedback-text">${text}</div>
+      `;
+      
+      // Add to beginning
+      container.insertBefore(item, container.firstChild);
+      
+      // Keep only last 10 items
+      feedbackItems.unshift({ type, text, time: timeStr });
+      if (feedbackItems.length > 10) {
+        feedbackItems.pop();
+        if (container.children.length > 10) {
+          container.removeChild(container.lastChild);
+        }
+      }
+    }
+    
+    function updateTalkRatio(ratio) {
+      talkRatio = ratio;
+      const el = document.getElementById('talk-ratio');
+      el.textContent = `${Math.round(ratio)}%`;
+      el.className = 'metric-value ' + (ratio > 60 ? 'bad' : ratio > 45 ? 'warning' : 'good');
+    }
+    
+    function updateDuration() {
+      if (!startTime) return;
+      
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      
+      document.getElementById('duration').textContent =
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+    
+    // ==================== WINDOW CONTROLS ====================
+    document.getElementById('close-btn').addEventListener('click', async () => {
+      await window.brutus.stopMonitoring();
+    });
+    
+    // ==================== START ====================
+    init();
+  </script>
+</body>
+</html>

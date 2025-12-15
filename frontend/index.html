@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brutus.ai - Sales Coaching Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a12 0%, #12121f 30%, #0d1a2d 70%, #0a0a12 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* Neural Network Background */
+        #neural-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* Morphing Blobs */
+        .blob-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .morphing-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+        }
+        
+        .blob-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255, 80, 80, 0.6) 0%, transparent 70%);
+            top: 10%;
+            left: 15%;
+            animation: float1 25s ease-in-out infinite;
+        }
+        
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(80, 150, 255, 0.5) 0%, transparent 70%);
+            top: 50%;
+            right: 10%;
+            animation: float2 30s ease-in-out infinite;
+        }
+        
+        .blob-3 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(200, 80, 255, 0.4) 0%, transparent 70%);
+            bottom: 20%;
+            left: 30%;
+            animation: float3 20s ease-in-out infinite;
+        }
+        
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 50px) scale(0.9); }
+        }
+        
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-40px, 40px) scale(0.95); }
+            66% { transform: translate(30px, -20px) scale(1.05); }
+        }
+        
+        @keyframes float3 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(40px, -40px) scale(1.1); }
+        }
+        
+        /* Auth Modal */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 18, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .auth-modal.hidden {
+            display: none;
+        }
+        
+        .auth-container {
+            background: rgba(20, 20, 35, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 80, 80, 0.2);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        
+        .auth-logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ff5050, #ff7850);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .auth-logo-text {
+            font-family: 'Space Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .auth-logo-text span {
+            color: #ff5050;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            text-transform: lowercase;
+        }
+        
+        .auth-tab:hover {
+            background: rgba(255, 80, 80, 0.1);
+            color: white;
+        }
+        
+        .auth-tab.active {
+            background: linear-gradient(135deg, #ff5050, #ff7850);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .auth-form.hidden {
+            display: none;
+        }
+        
+        .auth-input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-input:focus {
+            border-color: rgba(255, 80, 80, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .auth-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .auth-btn {
+            padding: 14px;
+            background: linear-gradient(135deg, #ff5050, #ff7850);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            text-transform: lowercase;
+        }
+        
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 80, 80, 0.3);
+        }
+        
+        .auth-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .auth-error {
+            color: #ff5050;
+            font-size: 13px;
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 80, 80, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .auth-error.visible {
+            display: block;
+        }
+        
+        /* Navigation */
+        .nav-container {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 8px;
+            background: rgba(20, 20, 35, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 80, 80, 0.2);
+            border-radius: 50px;
+            padding: 8px;
+        }
+        
+        .nav-item {
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: lowercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        
+        .nav-item:hover {
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 80, 80, 0.1);
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(255, 80, 80, 0.8), rgba(255, 120, 80, 0.8));
+            color: white;
+            box-shadow: 0 4px 20px rgba(255, 80, 80, 0.3);
+        }
+        
+        /* Logo */
+        .logo {
+            position: fixed;
+            top: 30px;
+            left: 40px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #ff5050, #ff7850);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 20px;
+            color: white;
+            box-shadow: 0 4px 20px rgba(255, 80, 80, 0.4);
+        }
+        
+        .logo-text {
+            font-family: 'Space Mono', monospace;
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .logo-text span {
+            color: #ff5050;
+        }
+        
+        /* Logout Button */
+        .logout-btn {
+            position: fixed;
+            top: 30px;
+            right: 40px;
+            z-index: 1000;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: lowercase;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 80, 80, 0.1);
+            color: white;
+            border-color: rgba(255, 80, 80, 0.3);
+        }
+        
+        /* Main Content */
+        .main-content {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            padding: 120px 40px 40px;
+        }
+        
+        .main-content.hidden {
+            display: none;
+        }
+        
+        /* View containers */
+        .view {
+            display: none;
+        }
+        
+        .view.active {
+            display: block;
+        }
+        
+        /* Floating Panels */
+        .floating-panel {
+            position: absolute;
+            background: rgba(20, 20, 35, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            cursor: grab;
+            transition: box-shadow 0.3s ease, transform 0.1s ease;
+            user-select: none;
+        }
+        
+        .floating-panel:hover {
+            border-color: rgba(255, 80, 80, 0.3);
+            box-shadow: 0 10px 40px rgba(255, 80, 80, 0.15);
+        }
+        
+        .floating-panel.dragging {
+            cursor: grabbing;
+            box-shadow: 0 20px 60px rgba(255, 80, 80, 0.25);
+            z-index: 100;
+        }
+        
+        .panel-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            text-transform: lowercase;
+            color: rgba(255, 80, 80, 0.8);
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+        
+        /* Stats Panel */
+        .stats-panel {
+            top: 140px;
+            left: 60px;
+            width: 280px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .stat-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .stat-value.good { color: #50ff80; }
+        .stat-value.warning { color: #ffb050; }
+        .stat-value.bad { color: #ff5050; }
+        
+        /* Performance Panel */
+        .performance-panel {
+            top: 140px;
+            right: 60px;
+            width: 320px;
+        }
+        
+        .performance-chart {
+            height: 120px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, rgba(255, 80, 80, 0.6), rgba(255, 120, 80, 0.4));
+            border-radius: 6px 6px 0 0;
+            min-height: 20px;
+            transition: height 0.5s ease;
+        }
+        
+        .chart-bar:nth-child(odd) {
+            background: linear-gradient(to top, rgba(80, 150, 255, 0.6), rgba(100, 180, 255, 0.4));
+        }
+        
+        /* Activity Panel */
+        .activity-panel {
+            bottom: 100px;
+            left: 60px;
+            width: 340px;
+        }
+        
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-content h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .activity-content p {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .activity-time {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: rgba(255, 80, 80, 0.7);
+        }
+        
+        /* Chat Panel */
+        .chat-panel {
+            bottom: 40px;
+            right: 60px;
+            width: 380px;
+            height: 420px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 80, 80, 0.3);
+            border-radius: 2px;
+        }
+        
+        .chat-message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        
+        .brutus-avatar {
+            background: linear-gradient(135deg, #ff5050, #ff7850);
+            color: white;
+        }
+        
+        .user-avatar {
+            background: linear-gradient(135deg, #5080ff, #7850ff);
+            color: white;
+        }
+        
+        .message-content {
+            flex: 1;
+        }
+        
+        .message-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.85);
+        }
+        
+        .message-time {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-top: 6px;
+        }
+        
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: white;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .chat-input:focus {
+            border-color: rgba(255, 80, 80, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .chat-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .chat-send-btn {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #ff5050, #ff7850);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .chat-send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(255, 80, 80, 0.4);
+        }
+        
+        .chat-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .chat-send-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+        
+        /* Quick Suggestions */
+        .chat-suggestions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .suggestion-btn {
+            padding: 8px 14px;
+            background: rgba(255, 80, 80, 0.1);
+            border: 1px solid rgba(255, 80, 80, 0.2);
+            border-radius: 20px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .suggestion-btn:hover {
+            background: rgba(255, 80, 80, 0.2);
+            color: white;
+            border-color: rgba(255, 80, 80, 0.4);
+        }
+        
+        /* Center Score Display */
+        .score-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+        }
+        
+        .score-number {
+            font-family: 'Space Mono', monospace;
+            font-size: 120px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff5050, #ff7850, #ffb050);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            text-shadow: 0 0 80px rgba(255, 80, 80, 0.3);
+        }
+        
+        .score-label {
+            font-size: 14px;
+            text-transform: lowercase;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 3px;
+            margin-top: 10px;
+        }
+        
+        /* Upload View */
+        .upload-view-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        .upload-zone {
+            width: 500px;
+            height: 300px;
+            border: 2px dashed rgba(255, 80, 80, 0.3);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(20, 20, 35, 0.4);
+            backdrop-filter: blur(20px);
+        }
+        
+        .upload-zone:hover {
+            border-color: rgba(255, 80, 80, 0.6);
+            background: rgba(255, 80, 80, 0.05);
+        }
+        
+        .upload-zone.uploading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        
+        .upload-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(255, 80, 80, 0.2), rgba(255, 120, 80, 0.1));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .upload-icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: #ff5050;
+        }
+        
+        .upload-text {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .upload-text span {
+            color: #ff5050;
+            font-weight: 600;
+        }
+        
+        .upload-hint {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* Progress View */
+        .progress-view-content {
+            padding: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .view-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 28px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .progress-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        
+        .progress-card {
+            background: rgba(20, 20, 35, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 28px;
+        }
+        
+        .progress-card h3 {
+            font-size: 14px;
+            color: rgba(255, 80, 80, 0.8);
+            margin-bottom: 16px;
+            text-transform: lowercase;
+            font-family: 'Space Mono', monospace;
+        }
+        
+        .progress-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .progress-bar-container {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff5050, #ff7850);
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #ff5050;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Hidden file input */
+        #file-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Blobs -->
+    <div class="blob-container">
+        <div class="morphing-blob blob-1"></div>
+        <div class="morphing-blob blob-2"></div>
+        <div class="morphing-blob blob-3"></div>
+    </div>
+    
+    <!-- Neural Network Canvas -->
+    <canvas id="neural-canvas"></canvas>
+    
+    <!-- Auth Modal -->
+    <div class="auth-modal" id="auth-modal">
+        <div class="auth-container">
+            <div class="auth-logo">
+                <div class="auth-logo-icon">B</div>
+                <div class="auth-logo-text">brutus<span>.ai</span></div>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">login</button>
+                <button class="auth-tab" data-tab="signup">sign up</button>
+            </div>
+            
+            <div class="auth-error" id="auth-error"></div>
+            
+            <!-- Login Form -->
+            <form class="auth-form" id="login-form">
+                <input type="email" class="auth-input" placeholder="email" required id="login-email">
+                <input type="password" class="auth-input" placeholder="password" required id="login-password">
+                <button type="submit" class="auth-btn" id="login-btn">login</button>
+            </form>
+            
+            <!-- Signup Form -->
+            <form class="auth-form hidden" id="signup-form">
+                <input type="text" class="auth-input" placeholder="name" required id="signup-name">
+                <input type="email" class="auth-input" placeholder="email" required id="signup-email">
+                <input type="password" class="auth-input" placeholder="password (min 8 characters)" required minlength="8" id="signup-password">
+                <button type="submit" class="auth-btn" id="signup-btn">create account</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Logo -->
+    <div class="logo">
+        <div class="logo-icon">B</div>
+        <div class="logo-text">brutus<span>.ai</span></div>
+    </div>
+    
+    <!-- Logout Button -->
+    <button class="logout-btn" id="logout-btn">logout</button>
+    
+    <!-- Navigation -->
+    <div class="nav-container">
+        <nav class="nav">
+            <div class="nav-item active" data-view="dashboard">dashboard</div>
+            <div class="nav-item" data-view="upload">upload</div>
+            <div class="nav-item" data-view="progress">progress</div>
+            <div class="nav-item" data-view="notes">notes</div>
+            <div class="nav-item" data-view="research">research</div>
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content hidden" id="main-content">
+        
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view active">
+            <!-- Center Score -->
+            <div class="score-display">
+                <div class="score-number" id="overall-score">--</div>
+                <div class="score-label">overall score</div>
+            </div>
+            
+            <!-- Stats Panel -->
+            <div class="floating-panel stats-panel" data-panel="stats">
+                <div class="panel-title">your metrics</div>
+                <div class="stat-item">
+                    <span class="stat-label">close rate</span>
+                    <span class="stat-value" id="close-rate">--%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">talk ratio</span>
+                    <span class="stat-value" id="talk-ratio">--%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">calls analyzed</span>
+                    <span class="stat-value good" id="calls-analyzed">0</span>
+                </div>
+            </div>
+            
+            <!-- Performance Panel -->
+            <div class="floating-panel performance-panel" data-panel="performance">
+                <div class="panel-title">weekly performance</div>
+                <div class="performance-chart" id="performance-chart">
+                    <div class="chart-bar" style="height: 20%"></div>
+                    <div class="chart-bar" style="height: 20%"></div>
+                    <div class="chart-bar" style="height: 20%"></div>
+                    <div class="chart-bar" style="height: 20%"></div>
+                    <div class="chart-bar" style="height: 20%"></div>
+                    <div class="chart-bar" style="height: 20%"></div>
+                    <div class="chart-bar" style="height: 20%"></div>
+                </div>
+            </div>
+            
+            <!-- Activity Panel -->
+            <div class="floating-panel activity-panel" data-panel="activity">
+                <div class="panel-title">recent activity</div>
+                <div id="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-content">
+                            <h4>no calls yet</h4>
+                            <p>upload your first call to get roasted</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Panel -->
+            <div class="floating-panel chat-panel" data-panel="chat">
+                <div class="panel-title">chat with brutus</div>
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-message">
+                        <div class="message-avatar brutus-avatar">B</div>
+                        <div class="message-content">
+                            <div class="message-text">ready for some honest feedback about your sales approach? don't worry, i'll be gentle. just kidding, i won't.</div>
+                            <div class="message-time">just now</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" class="chat-input" id="chat-input" placeholder="ask brutus anything...">
+                    <button class="chat-send-btn" id="chat-send-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="chat-suggestions">
+                    <button class="suggestion-btn" data-msg="how can i improve my close rate?">💡 improve close rate</button>
+                    <button class="suggestion-btn" data-msg="what's wrong with my talk ratio?">📊 talk ratio help</button>
+                    <button class="suggestion-btn" data-msg="roast my last call">🔥 roast me</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upload View -->
+        <div id="upload-view" class="view">
+            <div class="upload-view-content">
+                <div class="upload-zone" id="upload-zone">
+                    <div class="upload-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17,8 12,3 7,8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </div>
+                    <div class="upload-text" id="upload-text">drop your call recording here or <span>browse</span></div>
+                    <div class="upload-hint">supports mp3, wav, mp4, webm up to 500mb</div>
+                </div>
+                <input type="file" id="file-input" accept="audio/*,video/*">
+            </div>
+        </div>
+        
+        <!-- Progress View -->
+        <div id="progress-view" class="view">
+            <div class="progress-view-content">
+                <h2 class="view-title">your progress</h2>
+                <div class="progress-grid">
+                    <div class="progress-card">
+                        <h3>calls analyzed</h3>
+                        <div class="progress-value" id="progress-calls">0</div>
+                        <p style="color: rgba(255,255,255,0.5); font-size: 13px;" id="progress-calls-week">+0 this week</p>
+                    </div>
+                    <div class="progress-card">
+                        <h3>average score</h3>
+                        <div class="progress-value" id="progress-score">--</div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" id="progress-score-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-card">
+                        <h3>talk ratio trend</h3>
+                        <div class="progress-value" id="progress-talk-ratio">--%</div>
+                        <p style="color: rgba(255,255,255,0.5); font-size: 13px;">target: 40%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes View -->
+        <div id="notes-view" class="view">
+            <div class="progress-view-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 class="view-title">your notes</h2>
+                    <button class="auth-btn" id="export-notes-btn" style="width: auto; padding: 10px 20px;">export to CSV</button>
+                </div>
+                <div id="notes-list">
+                    <p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">Loading notes...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Research View -->
+        <div id="research-view" class="view">
+            <div class="progress-view-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 class="view-title">research</h2>
+                    <button class="auth-btn" id="export-research-btn" style="width: auto; padding: 10px 20px;">export to PDF</button>
+                </div>
+                <div id="research-list">
+                    <p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">Loading research...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIG ====================
+        const API_URL = 'http://localhost:3001';
+        
+        // ==================== STATE ====================
+        let authToken = localStorage.getItem('brutus_token');
+        let currentUser = null;
+        
+        // ==================== NEURAL NETWORK ====================
+        const canvas = document.getElementById('neural-canvas');
+        const ctx = canvas.getContext('2d');
+        let nodes = [];
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initNodes();
+        }
+        
+        function initNodes() {
+            nodes = [];
+            const numNodes = 30;
+            for (let i = 0; i < numNodes; i++) {
+                nodes.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    radius: Math.random() * 2 + 1,
+                    pulse: Math.random() * Math.PI * 2,
+                    type: Math.random() > 0.8 ? 'active' : 'normal'
+                });
+            }
+        }
+        
+        function drawNeuralNetwork() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dx = nodes[i].x - nodes[j].x;
+                    const dy = nodes[i].y - nodes[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 200) {
+                        const opacity = (1 - dist / 200) * 0.15;
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.strokeStyle = `rgba(255, 80, 80, ${opacity})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            nodes.forEach(node => {
+                node.pulse += 0.02;
+                const pulseSize = Math.sin(node.pulse) * 0.5 + 1;
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.radius * pulseSize, 0, Math.PI * 2);
+                
+                if (node.type === 'active') {
+                    ctx.fillStyle = 'rgba(255, 80, 80, 0.6)';
+                } else {
+                    ctx.fillStyle = 'rgba(100, 150, 255, 0.4)';
+                }
+                
+                ctx.fill();
+                
+                node.x += node.vx;
+                node.y += node.vy;
+                
+                if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
+                if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
+            });
+            
+            requestAnimationFrame(drawNeuralNetwork);
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        drawNeuralNetwork();
+        
+        // ==================== API HELPERS ====================
+        async function apiCall(endpoint, options = {}) {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            
+            const response = await fetch(`${API_URL}${endpoint}`, {
+                ...options,
+                headers
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error?.message || 'Request failed');
+            }
+            
+            return data;
+        }
+        
+        async function apiUpload(endpoint, file) {
+            const formData = new FormData();
+            formData.append('audio', file);
+            
+            const response = await fetch(`${API_URL}${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error?.message || 'Upload failed');
+            }
+            
+            return data;
+        }
+        
+        // ==================== AUTH ====================
+        const authModal = document.getElementById('auth-modal');
+        const mainContent = document.getElementById('main-content');
+        const authError = document.getElementById('auth-error');
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        
+        // Tab switching
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                if (tab.dataset.tab === 'login') {
+                    loginForm.classList.remove('hidden');
+                    signupForm.classList.add('hidden');
+                } else {
+                    loginForm.classList.add('hidden');
+                    signupForm.classList.remove('hidden');
+                }
+                
+                authError.classList.remove('visible');
+            });
+        });
+        
+        // Login
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-btn');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>';
+            authError.classList.remove('visible');
+            
+            try {
+                const data = await apiCall('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                authToken = data.token;
+                currentUser = data.user;
+                localStorage.setItem('brutus_token', authToken);
+                
+                showApp();
+            } catch (error) {
+                authError.textContent = error.message;
+                authError.classList.add('visible');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'login';
+            }
+        });
+        
+        // Signup
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const btn = document.getElementById('signup-btn');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>';
+            authError.classList.remove('visible');
+            
+            try {
+                const data = await apiCall('/auth/signup', {
+                    method: 'POST',
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                authToken = data.token;
+                currentUser = data.user;
+                localStorage.setItem('brutus_token', authToken);
+                
+                showApp();
+            } catch (error) {
+                authError.textContent = error.message;
+                authError.classList.add('visible');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'create account';
+            }
+        });
+        
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('brutus_token');
+            
+            authModal.classList.remove('hidden');
+            mainContent.classList.add('hidden');
+        });
+        
+        // Check existing token
+        async function checkAuth() {
+            if (!authToken) {
+                authModal.classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                const data = await apiCall('/auth/me');
+                currentUser = data.user;
+                showApp();
+            } catch (error) {
+                authToken = null;
+                localStorage.removeItem('brutus_token');
+                authModal.classList.remove('hidden');
+            }
+        }
+        
+        function showApp() {
+            authModal.classList.add('hidden');
+            mainContent.classList.remove('hidden');
+            loadDashboard();
+        }
+        
+        // ==================== DASHBOARD ====================
+        async function loadDashboard() {
+            try {
+                const data = await apiCall('/user/dashboard');
+                
+                // Update stats
+                if (data.profile) {
+                    document.getElementById('close-rate').textContent = 
+                        data.profile.closeRate ? `${data.profile.closeRate}%` : '--%';
+                    
+                    const talkRatio = data.profile.talkRatioAvg;
+                    const talkRatioEl = document.getElementById('talk-ratio');
+                    talkRatioEl.textContent = talkRatio ? `${Math.round(talkRatio)}%` : '--%';
+                    talkRatioEl.className = 'stat-value ' + (talkRatio > 50 ? 'bad' : talkRatio > 40 ? 'warning' : 'good');
+                    
+                    document.getElementById('calls-analyzed').textContent = data.profile.totalCallsAnalyzed || 0;
+                    
+                    // Progress view
+                    document.getElementById('progress-calls').textContent = data.profile.totalCallsAnalyzed || 0;
+                    document.getElementById('progress-talk-ratio').textContent = 
+                        talkRatio ? `${Math.round(talkRatio)}%` : '--%';
+                }
+                
+                // Update weekly stats
+                if (data.weeklyStats) {
+                    document.getElementById('progress-calls-week').textContent = 
+                        `+${data.weeklyStats.callCount} this week`;
+                    
+                    // Update chart
+                    const scores = data.weeklyStats.scores || [];
+                    const chartBars = document.querySelectorAll('.chart-bar');
+                    
+                    // Fill in scores from the end
+                    for (let i = 0; i < chartBars.length; i++) {
+                        const scoreIndex = scores.length - chartBars.length + i;
+                        if (scoreIndex >= 0 && scores[scoreIndex]) {
+                            chartBars[i].style.height = `${scores[scoreIndex].score}%`;
+                        }
+                    }
+                    
+                    // Calculate average score
+                    if (scores.length > 0) {
+                        const avgScore = Math.round(
+                            scores.reduce((sum, s) => sum + s.score, 0) / scores.length
+                        );
+                        document.getElementById('overall-score').textContent = avgScore;
+                        document.getElementById('progress-score').textContent = avgScore;
+                        document.getElementById('progress-score-bar').style.width = `${avgScore}%`;
+                    }
+                }
+                
+                // Update recent activity
+                if (data.recentCalls && data.recentCalls.length > 0) {
+                    const activityList = document.getElementById('activity-list');
+                    activityList.innerHTML = data.recentCalls.map(call => {
+                        const feedback = call.brutusFeedback?.[0]?.text || 'no feedback yet';
+                        const timeAgo = getTimeAgo(new Date(call.createdAt));
+                        
+                        return `
+                            <div class="activity-item">
+                                <div class="activity-content">
+                                    <h4>call analyzed (score: ${call.overallScore})</h4>
+                                    <p>${feedback}</p>
+                                </div>
+                                <div class="activity-time">${timeAgo}</div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+            }
+        }
+        
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            if (seconds < 60) return 'just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+            return date.toLocaleDateString();
+        }
+        
+        // ==================== NAVIGATION ====================
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                
+                const viewName = item.dataset.view;
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                
+                const targetView = document.getElementById(viewName + '-view');
+                if (targetView) {
+                    targetView.classList.add('active');
+                }
+            });
+        });
+        
+        // ==================== DRAGGABLE PANELS ====================
+        let draggedPanel = null;
+        let dragOffset = { x: 0, y: 0 };
+        
+        document.querySelectorAll('.floating-panel').forEach(panel => {
+            panel.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('chat-input') || 
+                    e.target.classList.contains('chat-send-btn') ||
+                    e.target.classList.contains('suggestion-btn')) return;
+                
+                draggedPanel = panel;
+                draggedPanel.classList.add('dragging');
+                
+                const rect = panel.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+            });
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (draggedPanel) {
+                draggedPanel.style.left = (e.clientX - dragOffset.x) + 'px';
+                draggedPanel.style.top = (e.clientY - dragOffset.y) + 'px';
+                draggedPanel.style.right = 'auto';
+                draggedPanel.style.bottom = 'auto';
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (draggedPanel) {
+                draggedPanel.classList.remove('dragging');
+                draggedPanel = null;
+            }
+        });
+        
+        // ==================== FILE UPLOAD ====================
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+        const uploadText = document.getElementById('upload-text');
+        
+        uploadZone.addEventListener('click', () => fileInput.click());
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.style.borderColor = 'rgba(255, 80, 80, 0.8)';
+        });
+        
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.style.borderColor = 'rgba(255, 80, 80, 0.3)';
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.style.borderColor = 'rgba(255, 80, 80, 0.3)';
+            
+            if (e.dataTransfer.files.length > 0) {
+                handleFileUpload(e.dataTransfer.files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+        
+        async function handleFileUpload(file) {
+            uploadZone.classList.add('uploading');
+            uploadText.innerHTML = '<span class="spinner"></span> analyzing... this may take a minute';
+            
+            try {
+                const data = await apiUpload('/calls/analyze', file);
+                
+                // Show success and roast
+                uploadText.innerHTML = `
+                    <strong style="color: #50ff80;">analysis complete!</strong><br>
+                    <span style="font-size: 14px;">score: ${data.call.overallScore}/100</span><br>
+                    <span style="font-size: 13px; color: rgba(255,255,255,0.6);">${data.analysis.overallRoast}</span>
+                `;
+                
+                // Refresh dashboard
+                loadDashboard();
+                
+                // Reset after 5 seconds
+                setTimeout(() => {
+                    uploadZone.classList.remove('uploading');
+                    uploadText.innerHTML = 'drop your call recording here or <span>browse</span>';
+                }, 5000);
+                
+            } catch (error) {
+                uploadText.innerHTML = `<span style="color: #ff5050;">error: ${error.message}</span>`;
+                
+                setTimeout(() => {
+                    uploadZone.classList.remove('uploading');
+                    uploadText.innerHTML = 'drop your call recording here or <span>browse</span>';
+                }, 3000);
+            }
+        }
+        
+        // ==================== CHAT ====================
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const chatSendBtn = document.getElementById('chat-send-btn');
+        
+        function addChatMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message';
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar ${isUser ? 'user-avatar' : 'brutus-avatar'}">${isUser ? 'U' : 'B'}</div>
+                <div class="message-content">
+                    <div class="message-text">${text}</div>
+                    <div class="message-time">${timeStr}</div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        async function sendChatMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+            
+            addChatMessage(text, true);
+            chatInput.value = '';
+            chatSendBtn.disabled = true;
+            
+            try {
+                const data = await apiCall('/calls/chat', {
+                    method: 'POST',
+                    body: JSON.stringify({ message: text })
+                });
+                
+                addChatMessage(data.response, false);
+            } catch (error) {
+                addChatMessage('sorry, something went wrong. try again.', false);
+            } finally {
+                chatSendBtn.disabled = false;
+            }
+        }
+        
+        chatSendBtn.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChatMessage();
+        });
+        
+        document.querySelectorAll('.suggestion-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                chatInput.value = btn.dataset.msg;
+                sendChatMessage();
+            });
+        });
+        
+        // ==================== NOTES ====================
+        async function loadNotes() {
+            try {
+                const data = await apiCall('/notes');
+                const notesList = document.getElementById('notes-list');
+
+                if (!data.notes || data.notes.length === 0) {
+                    notesList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">No notes yet. Take notes during your calls!</p>';
+                    return;
+                }
+
+                // Group notes by session
+                const notesBySession = {};
+                data.notes.forEach(note => {
+                    if (!notesBySession[note.sessionId]) {
+                        notesBySession[note.sessionId] = {
+                            session: note.session,
+                            notes: []
+                        };
+                    }
+                    notesBySession[note.sessionId].notes.push(note);
+                });
+
+                notesList.innerHTML = Object.values(notesBySession).map(group => {
+                    const sessionDate = new Date(group.session.startedAt).toLocaleDateString();
+                    const sessionTime = new Date(group.session.startedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                    return `
+                        <div style="background: rgba(20,20,35,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 24px; margin-bottom: 20px;">
+                            <h3 style="color: rgba(255,80,80,0.8); font-size: 14px; margin-bottom: 16px; font-family: 'Space Mono', monospace;">
+                                Call - ${sessionDate} at ${sessionTime}
+                            </h3>
+                            ${group.notes.map(note => {
+                                const noteTime = new Date(note.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                                const typeColor = note.type === 'manual' ? 'rgba(80,150,255,0.3)' : 'rgba(255,80,80,0.3)';
+                                const typeLabel = note.type === 'manual' ? '📝 manual' : '🤖 ai';
+
+                                return `
+                                    <div style="background: rgba(255,255,255,0.03); border-left: 3px solid ${typeColor}; padding: 14px; margin-bottom: 12px; border-radius: 8px;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                            <span style="font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase;">${typeLabel}</span>
+                                            <span style="font-size: 11px; color: rgba(255,255,255,0.4);">${noteTime}</span>
+                                        </div>
+                                        <p style="font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.85);">${note.content}</p>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Failed to load notes:', error);
+                document.getElementById('notes-list').innerHTML = '<p style="text-align: center; color: #ff5050; margin-top: 40px;">Failed to load notes</p>';
+            }
+        }
+
+        // Export notes to CSV
+        document.getElementById('export-notes-btn').addEventListener('click', async () => {
+            try {
+                const data = await apiCall('/notes');
+
+                if (!data.notes || data.notes.length === 0) {
+                    alert('No notes to export');
+                    return;
+                }
+
+                // Create CSV
+                const csvHeader = 'Date,Time,Type,Content\n';
+                const csvRows = data.notes.map(note => {
+                    const date = new Date(note.timestamp).toLocaleDateString();
+                    const time = new Date(note.timestamp).toLocaleTimeString();
+                    const content = note.content.replace(/"/g, '""'); // Escape quotes
+                    return `"${date}","${time}","${note.type}","${content}"`;
+                }).join('\n');
+
+                const csv = csvHeader + csvRows;
+
+                // Download
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `brutus-notes-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Failed to export notes:', error);
+                alert('Failed to export notes');
+            }
+        });
+
+        // ==================== RESEARCH ====================
+        async function loadResearch() {
+            try {
+                const data = await apiCall('/research');
+                const researchList = document.getElementById('research-list');
+
+                if (!data.research || data.research.length === 0) {
+                    researchList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">No research yet. Request research during your calls!</p>';
+                    return;
+                }
+
+                researchList.innerHTML = data.research.map(item => {
+                    const requestDate = new Date(item.requestedAt).toLocaleDateString();
+                    const requestTime = new Date(item.requestedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    const statusColor = item.status === 'completed' ? '#50ff80' : item.status === 'pending' ? '#ffb050' : '#ff5050';
+                    const statusLabel = item.status === 'pending' ? '⏳ researching...' : item.status === 'completed' ? '✓ completed' : '✗ failed';
+
+                    return `
+                        <div style="background: rgba(20,20,35,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 24px; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <h3 style="color: rgba(255,80,80,0.8); font-size: 18px; font-weight: 600;">${item.query}</h3>
+                                <span style="font-size: 12px; color: ${statusColor}; font-weight: 600;">${statusLabel}</span>
+                            </div>
+                            <p style="font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 16px;">
+                                Requested: ${requestDate} at ${requestTime}
+                            </p>
+                            ${item.results ? `
+                                <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px; white-space: pre-wrap; font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.85);">
+                                    ${item.results}
+                                </div>
+                            ` : '<p style="color: rgba(255,255,255,0.5); font-style: italic;">Research in progress...</p>'}
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Failed to load research:', error);
+                document.getElementById('research-list').innerHTML = '<p style="text-align: center; color: #ff5050; margin-top: 40px;">Failed to load research</p>';
+            }
+        }
+
+        // Export research to PDF (simplified - creates downloadable text file)
+        document.getElementById('export-research-btn').addEventListener('click', async () => {
+            try {
+                const data = await apiCall('/research');
+
+                if (!data.research || data.research.length === 0) {
+                    alert('No research to export');
+                    return;
+                }
+
+                // Create formatted text document
+                let content = 'BRUTUS.AI RESEARCH REPORT\n';
+                content += '='.repeat(50) + '\n\n';
+
+                data.research.forEach(item => {
+                    const date = new Date(item.requestedAt).toLocaleString();
+                    content += `QUERY: ${item.query}\n`;
+                    content += `DATE: ${date}\n`;
+                    content += `STATUS: ${item.status}\n`;
+                    content += `-`.repeat(50) + '\n';
+                    if (item.results) {
+                        content += item.results + '\n';
+                    } else {
+                        content += 'Research pending or failed\n';
+                    }
+                    content += '\n' + '='.repeat(50) + '\n\n';
+                });
+
+                // Download
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `brutus-research-${new Date().toISOString().split('T')[0]}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Failed to export research:', error);
+                alert('Failed to export research');
+            }
+        });
+
+        // Load notes/research when switching to those views
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const viewName = item.dataset.view;
+                if (viewName === 'notes') {
+                    loadNotes();
+                } else if (viewName === 'research') {
+                    loadResearch();
+                }
+            });
+        });
+
+        // ==================== INIT ====================
+        checkAuth();
+    </script>
+</body>
+</html>
