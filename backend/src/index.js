@@ -107,6 +107,21 @@ wss.on('connection', async (ws, req) => {
             }
             break;
 
+          case 'chat_message':
+            // User sent a chat message to Brutus during live call
+            console.log('[WebSocket] Received chat_message:', message.payload);
+            const { chatWithBrutus } = require('./services/brutus');
+            const chatResponse = await chatWithBrutus(ws.userId, message.payload.message);
+
+            ws.send(JSON.stringify({
+              type: 'chat_response',
+              payload: {
+                message: chatResponse,
+                timestamp: Date.now()
+              }
+            }));
+            break;
+
           case 'ping':
             ws.send(JSON.stringify({ type: 'pong' }));
             break;

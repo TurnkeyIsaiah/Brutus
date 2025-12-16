@@ -192,7 +192,13 @@
       background: rgba(80, 255, 128, 0.2);
       color: #50ff80;
     }
-    
+
+    .type-suggestion {
+      background: rgba(160, 100, 255, 0.2);
+      color: #a064ff;
+      border-left: 3px solid #a064ff;
+    }
+
     .feedback-time {
       font-size: 11px;
       color: rgba(255, 255, 255, 0.4);
@@ -475,6 +481,96 @@
       border-right: 2px solid rgba(255, 255, 255, 0.2);
       border-bottom: 2px solid rgba(255, 255, 255, 0.2);
     }
+
+    /* Chat Interface */
+    .chat-container {
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .chat-input:focus {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(160, 100, 255, 0.4);
+    }
+
+    .chat-input::placeholder {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .chat-send-btn {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #a064ff, #c080ff);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chat-send-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(160, 100, 255, 0.3);
+    }
+
+    .chat-send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .chat-message {
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      line-height: 1.4;
+      animation: slideIn 0.3s ease;
+    }
+
+    .chat-message.user {
+      background: rgba(160, 100, 255, 0.15);
+      border: 1px solid rgba(160, 100, 255, 0.3);
+      color: rgba(255, 255, 255, 0.9);
+      margin-left: 20px;
+      text-align: right;
+    }
+
+    .chat-message.brutus {
+      background: rgba(255, 80, 80, 0.1);
+      border: 1px solid rgba(255, 80, 80, 0.2);
+      color: rgba(255, 255, 255, 0.9);
+      margin-right: 20px;
+    }
+
+    .chat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      opacity: 0.6;
+    }
   </style>
 </head>
 <body>
@@ -544,6 +640,12 @@
       <button class="research-send-btn" id="research-send-btn">→</button>
     </div>
 
+    <!-- Chat with Brutus -->
+    <div class="chat-container">
+      <input type="text" class="chat-input" id="chat-input" placeholder="ask brutus anything...">
+      <button class="chat-send-btn" id="chat-send-btn">💬</button>
+    </div>
+
     <!-- Metrics Bar -->
     <div class="metrics-bar">
       <div class="metric-item">
@@ -572,6 +674,7 @@
     let ws = null;
     let isConnected = false;
     let sessionId = null;
+    let wsReconnectAttempts = 0;
     let startTime = null;
     let durationInterval = null;
     let audioContext = null;
@@ -757,6 +860,67 @@
       if (e.key === 'Enter') sendResearchRequest();
     });
 
+    // ==================== CHAT WITH BRUTUS ====================
+    const chatInput = document.getElementById('chat-input');
+    const chatSendBtn = document.getElementById('chat-send-btn');
+
+    // Send chat message to Brutus
+    async function sendChatMessage() {
+      const message = chatInput.value.trim();
+      if (!message) return;
+
+      chatSendBtn.disabled = true;
+      const userMessage = message;
+      chatInput.value = '';
+
+      // Add user message to feedback
+      addChatMessage('user', userMessage);
+
+      // Send to backend via WebSocket
+      if (ws && isConnected) {
+        sendToBackend('chat_message', { message: userMessage });
+      } else {
+        addFeedback('warning', 'not connected. check your backend.');
+        chatSendBtn.disabled = false;
+      }
+    }
+
+    // Add chat message to UI
+    function addChatMessage(sender, text) {
+      const container = document.getElementById('feedback-container');
+      const emptyState = document.getElementById('empty-state');
+
+      if (emptyState) {
+        emptyState.style.display = 'none';
+      }
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `chat-message ${sender}`;
+
+      const label = document.createElement('div');
+      label.className = 'chat-label';
+      label.textContent = sender === 'user' ? 'you' : 'brutus';
+
+      const messageText = document.createTextNode(text);
+
+      messageDiv.appendChild(label);
+      messageDiv.appendChild(messageText);
+
+      // Add to beginning
+      container.insertBefore(messageDiv, container.firstChild);
+
+      // Limit to 15 messages
+      const messages = container.querySelectorAll('.chat-message, .feedback-item');
+      if (messages.length > 15) {
+        container.removeChild(messages[messages.length - 1]);
+      }
+    }
+
+    chatSendBtn.addEventListener('click', sendChatMessage);
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendChatMessage();
+    });
+
     // ==================== INIT ====================
     async function init() {
       // Get settings and auth
@@ -765,6 +929,11 @@
       WS_URL = API_URL.replace('http', 'ws') + '/ws';
       
       const auth = await window.brutus.getAuth();
+      if (!auth || !auth.token) {
+        console.error('[Init] No auth token found');
+        addFeedback('critical', 'not authenticated. please log in.');
+        return;
+      }
       authToken = auth.token;
       
       // Init audio visualizer bars
@@ -819,6 +988,9 @@
         });
         
         const data = await response.json();
+        if (!data || !data.session || !data.session.id) {
+          throw new Error('Invalid session response from backend');
+        }
         sessionId = data.session.id;
         
         // Connect WebSocket
@@ -897,16 +1069,17 @@
       
       ws.onopen = () => {
         isConnected = true;
+        wsReconnectAttempts = 0; // Reset reconnect counter on successful connection
         console.log('WebSocket connected');
       };
       
       ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
-          
+
           if (message.type === 'brutus_feedback') {
             addFeedback(message.payload.type, message.payload.text);
-            
+
             // Update metrics if included
             if (message.payload.talkRatio !== undefined) {
               updateTalkRatio(message.payload.talkRatio);
@@ -916,6 +1089,12 @@
               document.getElementById('interrupt-count').textContent = interruptCount;
               document.getElementById('interrupt-count').className = 'metric-value bad';
             }
+          }
+
+          if (message.type === 'chat_response') {
+            // Brutus responded to user's chat message
+            addChatMessage('brutus', message.payload.message);
+            chatSendBtn.disabled = false;
           }
         } catch (e) {
           console.error('Failed to parse message:', e);
@@ -929,10 +1108,19 @@
       ws.onclose = () => {
         isConnected = false;
         console.log('WebSocket disconnected');
-        
-        // Attempt to reconnect
+
+        // Attempt to reconnect with exponential backoff
         if (sessionId) {
-          setTimeout(connectWebSocket, 3000);
+          const maxRetries = 10;
+          if (wsReconnectAttempts < maxRetries) {
+            wsReconnectAttempts++;
+            const delay = Math.min(1000 * Math.pow(2, wsReconnectAttempts - 1), 30000);
+            console.log(`[WebSocket] Reconnecting in ${delay}ms (attempt ${wsReconnectAttempts}/${maxRetries})`);
+            setTimeout(connectWebSocket, delay);
+          } else {
+            console.error('[WebSocket] Max reconnect attempts reached');
+            addFeedback('critical', 'connection lost. please restart monitoring.');
+          }
         }
       };
     }
@@ -1300,13 +1488,27 @@
       
       const item = document.createElement('div');
       item.className = 'feedback-item';
-      item.innerHTML = `
-        <div class="feedback-header">
-          <span class="feedback-type type-${type}">${type}</span>
-          <span class="feedback-time">${timeStr}</span>
-        </div>
-        <div class="feedback-text">${text}</div>
-      `;
+
+      const header = document.createElement('div');
+      header.className = 'feedback-header';
+
+      const typeSpan = document.createElement('span');
+      typeSpan.className = `feedback-type type-${type}`;
+      typeSpan.textContent = type;
+
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'feedback-time';
+      timeSpan.textContent = timeStr;
+
+      header.appendChild(typeSpan);
+      header.appendChild(timeSpan);
+
+      const textDiv = document.createElement('div');
+      textDiv.className = 'feedback-text';
+      textDiv.textContent = text;
+
+      item.appendChild(header);
+      item.appendChild(textDiv);
       
       // Add to beginning
       container.insertBefore(item, container.firstChild);

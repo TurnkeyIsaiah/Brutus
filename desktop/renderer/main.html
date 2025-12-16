@@ -1234,8 +1234,18 @@
     });
 
     document.getElementById('save-settings').addEventListener('click', async () => {
+      const apiUrl = document.getElementById('api-url').value;
+
+      // Validate API URL format
+      try {
+        new URL(apiUrl);
+      } catch (e) {
+        alert('Invalid API URL format. Please enter a valid URL (e.g., http://localhost:3001)');
+        return;
+      }
+
       const settings = {
-        apiUrl: document.getElementById('api-url').value,
+        apiUrl: apiUrl,
         autoStart: document.getElementById('auto-start').checked,
         overlayOpacity: parseInt(document.getElementById('overlay-opacity').value) / 100,
         audioFeedback: document.getElementById('audio-feedback').checked,
