@@ -325,7 +325,7 @@ ipcMain.handle('set-settings', (event, settings) => {
 
 ipcMain.handle('open-dashboard', async () => {
   const settings = store.get('settings', { apiUrl: 'http://localhost:3001' });
-  const dashboardUrl = settings.apiUrl.replace('3001', '3000') + '/brutus-frontend.html';
+  const dashboardUrl = settings.apiUrl + '/frontend/index.html';
   await shell.openExternal(dashboardUrl);
   return true;
 });
