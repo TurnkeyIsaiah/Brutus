@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { createServer } = require('http');
 const { WebSocketServer } = require('ws');
 
@@ -34,6 +35,9 @@ app.use('/calls', callsRoutes);
 app.use('/live', liveRoutes);
 app.use('/notes', notesRoutes);
 app.use('/research', researchRoutes);
+
+// Serve frontend static files
+app.use('/frontend', express.static(path.join(__dirname, '..', '..', 'frontend')));
 
 // Health check
 app.get('/health', (req, res) => {
