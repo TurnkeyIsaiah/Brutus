@@ -1,5 +1,13 @@
 require('dotenv').config();
 
+console.log('[ENV CHECK]', {
+  DATABASE_URL: !!process.env.DATABASE_URL,
+  JWT_SECRET: !!process.env.JWT_SECRET,
+  ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
+  STRIPE_SECRET_KEY: !!process.env.STRIPE_SECRET_KEY,
+  RESEND_API_KEY: !!process.env.RESEND_API_KEY,
+});
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
