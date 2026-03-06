@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Features - Brutus AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0a0a12;
+            --bg-card: rgba(20, 20, 35, 0.6);
+            --red-primary: #ff5050;
+            --red-secondary: #ff7850;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --border-subtle: rgba(255, 255, 255, 0.1);
+            --border-red: rgba(255, 80, 80, 0.3);
+        }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #0a0a12 0%, #12121f 30%, #0d1a2d 70%, #0a0a12 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        .blob-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .morphing-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15; }
+        .blob-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(255, 80, 80, 0.6) 0%, transparent 70%); top: 10%; right: 10%; animation: float1 25s ease-in-out infinite; }
+        .blob-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(80, 150, 255, 0.5) 0%, transparent 70%); top: 50%; left: 5%; animation: float2 30s ease-in-out infinite; }
+        @keyframes float1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-30px, 20px); } }
+        @keyframes float2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(20px, -30px); } }
+        .content { position: relative; z-index: 10; }
+        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; background: rgba(10, 10, 18, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-subtle); }
+        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--red-primary), var(--red-secondary)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 20px; color: white; }
+        .logo-text { font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; color: white; }
+        .logo-text span { color: var(--red-primary); }
+        .nav-links { display: flex; gap: 40px; align-items: center; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.3s; text-transform: lowercase; }
+        .nav-links a:hover, .nav-links a.active { color: var(--text-primary); }
+        .nav-cta { padding: 10px 24px; background: linear-gradient(135deg, var(--red-primary), var(--red-secondary)); border-radius: 30px; color: white !important; font-weight: 600; }
+        .page-header { padding: 160px 40px 80px; text-align: center; }
+        .page-header h1 { font-size: clamp(40px, 6vw, 56px); font-weight: 700; margin-bottom: 20px; }
+        .page-header h1 span { background: linear-gradient(135deg, var(--red-primary), var(--red-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-header p { font-size: 18px; color: var(--text-secondary); max-width: 600px; margin: 0 auto; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px; max-width: 1200px; margin: 0 auto; padding: 0 40px 100px; }
+        .feature-card { background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border-subtle); border-radius: 24px; padding: 40px; transition: all 0.3s; }
+        .feature-card:hover { border-color: var(--border-red); transform: translateY(-5px); }
+        .feature-icon { width: 64px; height: 64px; background: linear-gradient(135deg, rgba(255, 80, 80, 0.2), rgba(255, 120, 80, 0.1)); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 24px; }
+        .feature-card h3 { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
+        .feature-card p { font-size: 15px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px; }
+        .feature-bullets { list-style: none; }
+        .feature-bullets li { padding: 8px 0; font-size: 14px; color: var(--text-secondary); display: flex; align-items: center; gap: 10px; }
+        .feature-bullets li::before { content: '✓'; color: #50ff80; font-weight: 700; }
+        .cta-section { padding: 100px 40px; text-align: center; }
+        .cta-box { background: var(--bg-card); border: 1px solid var(--border-red); border-radius: 32px; padding: 80px 40px; max-width: 800px; margin: 0 auto; }
+        .cta-box h2 { font-size: clamp(28px, 4vw, 40px); margin-bottom: 20px; }
+        .cta-box p { font-size: 18px; color: var(--text-secondary); margin-bottom: 40px; }
+        .btn-primary { padding: 16px 32px; background: linear-gradient(135deg, var(--red-primary), var(--red-secondary)); border: none; border-radius: 12px; color: white; font-size: 16px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; text-transform: lowercase; transition: transform 0.3s, box-shadow 0.3s; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(255, 80, 80, 0.4); }
+        footer { padding: 60px 40px; border-top: 1px solid var(--border-subtle); }
+        .footer-content { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; gap: 24px; }
+        .footer-links { display: flex; gap: 32px; }
+        .footer-links a { color: var(--text-secondary); text-decoration: none; font-size: 14px; }
+        .footer-copyright { color: var(--text-secondary); font-size: 14px; }
+        @media (max-width: 768px) {
+            nav { padding: 16px 24px; }
+            .nav-links { display: none; }
+            .page-header, .features-grid, .cta-section { padding-left: 24px; padding-right: 24px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .footer-content { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="blob-container">
+        <div class="morphing-blob blob-1"></div>
+        <div class="morphing-blob blob-2"></div>
+    </div>
+    <div class="content">
+        <nav>
+            <a href="index.html" class="logo">
+                <div class="logo-icon">B</div>
+                <div class="logo-text">brutus <span>AI</span></div>
+            </a>
+            <div class="nav-links">
+                <a href="features.html" class="active">features</a>
+                <a href="pricing.html">pricing</a>
+                <a href="about.html">about</a>
+                <a href="https://app.brutusai.coach/login.html" class="nav-cta">get started</a>
+            </div>
+        </nav>
+        <header class="page-header">
+            <h1>everything you need to <span>close more</span></h1>
+            <p>powerful features that turn good salespeople into unstoppable closers.</p>
+        </header>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">👁️</div>
+                <h3>real-time monitoring</h3>
+                <p>brutus watches your screen and listens to every word during your calls. nothing gets past it.</p>
+                <ul class="feature-bullets">
+                    <li>screen capture every 5 seconds</li>
+                    <li>continuous audio transcription</li>
+                    <li>detects visual cues from prospects</li>
+                    <li>works with zoom, teams, meet</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>instant coaching</h3>
+                <p>get feedback delivered to your screen in real-time. adjust your approach while you still have a chance.</p>
+                <ul class="feature-bullets">
+                    <li>3-5 second feedback latency</li>
+                    <li>non-intrusive overlay window</li>
+                    <li>prioritized by urgency</li>
+                    <li>actionable, specific tips</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>talk ratio tracking</h3>
+                <p>see exactly how much you're talking vs listening. most salespeople talk 70%+ of the time. that's why they lose.</p>
+                <ul class="feature-bullets">
+                    <li>real-time talk/listen ratio</li>
+                    <li>alerts when you're over-talking</li>
+                    <li>historical trends</li>
+                    <li>benchmark against top performers</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>nepq methodology</h3>
+                <p>trained on neuro-emotional persuasion questioning. asks better questions, uncovers real pain points.</p>
+                <ul class="feature-bullets">
+                    <li>situation questions</li>
+                    <li>problem awareness questions</li>
+                    <li>solution awareness questions</li>
+                    <li>consequence questions</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📈</div>
+                <h3>progress analytics</h3>
+                <p>track your improvement over time. brutus remembers every call and shows you exactly where you're getting better.</p>
+                <ul class="feature-bullets">
+                    <li>call-by-call scoring</li>
+                    <li>weekly/monthly trends</li>
+                    <li>bad habit identification</li>
+                    <li>strength recognition</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔥</div>
+                <h3>brutally honest feedback</h3>
+                <p>no participation trophies. brutus tells you what you need to hear, not what you want to hear.</p>
+                <ul class="feature-bullets">
+                    <li>direct, actionable criticism</li>
+                    <li>no sugarcoating</li>
+                    <li>celebrates real wins</li>
+                    <li>remembers your patterns</li>
+                </ul>
+            </div>
+        </div>
+        <section class="cta-section">
+            <div class="cta-box">
+                <h2>ready to get roasted?</h2>
+                <p>start your free trial today. brutus is waiting to tell you everything you're doing wrong.</p>
+                <a href="pricing.html" class="btn-primary">start free trial</a>
+            </div>
+        </section>
+        <footer>
+            <div class="footer-content">
+                <a href="index.html" class="logo">
+                    <div class="logo-icon">B</div>
+                    <div class="logo-text">brutus <span>AI</span></div>
+                </a>
+                <div class="footer-links">
+                    <a href="features.html">features</a>
+                    <a href="pricing.html">pricing</a>
+                    <a href="about.html">about</a>
+                </div>
+                <div class="footer-copyright">© 2025 Brutus AI. all rights reserved.</div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

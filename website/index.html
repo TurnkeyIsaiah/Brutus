@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brutus AI - AI Sales Coach That Doesn't Sugarcoat</title>
+    <meta name="description" content="Real-time AI sales coaching during your calls. Brutus watches, listens, and tells you exactly what you're doing wrong. No fluff, just results.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-dark: #0a0a12;
+            --bg-card: rgba(20, 20, 35, 0.6);
+            --red-primary: #ff5050;
+            --red-secondary: #ff7850;
+            --blue-accent: #5096ff;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --border-subtle: rgba(255, 255, 255, 0.1);
+            --border-red: rgba(255, 80, 80, 0.3);
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a12 0%, #12121f 30%, #0d1a2d 70%, #0a0a12 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        /* Neural Network Background */
+        #neural-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* Morphing Blobs */
+        .blob-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .morphing-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+        }
+        
+        .blob-1 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255, 80, 80, 0.6) 0%, transparent 70%);
+            top: 5%;
+            left: 10%;
+            animation: float1 25s ease-in-out infinite;
+        }
+        
+        .blob-2 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(80, 150, 255, 0.5) 0%, transparent 70%);
+            top: 40%;
+            right: 5%;
+            animation: float2 30s ease-in-out infinite;
+        }
+        
+        .blob-3 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(200, 80, 255, 0.4) 0%, transparent 70%);
+            bottom: 10%;
+            left: 25%;
+            animation: float3 20s ease-in-out infinite;
+        }
+        
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 50px) scale(0.9); }
+        }
+        
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-40px, 40px) scale(0.95); }
+            66% { transform: translate(30px, -20px) scale(1.05); }
+        }
+        
+        @keyframes float3 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(40px, -40px) scale(1.1); }
+        }
+        
+        /* Content Wrapper */
+        .content {
+            position: relative;
+            z-index: 10;
+        }
+        
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 18, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--red-primary), var(--red-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 20px;
+            color: white;
+            box-shadow: 0 4px 20px rgba(255, 80, 80, 0.3);
+        }
+        
+        .logo-text {
+            font-family: 'Space Mono', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .logo-text span {
+            color: var(--red-primary);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s;
+            text-transform: lowercase;
+        }
+        
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+        
+        .nav-cta {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, var(--red-primary), var(--red-secondary));
+            border-radius: 30px;
+            color: white !important;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 80, 80, 0.4);
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 140px 40px 80px;
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 80, 80, 0.1);
+            border: 1px solid var(--border-red);
+            border-radius: 30px;
+            font-size: 13px;
+            color: var(--red-primary);
+            margin-bottom: 32px;
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        .hero-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--red-primary);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .hero h1 {
+            font-size: clamp(48px, 8vw, 80px);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.6s ease 0.1s both;
+        }
+        
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--red-primary), var(--red-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero p {
+            font-size: 20px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            line-height: 1.6;
+            margin-bottom: 48px;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+        
+        .hero-ctas {
+            display: flex;
+            gap: 16px;
+            animation: fadeInUp 0.6s ease 0.3s both;
+        }
+        
+        .btn-primary {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, var(--red-primary), var(--red-secondary));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            text-transform: lowercase;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(255, 80, 80, 0.4);
+        }
+        
+        .btn-secondary {
+            padding: 16px 32px;
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            text-transform: lowercase;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-red);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Demo Preview */
+        .demo-preview {
+            margin-top: 80px;
+            width: 100%;
+            max-width: 1000px;
+            animation: fadeInUp 0.6s ease 0.4s both;
+        }
+        
+        .demo-window {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
+        }
+        
+        .demo-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .demo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .demo-dot:nth-child(1) { background: #ff5f57; }
+        .demo-dot:nth-child(2) { background: #ffbd2e; }
+        .demo-dot:nth-child(3) { background: #28ca42; }
+        
+        .demo-content {
+            padding: 32px;
+            display: flex;
+            gap: 24px;
+        }
+        
+        .demo-transcript {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .demo-transcript-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+        
+        .demo-line {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .demo-line:last-child {
+            border-bottom: none;
+        }
+        
+        .demo-line span {
+            color: var(--red-primary);
+            font-weight: 600;
+        }
+        
+        .demo-feedback {
+            width: 280px;
+        }
+        
+        .demo-feedback-card {
+            background: rgba(255, 80, 80, 0.1);
+            border: 1px solid var(--border-red);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .feedback-type {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        
+        .type-warning {
+            background: rgba(255, 176, 80, 0.2);
+            color: #ffb050;
+        }
+        
+        .type-critical {
+            background: rgba(255, 80, 80, 0.2);
+            color: var(--red-primary);
+        }
+        
+        .type-good {
+            background: rgba(80, 255, 128, 0.2);
+            color: #50ff80;
+        }
+        
+        .demo-feedback-card p {
+            font-size: 13px;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 120px 40px;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        
+        .section-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            color: var(--red-primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+        
+        .section-title {
+            font-size: clamp(36px, 5vw, 52px);
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .section-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .feature-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 32px;
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            border-color: var(--border-red);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(255, 80, 80, 0.1);
+        }
+        
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, rgba(255, 80, 80, 0.2), rgba(255, 120, 80, 0.1));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .feature-card p {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        /* How It Works */
+        .how-it-works {
+            padding: 120px 40px;
+            background: rgba(255, 80, 80, 0.02);
+        }
+        
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+        
+        .step {
+            flex: 1;
+            min-width: 280px;
+            max-width: 350px;
+            text-align: center;
+        }
+        
+        .step-number {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--red-primary), var(--red-secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 auto 24px;
+            box-shadow: 0 8px 24px rgba(255, 80, 80, 0.3);
+        }
+        
+        .step h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .step p {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        /* Testimonials */
+        .testimonials {
+            padding: 120px 40px;
+        }
+        
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .testimonial-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 32px;
+        }
+        
+        .testimonial-text {
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 24px;
+            color: var(--text-secondary);
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .testimonial-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--red-primary), var(--red-secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        
+        .testimonial-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .testimonial-info p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 120px 40px;
+            text-align: center;
+        }
+        
+        .cta-box {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-red);
+            border-radius: 32px;
+            padding: 80px 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .cta-box h2 {
+            font-size: clamp(32px, 4vw, 44px);
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .cta-box p {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+        
+        /* Footer */
+        footer {
+            padding: 60px 40px;
+            border-top: 1px solid var(--border-subtle);
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 32px;
+        }
+        
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+        
+        .footer-copyright {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            nav {
+                padding: 16px 24px;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .hero {
+                padding: 120px 24px 60px;
+            }
+            
+            .hero-ctas {
+                flex-direction: column;
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .demo-content {
+                flex-direction: column;
+            }
+            
+            .demo-feedback {
+                width: 100%;
+            }
+            
+            .features, .how-it-works, .testimonials, .cta-section {
+                padding: 80px 24px;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .footer-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="blob-container">
+        <div class="morphing-blob blob-1"></div>
+        <div class="morphing-blob blob-2"></div>
+        <div class="morphing-blob blob-3"></div>
+    </div>
+    <canvas id="neural-canvas"></canvas>
+    
+    <div class="content">
+        <!-- Navigation -->
+        <nav>
+            <a href="index.html" class="logo">
+                <div class="logo-icon">B</div>
+                <div class="logo-text">brutus <span>AI</span></div>
+            </a>
+            <div class="nav-links">
+                <a href="features.html">features</a>
+                <a href="pricing.html">pricing</a>
+                <a href="about.html">about</a>
+                <a href="https://app.brutusai.coach/login.html" class="nav-cta">get started</a>
+            </div>
+            <button class="mobile-menu-btn">☰</button>
+        </nav>
+        
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-badge">real-time ai sales coaching</div>
+            <h1>stop losing deals.<br><span>start closing.</span></h1>
+            <p>brutus watches your sales calls in real-time and tells you exactly what you're doing wrong. no fluff, no hand-holding—just honest feedback that makes you better.</p>
+            <div class="hero-ctas">
+                <a href="https://app.brutusai.coach/signup.html" class="btn-primary">start free — no card needed</a>
+                <a href="#demo" class="btn-secondary">see how it works</a>
+            </div>
+            
+            <!-- Demo Preview -->
+            <div class="demo-preview" id="demo">
+                <div class="demo-window">
+                    <div class="demo-header">
+                        <div class="demo-dot"></div>
+                        <div class="demo-dot"></div>
+                        <div class="demo-dot"></div>
+                    </div>
+                    <div class="demo-content">
+                        <div class="demo-transcript">
+                            <div class="demo-transcript-title">live transcript</div>
+                            <div class="demo-line"><span>you:</span> so our platform basically has a lot of features that can help your business grow and we've been in the market for about five years now and...</div>
+                            <div class="demo-line"><span>prospect:</span> that sounds interesting, but what about—</div>
+                            <div class="demo-line"><span>you:</span> —and we also have integrations with over 50 different tools which is really great because...</div>
+                        </div>
+                        <div class="demo-feedback">
+                            <div class="demo-feedback-card">
+                                <div class="feedback-type type-critical">critical</div>
+                                <p>you just interrupted them. let them finish next time.</p>
+                            </div>
+                            <div class="demo-feedback-card">
+                                <div class="feedback-type type-warning">warning</div>
+                                <p>you've been talking for 90 seconds straight. ask a question.</p>
+                            </div>
+                            <div class="demo-feedback-card">
+                                <div class="feedback-type type-warning">warning</div>
+                                <p>feature dumping. focus on their problem, not your product.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Features Section -->
+        <section class="features" id="features">
+            <div class="section-header">
+                <div class="section-label">features</div>
+                <h2 class="section-title">your unfair advantage</h2>
+                <p class="section-subtitle">everything you need to transform your sales performance—without the BS.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">👁️</div>
+                    <h3>real-time monitoring</h3>
+                    <p>brutus watches your screen and listens to every word. it knows when you're rambling, interrupting, or losing the prospect's attention.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>instant feedback</h3>
+                    <p>get coaching tips delivered to your screen in real-time. no waiting until after the call to find out you blew it.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>talk ratio tracking</h3>
+                    <p>see exactly how much you're talking vs listening. spoiler: you're probably talking too much.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>nepq methodology</h3>
+                    <p>trained on the neuro-emotional persuasion questioning framework. ask better questions, close more deals.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>progress tracking</h3>
+                    <p>watch your skills improve over time with detailed analytics on every call. brutus remembers everything.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔥</div>
+                    <h3>brutally honest</h3>
+                    <p>no participation trophies here. brutus tells you what you need to hear, not what you want to hear.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- How It Works -->
+        <section class="how-it-works">
+            <div class="section-header">
+                <div class="section-label">how it works</div>
+                <h2 class="section-title">simple. powerful. effective.</h2>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>install the app</h3>
+                    <p>download the brutus desktop app. it runs quietly in your system tray, ready when you need it.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>start monitoring</h3>
+                    <p>one click before your call. brutus starts capturing audio and watching your screen.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>get coached</h3>
+                    <p>real-time feedback appears in an overlay. adjust your approach mid-call and close more deals.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Testimonials -->
+        <section class="testimonials">
+            <div class="section-header">
+                <div class="section-label">testimonials</div>
+                <h2 class="section-title">what closers are saying</h2>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"brutus told me I was interrupting prospects 12 times per call. I had no idea. fixed it, and my close rate jumped 23% in two weeks."</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">M</div>
+                        <div class="testimonial-info">
+                            <h4>Marcus Chen</h4>
+                            <p>Enterprise AE, SaaS Company</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"my talk ratio was 72%. that's embarrassing. brutus helped me get it down to 45% and actually listen to what prospects are saying."</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">S</div>
+                        <div class="testimonial-info">
+                            <h4>Sarah Williams</h4>
+                            <p>Real Estate Agent</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"the real-time coaching during calls is a game-changer. it's like having a sales manager in your ear, except one that actually knows what they're talking about."</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">J</div>
+                        <div class="testimonial-info">
+                            <h4>James Rodriguez</h4>
+                            <p>SDR Team Lead</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="cta-box">
+                <h2>ready to stop sucking at sales?</h2>
+                <p>start your free trial today. no credit card required. just honest feedback that makes you better.</p>
+                <a href="https://app.brutusai.coach/signup.html" class="btn-primary">start free — no card needed</a>
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <footer>
+            <div class="footer-content">
+                <a href="index.html" class="logo">
+                    <div class="logo-icon">B</div>
+                    <div class="logo-text">brutus <span>AI</span></div>
+                </a>
+                <div class="footer-links">
+                    <a href="features.html">features</a>
+                    <a href="pricing.html">pricing</a>
+                    <a href="about.html">about</a>
+                </div>
+                <div class="footer-copyright">© 2025 Brutus AI. all rights reserved.</div>
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        // Neural Network Animation
+        const canvas = document.getElementById('neural-canvas');
+        const ctx = canvas.getContext('2d');
+        let nodes = [];
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initNodes();
+        }
+        
+        function initNodes() {
+            nodes = [];
+            const numNodes = Math.floor((canvas.width * canvas.height) / 40000);
+            for (let i = 0; i < numNodes; i++) {
+                nodes.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    radius: Math.random() * 2 + 1,
+                    pulse: Math.random() * Math.PI * 2,
+                    type: Math.random() > 0.85 ? 'active' : 'normal'
+                });
+            }
+        }
+        
+        function drawNeuralNetwork() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw connections
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dx = nodes[i].x - nodes[j].x;
+                    const dy = nodes[i].y - nodes[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 180) {
+                        const opacity = (1 - dist / 180) * 0.12;
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.strokeStyle = `rgba(255, 80, 80, ${opacity})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // Draw nodes
+            nodes.forEach(node => {
+                node.pulse += 0.02;
+                const pulseSize = Math.sin(node.pulse) * 0.5 + 1;
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, node.radius * pulseSize, 0, Math.PI * 2);
+                
+                if (node.type === 'active') {
+                    ctx.fillStyle = 'rgba(255, 80, 80, 0.6)';
+                } else {
+                    ctx.fillStyle = 'rgba(100, 150, 255, 0.4)';
+                }
+                
+                ctx.fill();
+                
+                // Update position
+                node.x += node.vx;
+                node.y += node.vy;
+                
+                // Bounce off edges
+                if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
+                if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
+            });
+            
+            requestAnimationFrame(drawNeuralNetwork);
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        drawNeuralNetwork();
+    </script>
+</body>
+</html>
