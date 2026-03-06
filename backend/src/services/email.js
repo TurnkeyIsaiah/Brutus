@@ -10,8 +10,14 @@ const getResend = () => {
   return _resend;
 };
 
+const resendSend = async (payload) => {
+  const { data, error } = await getResend().emails.send(payload);
+  if (error) throw new Error(error.message || JSON.stringify(error));
+  return data;
+};
+
 const sendWelcomeEmail = async (user) => {
-  await getResend().emails.send({
+  await resendSend({
     from: FROM,
     to: user.email,
     subject: 'brutus is watching. welcome.',
@@ -34,7 +40,7 @@ const sendWelcomeEmail = async (user) => {
 
 const sendPasswordResetEmail = async (email, token) => {
   const resetUrl = `${APP_URL}/reset-password.html?token=${token}`;
-  await getResend().emails.send({
+  await resendSend({
     from: FROM,
     to: email,
     subject: 'reset your brutus password',
@@ -56,5 +62,6 @@ const sendPasswordResetEmail = async (email, token) => {
     `
   });
 };
+
 
 module.exports = { sendWelcomeEmail, sendPasswordResetEmail };
