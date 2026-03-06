@@ -2,9 +2,11 @@ const Anthropic = require('@anthropic-ai/sdk');
 const prisma = require('../lib/prisma');
 const { deductTokens } = require('../lib/tokens');
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
-});
+let _anthropic = null;
+const getAnthropic = () => {
+  if (!_anthropic) _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return _anthropic;
+};
 
 // ==================== BRUTUS SYSTEM PROMPT ====================
 
@@ -66,7 +68,7 @@ USER CONTEXT:
 - Previous summary: ${userProfile.summary}
 ` : 'NEW USER - First call being analyzed.';
 
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
       system: BRUTUS_SYSTEM_PROMPT,
@@ -199,7 +201,7 @@ If this chunk is normal/fine/not urgent, respond with:
 Remember: Be helpful, not just critical. Mix constructive corrections with proactive guidance.`
     });
 
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 300,
       system: `${BRUTUS_SYSTEM_PROMPT}
@@ -288,7 +290,7 @@ async function updateUserSummary(userId) {
     const avgTalkRatio = recentCalls.reduce((sum, c) => sum + parseFloat(c.talkRatio), 0) / recentCalls.length;
     
     // Generate new summary using Brutus
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 500,
       system: BRUTUS_SYSTEM_PROMPT,
@@ -387,7 +389,7 @@ RECENT CALLS:
 ${recentCalls.map((c, i) => `Call ${i + 1}: Score ${c.overallScore}/100, Talk ratio ${c.talkRatio}%`).join('\n') || 'No calls yet'}
 `;
 
-    const response = await anthropic.messages.create({
+    const response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 500,
       system: `${BRUTUS_SYSTEM_PROMPT}

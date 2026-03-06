@@ -3,9 +3,11 @@ const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+let _openai = null;
+const getOpenAI = () => {
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return _openai;
+};
 
 // ==================== TRANSCRIBE AUDIO FILE ====================
 
@@ -38,7 +40,7 @@ async function transcribeAudio(audioBuffer, mimeType = 'audio/webm') {
     
     try {
       // Transcribe using Whisper
-      const transcription = await openai.audio.transcriptions.create({
+      const transcription = await getOpenAI().audio.transcriptions.create({
         file: fs.createReadStream(tempFilePath),
         model: 'whisper-1',
         response_format: 'verbose_json',
@@ -92,7 +94,7 @@ async function transcribeChunk(audioBuffer, mimeType = 'audio/webm') {
     fs.writeFileSync(tempFilePath, audioBuffer);
     
     try {
-      const transcription = await openai.audio.transcriptions.create({
+      const transcription = await getOpenAI().audio.transcriptions.create({
         file: fs.createReadStream(tempFilePath),
         model: 'whisper-1',
         response_format: 'text'
