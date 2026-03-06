@@ -2,6 +2,6 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "node src/index.js"
+startCommand = "DATABASE_URL='${{DATABASE_URL}}' JWT_SECRET='${{JWT_SECRET}}' ANTHROPIC_API_KEY='${{ANTHROPIC_API_KEY}}' OPENAI_API_KEY='${{OPENAI_API_KEY}}' RESEND_API_KEY='${{RESEND_API_KEY}}' EMAIL_FROM='${{EMAIL_FROM}}' APP_URL='${{APP_URL}}' FRONTEND_URL='${{FRONTEND_URL}}' STRIPE_SECRET_KEY='${{STRIPE_SECRET_KEY}}' STRIPE_WEBHOOK_SECRET='${{STRIPE_WEBHOOK_SECRET}}' node src/index.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
