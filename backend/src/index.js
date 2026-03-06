@@ -2,9 +2,14 @@ require('dotenv').config();
 
 const REQUIRED = ['DATABASE_URL', 'JWT_SECRET', 'ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'RESEND_API_KEY'];
 console.log('[ENV CHECK]', REQUIRED.reduce((acc, k) => {
-  acc[k] = process.env[k] ? `set (${process.env[k].length} chars)` : 'MISSING';
+  const v = process.env[k];
+  acc[k] = v === undefined ? 'NOT_IN_ENV' : v === '' ? 'EMPTY_STRING' : `set (${v.length} chars)`;
   return acc;
 }, {}));
+// Log Railway system vars to confirm their injection mechanism works
+const railwayVars = Object.keys(process.env).filter(k => k.startsWith('RAILWAY_'));
+console.log('[RAILWAY SYSTEM VARS]', railwayVars.length ? railwayVars : 'none found');
+console.log('[TOTAL ENV KEYS]', Object.keys(process.env).length);
 
 const express = require('express');
 const cors = require('cors');
