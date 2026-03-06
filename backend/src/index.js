@@ -20,8 +20,15 @@ const server = createServer(app);
 
 // ==================== MIDDLEWARE ====================
 
+const allowedOrigins = (process.env.FRONTEND_URL || '')
+  .split(',').map(o => o.trim()).filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 
