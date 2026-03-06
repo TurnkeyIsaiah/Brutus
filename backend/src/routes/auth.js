@@ -175,9 +175,11 @@ router.post('/forgot-password', async (req, res, next) => {
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
       await prisma.passwordResetToken.create({ data: { userId: user.id, token, expiresAt } });
-      sendPasswordResetEmail(user.email, token).catch(err =>
-        console.error('[Email] Password reset email failed:', err.message)
-      );
+      try {
+        await sendPasswordResetEmail(user.email, token);
+      } catch (emailErr) {
+        return res.status(500).json({ error: { message: `Email failed: ${emailErr.message}` } });
+      }
     }
 
     res.json({ message: 'If that email exists, a reset link has been sent.' });
