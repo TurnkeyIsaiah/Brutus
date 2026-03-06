@@ -189,6 +189,27 @@
             text-decoration: none;
         }
         .forgot-link a:hover { color: #ff5050; }
+
+        .password-wrap {
+            position: relative;
+        }
+        .password-wrap .auth-input {
+            padding-right: 48px;
+        }
+        .toggle-pw {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: rgba(255,255,255,0.4);
+            font-size: 16px;
+            padding: 4px;
+            line-height: 1;
+        }
+        .toggle-pw:hover { color: rgba(255,255,255,0.8); }
     </style>
 </head>
 <body>
@@ -209,7 +230,10 @@
         <form class="auth-form" id="loginForm">
             <div id="authError" class="auth-error"></div>
             <input type="email" class="auth-input" id="email" placeholder="email" required autocomplete="email">
-            <input type="password" class="auth-input" id="password" placeholder="password" required autocomplete="current-password">
+            <div class="password-wrap">
+                <input type="password" class="auth-input" id="password" placeholder="password" required autocomplete="current-password">
+                <button type="button" class="toggle-pw" id="togglePw" aria-label="show password">👁</button>
+            </div>
             <div class="forgot-link"><a href="forgot-password.html">forgot password?</a></div>
             <button type="submit" class="auth-btn" id="loginBtn">sign in</button>
         </form>
@@ -230,6 +254,13 @@
             s.textContent = 'password updated. go get roasted.';
             s.classList.add('visible');
         }
+
+        document.getElementById('togglePw').addEventListener('click', () => {
+            const pw = document.getElementById('password');
+            const btn = document.getElementById('togglePw');
+            if (pw.type === 'password') { pw.type = 'text'; btn.textContent = '🙈'; }
+            else { pw.type = 'password'; btn.textContent = '👁'; }
+        });
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
