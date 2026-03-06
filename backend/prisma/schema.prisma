@@ -11,12 +11,6 @@ datasource db {
 
 // ==================== ENUMS ====================
 
-enum SubscriptionStatus {
-  trial
-  active
-  cancelled
-}
-
 enum SessionStatus {
   active
   completed
@@ -42,9 +36,16 @@ model User {
   passwordHash       String             @map("password_hash")
   name               String
   createdAt          DateTime           @default(now()) @map("created_at")
-  subscriptionStatus SubscriptionStatus @default(trial) @map("subscription_status")
-  settings           Json               @default("{\"brutalHonestyMode\": true, \"realTimeInterrupts\": false, \"dailyRoastSummary\": true, \"improvementAlerts\": true}")
-  
+  tokenBalance            BigInt    @default(200000) @map("token_balance")
+  tokensUsed              BigInt    @default(0) @map("tokens_used")
+  stripeCustomerId        String?   @unique @map("stripe_customer_id")
+  stripePaymentMethodId   String?   @map("stripe_payment_method_id")
+  autoTopUpEnabled        Boolean   @default(false) @map("auto_top_up_enabled")
+  autoTopUpAmountCents    Int       @default(0) @map("auto_top_up_amount_cents")
+  autoTopUpThresholdCents Int       @default(0) @map("auto_top_up_threshold_cents")
+  autoTopUpLastTriggeredAt DateTime? @map("auto_top_up_last_triggered_at")
+  settings                Json      @default("{\"brutalHonestyMode\": true, \"realTimeInterrupts\": false, \"dailyRoastSummary\": true, \"improvementAlerts\": true}")
+
   // Relations
   profile            UserProfile?
   calls              Call[]
@@ -140,6 +141,16 @@ model Note {
   session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@map("notes")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("password_reset_tokens")
 }
 
 model Research {

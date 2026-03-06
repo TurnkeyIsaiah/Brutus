@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brutus.ai — Credits Added</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: linear-gradient(135deg, #0a0a12 0%, #12121f 30%, #0d1a2d 70%, #0a0a12 100%); color: #fff; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .blob-container { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+        .morphing-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15; }
+        .blob-1 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(80,255,128,0.5) 0%, transparent 70%); top: 10%; left: 15%; animation: float1 25s ease-in-out infinite; }
+        .blob-2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(255,80,80,0.4) 0%, transparent 70%); top: 50%; right: 10%; animation: float2 30s ease-in-out infinite; }
+        @keyframes float1 { 0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(50px,-30px) scale(1.1);}66%{transform:translate(-30px,50px) scale(0.9);} }
+        @keyframes float2 { 0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(-40px,40px) scale(0.95);}66%{transform:translate(30px,-20px) scale(1.05);} }
+        .card { position: relative; z-index: 10; background: rgba(20,20,35,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(80,255,128,0.2); border-radius: 24px; padding: 48px 40px; width: 100%; max-width: 420px; margin: 20px; text-align: center; }
+        .check { width: 72px; height: 72px; background: linear-gradient(135deg, rgba(80,255,128,0.2), rgba(80,255,128,0.05)); border: 1px solid rgba(80,255,128,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 28px; }
+        .check svg { width: 36px; height: 36px; stroke: #50ff80; }
+        h2 { font-family: 'Space Mono', monospace; font-size: 22px; margin-bottom: 12px; }
+        .subtitle { color: rgba(255,255,255,0.55); font-size: 15px; line-height: 1.6; margin-bottom: 8px; }
+        .token-added { font-family: 'Space Mono', monospace; font-size: 13px; color: #50ff80; margin-bottom: 36px; }
+        .cta-btn { display: inline-block; padding: 14px 36px; background: linear-gradient(135deg, #ff5050, #ff7850); border: none; border-radius: 12px; color: white; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; text-decoration: none; transition: all 0.3s ease; text-transform: lowercase; }
+        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,80,80,0.3); }
+        .countdown { margin-top: 20px; font-size: 13px; color: rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body>
+    <div class="blob-container">
+        <div class="morphing-blob blob-1"></div>
+        <div class="morphing-blob blob-2"></div>
+    </div>
+    <div class="card">
+        <div class="check">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+        </div>
+        <h2>credits added.</h2>
+        <p class="subtitle">your token balance has been topped up. brutus is ready to get back to work.</p>
+        <p class="token-added" id="token-msg">returning you to the app...</p>
+        <a href="index.html" class="cta-btn">back to brutus</a>
+        <p class="countdown" id="countdown"></p>
+    </div>
+
+    <script>
+        // Auto-redirect after 5 seconds
+        let secs = 5;
+        const countEl = document.getElementById('countdown');
+        countEl.textContent = `redirecting in ${secs}s`;
+        const timer = setInterval(() => {
+            secs--;
+            if (secs <= 0) {
+                clearInterval(timer);
+                window.location.href = 'index.html';
+            } else {
+                countEl.textContent = `redirecting in ${secs}s`;
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

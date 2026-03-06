@@ -1,6 +1,7 @@
 const prisma = require('../lib/prisma');
 const { getRealTimeFeedback, updateUserSummary, analyzeCall } = require('./brutus');
 const { transcribeChunk } = require('./transcription');
+const { deductTokens, hasTokens } = require('../lib/tokens');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const anthropic = new Anthropic({
@@ -62,6 +63,12 @@ async function handleTranscriptChunk(userId, payload) {
     if (!session) {
       console.error('No active session found');
       return null;
+    }
+
+    // Reject if user is out of tokens
+    const hasFunds = await hasTokens(userId);
+    if (!hasFunds) {
+      return { type: 'error', code: 'OUT_OF_TOKENS', text: "you're out of tokens. add credits to keep brutus watching." };
     }
 
     let transcript = transcriptChunk;
@@ -211,6 +218,8 @@ Examples of good notes:
 Only generate notes for IMPORTANT moments. Routine small talk should return SKIP.`
       }]
     });
+
+    deductTokens(userId, response.usage).catch(console.error);
 
     const noteContent = response.content[0].text.trim();
 

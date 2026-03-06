@@ -853,6 +853,258 @@
         #file-input {
             display: none;
         }
+
+        /* Token Balance Badge */
+        .token-badge {
+            position: fixed;
+            top: 30px;
+            right: 120px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(20, 20, 35, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            padding: 10px 18px;
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .token-badge:hover {
+            border-color: rgba(255, 80, 80, 0.4);
+            color: white;
+        }
+        .token-badge.low {
+            border-color: rgba(255, 80, 80, 0.6);
+            color: #ff5050;
+            animation: pulse-badge 2s ease-in-out infinite;
+        }
+        .token-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #50ff80;
+            flex-shrink: 0;
+        }
+        .token-badge.low .token-dot { background: #ff5050; }
+        @keyframes pulse-badge {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 80, 80, 0); }
+            50% { box-shadow: 0 0 0 6px rgba(255, 80, 80, 0.1); }
+        }
+
+        /* Credits View */
+        .credits-view-content {
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .balance-hero {
+            text-align: center;
+            margin-bottom: 52px;
+        }
+        .balance-amount {
+            font-family: 'Space Mono', monospace;
+            font-size: 72px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff5050, #ff7850);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        .balance-sublabel {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 10px;
+            font-family: 'Space Mono', monospace;
+        }
+        .balance-warning {
+            margin-top: 16px;
+            font-size: 13px;
+            color: #ff5050;
+            background: rgba(255, 80, 80, 0.08);
+            border: 1px solid rgba(255, 80, 80, 0.2);
+            border-radius: 10px;
+            padding: 10px 20px;
+            display: inline-block;
+        }
+        .credits-section { margin-bottom: 44px; }
+        .credits-section-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            color: rgba(255, 80, 80, 0.8);
+            text-transform: lowercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+        .packs-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        .pack-card {
+            background: rgba(20, 20, 35, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .pack-card:hover {
+            border-color: rgba(255, 80, 80, 0.4);
+            background: rgba(255, 80, 80, 0.05);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(255, 80, 80, 0.12);
+        }
+        .pack-price {
+            font-family: 'Space Mono', monospace;
+            font-size: 34px;
+            font-weight: 700;
+            color: #ff5050;
+        }
+        .pack-tokens {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.45);
+            margin-top: 6px;
+        }
+        .pack-name {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.75);
+            margin-top: 14px;
+            font-weight: 500;
+        }
+        .custom-topup-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .credits-dollar-wrap {
+            position: relative;
+            flex: 1;
+        }
+        .credits-dollar-wrap span {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Space Mono', monospace;
+            font-size: 15px;
+            pointer-events: none;
+        }
+        .credits-input {
+            width: 100%;
+            padding: 14px 18px 14px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-family: 'Space Mono', monospace;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .credits-input:focus {
+            border-color: rgba(255, 80, 80, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .credits-input::placeholder { color: rgba(255, 255, 255, 0.25); }
+        .credits-btn {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #ff5050, #ff7850);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        .credits-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 80, 80, 0.3);
+        }
+        .credits-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .auto-topup-card {
+            background: rgba(20, 20, 35, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 28px;
+        }
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .toggle-label { font-size: 15px; color: rgba(255, 255, 255, 0.85); }
+        .toggle-sublabel { font-size: 12px; color: rgba(255, 255, 255, 0.4); margin-top: 2px; }
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 28px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .toggle-slider:before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            left: 3px;
+            top: 3px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle input:checked + .toggle-slider { background: linear-gradient(135deg, #ff5050, #ff7850); }
+        .toggle input:checked + .toggle-slider:before { transform: translateX(22px); background: white; }
+        .auto-topup-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .auto-topup-field label {
+            display: block;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+            text-transform: lowercase;
+            letter-spacing: 0.5px;
+        }
+        .credits-hint {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-top: 16px;
+            line-height: 1.5;
+        }
+        .credits-hint a { color: rgba(255, 80, 80, 0.7); text-decoration: none; }
+        .credits-success-msg {
+            display: none;
+            text-align: center;
+            padding: 14px;
+            background: rgba(80, 255, 128, 0.08);
+            border: 1px solid rgba(80, 255, 128, 0.2);
+            border-radius: 10px;
+            color: #50ff80;
+            font-size: 14px;
+            margin-top: 16px;
+        }
     </style>
 </head>
 <body>
@@ -904,9 +1156,15 @@
         <div class="logo-text">brutus<span>.ai</span></div>
     </div>
     
+    <!-- Token Balance Badge -->
+    <div class="token-badge" id="token-badge" onclick="switchToCredits()" title="click to add credits">
+        <span class="token-dot"></span>
+        <span id="token-badge-text">-- tokens</span>
+    </div>
+
     <!-- Logout Button -->
     <button class="logout-btn" id="logout-btn">logout</button>
-    
+
     <!-- Navigation -->
     <div class="nav-container">
         <nav class="nav">
@@ -915,6 +1173,7 @@
             <div class="nav-item" data-view="progress">progress</div>
             <div class="nav-item" data-view="notes">notes</div>
             <div class="nav-item" data-view="research">research</div>
+            <div class="nav-item" data-view="credits">credits</div>
         </nav>
     </div>
     
@@ -1054,6 +1313,102 @@
                 </div>
                 <div id="notes-list">
                     <p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">Loading notes...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Credits View -->
+        <div id="credits-view" class="view">
+            <div class="credits-view-content">
+                <div class="balance-hero">
+                    <div class="balance-amount" id="credits-balance-display">---</div>
+                    <div class="balance-sublabel" id="credits-balance-dollars"></div>
+                    <div id="credits-low-warning" class="balance-warning" style="display:none">
+                        running low — top up to keep brutus watching your calls
+                    </div>
+                </div>
+
+                <!-- Preset Packs -->
+                <div class="credits-section">
+                    <div class="credits-section-title">// token packs</div>
+                    <div class="packs-grid">
+                        <div class="pack-card" onclick="buyPack('starter')">
+                            <div class="pack-price">$10</div>
+                            <div class="pack-tokens">500,000 tokens</div>
+                            <div class="pack-name">starter</div>
+                        </div>
+                        <div class="pack-card" onclick="buyPack('grind')">
+                            <div class="pack-price">$29</div>
+                            <div class="pack-tokens">2,000,000 tokens</div>
+                            <div class="pack-name">grind</div>
+                        </div>
+                        <div class="pack-card" onclick="buyPack('closer')">
+                            <div class="pack-price">$59</div>
+                            <div class="pack-tokens">5,000,000 tokens</div>
+                            <div class="pack-name">closer</div>
+                        </div>
+                        <div class="pack-card" onclick="buyPack('team')">
+                            <div class="pack-price">$199</div>
+                            <div class="pack-tokens">20,000,000 tokens</div>
+                            <div class="pack-name">team</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Top-Up -->
+                <div class="credits-section">
+                    <div class="credits-section-title">// custom amount</div>
+                    <div class="custom-topup-row">
+                        <div class="credits-dollar-wrap">
+                            <span>$</span>
+                            <input type="number" class="credits-input" id="custom-amount-input"
+                                   placeholder="10.00" min="5" step="1">
+                        </div>
+                        <button class="credits-btn" id="custom-topup-btn" onclick="customTopup()">top up</button>
+                    </div>
+                    <p class="credits-hint">minimum $5 · ~50,000 tokens per dollar · no expiry</p>
+                </div>
+
+                <!-- Auto Top-Up -->
+                <div class="credits-section">
+                    <div class="credits-section-title">// auto top-up</div>
+                    <div class="auto-topup-card">
+                        <div class="toggle-row">
+                            <div>
+                                <div class="toggle-label">automatically top up</div>
+                                <div class="toggle-sublabel">charges your saved card when balance runs low</div>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="auto-topup-toggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="auto-topup-fields">
+                            <div class="auto-topup-field">
+                                <label>top up amount (min $5)</label>
+                                <div class="credits-dollar-wrap">
+                                    <span>$</span>
+                                    <input type="number" class="credits-input" id="auto-amount-input"
+                                           placeholder="10" min="5" step="1">
+                                </div>
+                            </div>
+                            <div class="auto-topup-field">
+                                <label>trigger when balance drops below (min $5 worth)</label>
+                                <div class="credits-dollar-wrap">
+                                    <span>$</span>
+                                    <input type="number" class="credits-input" id="auto-threshold-input"
+                                           placeholder="5" min="5" step="1">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <button class="credits-btn" id="save-auto-topup-btn" onclick="saveAutoTopup()">save settings</button>
+                            <div class="credits-success-msg" id="auto-topup-success">settings saved.</div>
+                        </div>
+                        <p class="credits-hint" id="auto-topup-hint" style="margin-top: 16px;">
+                            requires a saved card — make any purchase first and your card will be saved automatically.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1303,6 +1658,114 @@
             mainContent.classList.add('hidden');
         });
         
+        // ==================== TOKEN BALANCE ====================
+        async function loadBalance() {
+            try {
+                const data = await apiCall('/billing/balance');
+                const balance = parseInt(data.tokenBalance);
+                const dollars = (balance / 50000).toFixed(2);
+                const isLow = balance < 50000; // under $1 worth
+
+                // Header badge
+                const badge = document.getElementById('token-badge');
+                const badgeText = document.getElementById('token-badge-text');
+                badgeText.textContent = balance.toLocaleString() + ' tokens';
+                badge.classList.toggle('low', isLow);
+
+                // Credits view display
+                document.getElementById('credits-balance-display').textContent = balance.toLocaleString();
+                document.getElementById('credits-balance-dollars').textContent = `≈ $${dollars} worth`;
+                document.getElementById('credits-low-warning').style.display = isLow ? 'block' : 'none';
+
+                // Auto top-up settings
+                const at = data.autoTopUp;
+                document.getElementById('auto-topup-toggle').checked = at.enabled;
+                if (at.amountDollars) document.getElementById('auto-amount-input').value = at.amountDollars;
+                if (at.thresholdDollars) document.getElementById('auto-threshold-input').value = at.thresholdDollars;
+                document.getElementById('auto-topup-hint').style.display = data.hasSavedCard ? 'none' : 'block';
+
+                return data;
+            } catch (e) {
+                console.error('Failed to load balance:', e);
+            }
+        }
+
+        async function buyPack(packId) {
+            try {
+                const data = await apiCall('/billing/add-credits', {
+                    method: 'POST',
+                    body: JSON.stringify({ pack: packId })
+                });
+                window.location.href = data.url;
+            } catch (e) {
+                alert('Failed to start checkout: ' + e.message);
+            }
+        }
+
+        async function customTopup() {
+            const amount = parseFloat(document.getElementById('custom-amount-input').value);
+            if (!amount || amount < 5) {
+                alert('Minimum top-up is $5');
+                return;
+            }
+            const btn = document.getElementById('custom-topup-btn');
+            btn.disabled = true;
+            btn.textContent = 'redirecting...';
+            try {
+                const data = await apiCall('/billing/custom-topup', {
+                    method: 'POST',
+                    body: JSON.stringify({ amountDollars: amount })
+                });
+                window.location.href = data.url;
+            } catch (e) {
+                alert('Failed to start checkout: ' + e.message);
+                btn.disabled = false;
+                btn.textContent = 'top up';
+            }
+        }
+
+        async function saveAutoTopup() {
+            const enabled = document.getElementById('auto-topup-toggle').checked;
+            const amountDollars = parseFloat(document.getElementById('auto-amount-input').value);
+            const thresholdDollars = parseFloat(document.getElementById('auto-threshold-input').value);
+
+            if (enabled) {
+                if (!amountDollars || amountDollars < 5) { alert('Auto top-up amount must be at least $5'); return; }
+                if (!thresholdDollars || thresholdDollars < 5) { alert('Threshold must be at least $5'); return; }
+            }
+
+            const btn = document.getElementById('save-auto-topup-btn');
+            btn.disabled = true;
+            btn.textContent = 'saving...';
+
+            try {
+                await apiCall('/billing/auto-topup', {
+                    method: 'PUT',
+                    body: JSON.stringify({ enabled, amountDollars, thresholdDollars })
+                });
+                const msg = document.getElementById('auto-topup-success');
+                msg.style.display = 'block';
+                setTimeout(() => { msg.style.display = 'none'; }, 3000);
+            } catch (e) {
+                if (e.message.includes('NO_SAVED_CARD') || e.message.includes('saved payment')) {
+                    alert('No saved card yet — make any purchase first and your card will be saved automatically.');
+                } else {
+                    alert('Failed to save: ' + e.message);
+                }
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'save settings';
+            }
+        }
+
+        function switchToCredits() {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.querySelector('[data-view="credits"]').classList.add('active');
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('credits-view').classList.add('active');
+            loadBalance();
+        }
+
         // Check existing token
         async function checkAuth() {
             if (!authToken) {
@@ -1325,6 +1788,7 @@
             authModal.classList.add('hidden');
             mainContent.classList.remove('hidden');
             loadDashboard();
+            loadBalance();
         }
         
         // ==================== DASHBOARD ====================
@@ -1425,6 +1889,10 @@
                 if (targetView) {
                     targetView.classList.add('active');
                 }
+
+                if (viewName === 'notes') loadNotes();
+                if (viewName === 'research') loadResearch();
+                if (viewName === 'credits') loadBalance();
             });
         });
         
@@ -1518,12 +1986,15 @@
                 }, 5000);
                 
             } catch (error) {
-                uploadText.innerHTML = `<span style="color: #ff5050;">error: ${error.message}</span>`;
-                
+                const isTokenError = error.message.includes('tokens') || error.message.includes('OUT_OF_TOKENS');
+                uploadText.innerHTML = isTokenError
+                    ? `<span style="color:#ff5050;">out of tokens.</span> <span style="color:rgba(255,255,255,0.6);font-size:13px;cursor:pointer;text-decoration:underline;" onclick="switchToCredits()">add credits →</span>`
+                    : `<span style="color: #ff5050;">error: ${error.message}</span>`;
+
                 setTimeout(() => {
                     uploadZone.classList.remove('uploading');
                     uploadText.innerHTML = 'drop your call recording here or <span>browse</span>';
-                }, 3000);
+                }, isTokenError ? 8000 : 3000);
             }
         }
         

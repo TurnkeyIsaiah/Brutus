@@ -1,5 +1,6 @@
 const Anthropic = require('@anthropic-ai/sdk');
 const prisma = require('../lib/prisma');
+const { deductTokens } = require('../lib/tokens');
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY
@@ -110,19 +111,21 @@ Format your response as JSON:
       ]
     });
 
+    deductTokens(userId, response.usage).catch(console.error);
+
     // Parse the response
     const content = response.content[0].text;
-    
+
     // Extract JSON from response (handle potential markdown code blocks)
     let jsonStr = content;
     const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       jsonStr = jsonMatch[1] || jsonMatch[0];
     }
-    
+
     const analysis = JSON.parse(jsonStr);
     return analysis;
-    
+
   } catch (error) {
     console.error('Brutus analysis error:', error);
     throw new Error('Failed to analyze call: ' + error.message);
@@ -228,15 +231,17 @@ Rules for live feedback:
       ]
     });
 
+    deductTokens(userId, response.usage).catch(console.error);
+
     const content = response.content[0].text;
-    
+
     // Parse response
     let jsonStr = content;
     const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       jsonStr = jsonMatch[1] || jsonMatch[0];
     }
-    
+
     const feedback = JSON.parse(jsonStr);
     
     if (feedback.skip) {
@@ -318,13 +323,15 @@ Generate an updated profile in JSON format:
       ]
     });
 
+    deductTokens(userId, response.usage).catch(console.error);
+
     const content = response.content[0].text;
     let jsonStr = content;
     const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       jsonStr = jsonMatch[1] || jsonMatch[0];
     }
-    
+
     const updates = JSON.parse(jsonStr);
     
     // Update profile
@@ -398,8 +405,10 @@ Respond as Brutus. Keep it conversational but valuable. 2-4 sentences usually.`
       ]
     });
 
+    deductTokens(userId, response.usage).catch(console.error);
+
     return response.content[0].text;
-    
+
   } catch (error) {
     console.error('Chat error:', error);
     return "something went wrong on my end. try again, and maybe this time i'll actually be able to roast you properly.";

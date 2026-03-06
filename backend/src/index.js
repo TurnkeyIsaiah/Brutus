@@ -12,6 +12,7 @@ const callsRoutes = require('./routes/calls');
 const liveRoutes = require('./routes/live');
 const notesRoutes = require('./routes/notes');
 const researchRoutes = require('./routes/research');
+const billingRoutes = require('./routes/billing');
 const { authenticateWS } = require('./middleware/auth');
 
 const app = express();
@@ -20,9 +21,12 @@ const server = createServer(app);
 // ==================== MIDDLEWARE ====================
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL,
   credentials: true
 }));
+
+// Stripe webhook must receive raw body — register before express.json()
+app.use('/billing/webhook', billingRoutes);
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -35,6 +39,7 @@ app.use('/calls', callsRoutes);
 app.use('/live', liveRoutes);
 app.use('/notes', notesRoutes);
 app.use('/research', researchRoutes);
+app.use('/billing', billingRoutes);
 
 // Serve frontend static files
 app.use('/frontend', express.static(path.join(__dirname, '..', '..', 'frontend')));

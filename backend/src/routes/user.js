@@ -128,7 +128,14 @@ router.get('/dashboard', async (req, res, next) => {
       }
     });
     
+    const userTokens = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { tokenBalance: true, tokensUsed: true }
+    });
+
     res.json({
+      tokenBalance: userTokens.tokenBalance.toString(),
+      tokensUsed: userTokens.tokensUsed.toString(),
       profile: profile ? {
         talkRatioAvg: parseFloat(profile.talkRatioAvg),
         closeRate: parseFloat(profile.closeRate),

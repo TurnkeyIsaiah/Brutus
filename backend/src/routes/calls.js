@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const prisma = require('../lib/prisma');
 const { authenticate } = require('../middleware/auth');
+const { checkTokenBalance } = require('../middleware/subscription');
 const { transcribeAudio } = require('../services/transcription');
 const { analyzeCall, updateUserSummary, chatWithBrutus } = require('../services/brutus');
 
@@ -39,7 +40,7 @@ router.use(authenticate);
 
 // ==================== ANALYZE UPLOADED CALL ====================
 
-router.post('/analyze', upload.single('audio'), async (req, res, next) => {
+router.post('/analyze', checkTokenBalance, upload.single('audio'), async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -118,7 +119,7 @@ router.post('/analyze', upload.single('audio'), async (req, res, next) => {
 
 // ==================== ANALYZE TRANSCRIPT DIRECTLY ====================
 
-router.post('/analyze-transcript', async (req, res, next) => {
+router.post('/analyze-transcript', checkTokenBalance, async (req, res, next) => {
   try {
     const { transcript, durationSeconds } = req.body;
     

@@ -13,20 +13,19 @@
   "build": {
     "appId": "com.brutus.ai",
     "productName": "Brutus.ai",
+    "icon": "assets/icon.png",
     "directories": {
       "output": "dist"
     },
     "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico"
+      "target": "nsis"
     },
     "mac": {
       "target": "dmg",
-      "icon": "assets/icon.icns"
+      "category": "public.app-category.business"
     },
     "linux": {
-      "target": "AppImage",
-      "icon": "assets/icon.png"
+      "target": "AppImage"
     },
     "nsis": {
       "oneClick": false,
@@ -38,7 +37,7 @@
     "ws": "^8.17.0"
   },
   "devDependencies": {
-    "electron": "^31.0.0",
+    "electron": "^39.2.7",
     "electron-builder": "^24.13.3"
   }
 }

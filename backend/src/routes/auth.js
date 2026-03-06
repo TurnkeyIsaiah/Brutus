@@ -1,7 +1,9 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const prisma = require('../lib/prisma');
 const { generateToken, authenticate } = require('../middleware/auth');
+const { sendWelcomeEmail, sendPasswordResetEmail } = require('../services/email');
 
 const router = express.Router();
 
@@ -57,20 +59,23 @@ router.post('/signup', async (req, res, next) => {
     
     // Generate token
     const token = generateToken(user.id);
-    
+
+    // Send welcome email (non-blocking)
+    sendWelcomeEmail(user).catch(err => console.error('[Email] Welcome email failed:', err.message));
+
     res.status(201).json({
       message: 'Account created. brutus is ready to judge you.',
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-        subscriptionStatus: user.subscriptionStatus,
+        tokenBalance: user.tokenBalance.toString(),
         settings: user.settings,
         profile: user.profile
       },
       token
     });
-    
+
   } catch (error) {
     next(error);
   }
@@ -118,13 +123,13 @@ router.post('/login', async (req, res, next) => {
         id: user.id,
         email: user.email,
         name: user.name,
-        subscriptionStatus: user.subscriptionStatus,
+        tokenBalance: user.tokenBalance.toString(),
         settings: user.settings,
         profile: user.profile
       },
       token
     });
-    
+
   } catch (error) {
     next(error);
   }
@@ -146,11 +151,66 @@ router.get('/me', authenticate, async (req, res) => {
       id: req.user.id,
       email: req.user.email,
       name: req.user.name,
-      subscriptionStatus: req.user.subscriptionStatus,
+      tokenBalance: req.user.tokenBalance.toString(),
       settings: req.user.settings,
       profile: req.user.profile
     }
   });
+});
+
+// ==================== FORGOT PASSWORD ====================
+
+router.post('/forgot-password', async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: { message: 'Email is required' } });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+
+    // Always respond 200 to prevent user enumeration
+    if (user) {
+      const token = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await prisma.passwordResetToken.create({ data: { userId: user.id, token, expiresAt } });
+      sendPasswordResetEmail(user.email, token).catch(err =>
+        console.error('[Email] Password reset email failed:', err.message)
+      );
+    }
+
+    res.json({ message: 'If that email exists, a reset link has been sent.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ==================== RESET PASSWORD ====================
+
+router.post('/reset-password', async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password || password.length < 8) {
+      return res.status(400).json({ error: { message: 'Valid token and password (8+ chars) are required' } });
+    }
+
+    const resetToken = await prisma.passwordResetToken.findUnique({ where: { token } });
+
+    if (!resetToken || resetToken.expiresAt < new Date()) {
+      return res.status(400).json({ error: { message: 'Reset link is invalid or has expired' } });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    await prisma.user.update({ where: { id: resetToken.userId }, data: { passwordHash } });
+    await prisma.passwordResetToken.delete({ where: { token } });
+
+    res.json({ message: 'Password updated. go get roasted.' });
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = router;
