@@ -812,7 +812,7 @@
               <div class="section-title">backend connection</div>
               <div class="setting-item">
                 <label for="api-url">API URL</label>
-                <input type="text" id="api-url" class="form-input" placeholder="http://localhost:3001">
+                <input type="text" id="api-url" class="form-input" placeholder="https://api.brutusai.coach">
                 <p class="setting-hint">The URL of your Brutus backend server</p>
               </div>
             </div>
@@ -991,7 +991,7 @@
   
   <script>
     // ==================== CONFIG ====================
-    let API_URL = 'http://localhost:3001';
+    let API_URL = 'https://api.brutusai.coach';
     let authToken = null;
     let currentUser = null;
     let isMonitoring = false;
@@ -1211,7 +1211,7 @@
       const settings = await window.brutus.getSettings();
 
       // API URL
-      document.getElementById('api-url').value = settings.apiUrl || 'http://localhost:3001';
+      document.getElementById('api-url').value = settings.apiUrl || 'https://api.brutusai.coach';
 
       // Auto start
       document.getElementById('auto-start').checked = settings.autoStart || false;
@@ -1240,7 +1240,7 @@
       try {
         new URL(apiUrl);
       } catch (e) {
-        alert('Invalid API URL format. Please enter a valid URL (e.g., http://localhost:3001)');
+        alert('Invalid API URL format. Please enter a valid URL (e.g., https://api.brutusai.coach)');
         return;
       }
 

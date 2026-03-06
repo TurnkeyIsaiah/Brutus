@@ -312,7 +312,7 @@ ipcMain.handle('resize-overlay', (event, { width, height }) => {
 
 ipcMain.handle('get-settings', () => {
   return store.get('settings', {
-    apiUrl: 'http://localhost:3001',
+    apiUrl: 'https://api.brutusai.coach',
     autoStart: false,
     overlayOpacity: 0.95
   });
@@ -324,9 +324,7 @@ ipcMain.handle('set-settings', (event, settings) => {
 });
 
 ipcMain.handle('open-dashboard', async () => {
-  const settings = store.get('settings', { apiUrl: 'http://localhost:3001' });
-  const dashboardUrl = settings.apiUrl + '/frontend/index.html';
-  await shell.openExternal(dashboardUrl);
+  await shell.openExternal('https://app.brutusai.coach/index.html');
   return true;
 });
 
