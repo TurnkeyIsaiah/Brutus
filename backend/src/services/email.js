@@ -1,7 +1,7 @@
 const { Resend } = require('resend');
 
-const FROM = process.env.EMAIL_FROM || 'Brutus.ai <noreply@brutus.ai>';
-const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+const getFrom = () => process.env.EMAIL_FROM || 'Brutus AI <noreply@brutusai.coach>';
+const getAppUrl = () => process.env.APP_URL || 'https://app.brutusai.coach';
 
 // Lazy-initialize so missing RESEND_API_KEY doesn't crash startup
 let _resend = null;
@@ -18,7 +18,7 @@ const resendSend = async (payload) => {
 
 const sendWelcomeEmail = async (user) => {
   await resendSend({
-    from: FROM,
+    from: getFrom(),
     to: user.email,
     subject: 'brutus is watching. welcome.',
     html: `
@@ -39,9 +39,9 @@ const sendWelcomeEmail = async (user) => {
 };
 
 const sendPasswordResetEmail = async (email, token) => {
-  const resetUrl = `${APP_URL}/reset-password.html?token=${token}`;
+  const resetUrl = `${getAppUrl()}/reset-password.html?token=${token}`;
   await resendSend({
-    from: FROM,
+    from: getFrom(),
     to: email,
     subject: 'reset your brutus password',
     html: `
