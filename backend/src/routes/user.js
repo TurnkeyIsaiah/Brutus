@@ -92,10 +92,10 @@ router.get('/dashboard', async (req, res, next) => {
     const recentCalls = await prisma.call.findMany({
       where: { userId: req.user.id },
       orderBy: { createdAt: 'desc' },
-      take: 5,
+      take: 4,
       select: {
         id: true,
-        recordedAt: true,
+        createdAt: true,
         durationSeconds: true,
         overallScore: true,
         talkRatio: true,

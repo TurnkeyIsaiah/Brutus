@@ -114,7 +114,47 @@
       background: rgba(255, 80, 80, 0.3);
       color: #fff;
     }
-    
+
+    /* Header screen capture toggle */
+    .header-toggle {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+    }
+    .header-toggle input[type="checkbox"] { display: none; }
+    .header-toggle-slider {
+      width: 28px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .header-toggle-slider::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: all 0.2s;
+    }
+    .header-toggle input:checked + .header-toggle-slider {
+      background: rgba(255, 80, 80, 0.6);
+    }
+    .header-toggle input:checked + .header-toggle-slider::after {
+      left: 15px;
+      background: #fff;
+    }
+    .header-toggle-text {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
     /* Feedback List */
     .feedback-container {
       flex: 1;
@@ -197,6 +237,11 @@
       background: rgba(160, 100, 255, 0.2);
       color: #a064ff;
       border-left: 3px solid #a064ff;
+    }
+
+    .type-brutus {
+      background: rgba(255, 80, 80, 0.15);
+      color: #ff6060;
     }
 
     .feedback-time {
@@ -579,10 +624,15 @@
     <div class="overlay-header">
       <div class="header-left">
         <div class="brutus-avatar">B</div>
-        <div class="header-title">brutus live coaching</div>
+        <div class="header-title">brutus AI live coaching</div>
       </div>
       <div class="header-status">
         <div class="status-dot"></div>
+        <label class="header-toggle" title="toggle screen capture">
+          <input type="checkbox" id="screen-capture-toggle" checked>
+          <span class="header-toggle-slider"></span>
+          <span class="header-toggle-text">📷</span>
+        </label>
         <button class="close-btn" id="close-btn">×</button>
       </div>
     </div>
@@ -608,15 +658,6 @@
       <button class="action-btn research-btn" id="research-btn" title="Request research">
         <span>🔍</span> research
       </button>
-    </div>
-
-    <!-- Screen Capture Toggle -->
-    <div class="screen-capture-toggle">
-      <label class="toggle-label">
-        <input type="checkbox" id="screen-capture-toggle" checked>
-        <span class="toggle-slider"></span>
-        <span class="toggle-text">📷 screen capture</span>
-      </label>
     </div>
 
     <!-- AI Notes Toggle -->
@@ -678,17 +719,20 @@
     let startTime = null;
     let durationInterval = null;
     let audioContext = null;
+    let audioMixNode = null;
     let analyser = null;
     let mediaStream = null;
     let mediaRecorder = null;
     let recordingInterval = null;
-    let screenshotInterval = null;
     let screenStream = null;
-    let lastScreenshot = null;
 
     let feedbackItems = [];
     let interruptCount = 0;
     let talkRatio = 0;
+    let chunkCounter = 0;
+    let repTalkingFrames = 0;
+    let totalFrames = 0;
+    const TALK_SILENCE_THRESHOLD = 15;
 
     // ==================== SCREEN CAPTURE TOGGLE ====================
     const screenCaptureToggle = document.getElementById('screen-capture-toggle');
@@ -977,6 +1021,19 @@
     
     // ==================== SESSION MANAGEMENT ====================
     async function startSession() {
+      // Clear previous session messages and state
+      feedbackItems = [];
+      chunkCounter = 0;
+      interruptCount = 0;
+      repTalkingFrames = 0;
+      totalFrames = 0;
+      document.getElementById('talk-ratio').textContent = '--%';
+      document.getElementById('talk-ratio').className = 'metric-value';
+      document.getElementById('interrupt-count').textContent = '0';
+      document.getElementById('interrupt-count').className = 'metric-value good';
+      const container = document.getElementById('feedback-container');
+      container.innerHTML = '<div class="empty-state" id="empty-state"><div class="empty-state-icon">🎯</div><div class="empty-state-text">listening for your sales call...</div></div>';
+
       try {
         // Start session on backend
         const response = await fetch(`${API_URL}/live/start`, {
@@ -999,23 +1056,23 @@
         // Start audio capture
         await startAudioCapture();
 
-        // Start screen capture (only if enabled)
+        // Start duration timer
+        startTime = Date.now();
+        durationInterval = setInterval(updateDuration, 1000);
+
+        // Clear empty state
+        document.getElementById('empty-state').style.display = 'none';
+
+        // Add initial feedback
+        addFeedback('insight', 'monitoring started. let\'s see what you\'ve got.');
+
+        // Start screen capture (only if enabled) - non-blocking, won't abort session on failure
         if (isScreenCaptureEnabled) {
-          await startScreenCapture();
+          startScreenCapture();
         } else {
           console.log('[Session] Screen capture disabled by toggle - skipping');
         }
 
-        // Start duration timer
-        startTime = Date.now();
-        durationInterval = setInterval(updateDuration, 1000);
-        
-        // Clear empty state
-        document.getElementById('empty-state').style.display = 'none';
-        
-        // Add initial feedback
-        addFeedback('insight', 'monitoring started. let\'s see what you\'ve got.');
-        
       } catch (error) {
         console.error('Failed to start session:', error);
         addFeedback('critical', 'failed to connect. check your backend.');
@@ -1038,7 +1095,7 @@
       // End session on backend
       if (sessionId) {
         try {
-          await fetch(`${API_URL}/live/end`, {
+          const endRes = await fetch(`${API_URL}/live/end`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1046,21 +1103,31 @@
             },
             body: JSON.stringify({ sessionId })
           });
+          const endData = await endRes.json();
+          if (endData.analysis) {
+            showPostCallSummary(endData.analysis);
+            updateTalkRatio(endData.analysis.talkRatio);
+            interruptCount = endData.analysis.interruptionCount || 0;
+            const intEl = document.getElementById('interrupt-count');
+            intEl.textContent = interruptCount;
+            intEl.className = 'metric-value ' + (interruptCount > 3 ? 'bad' : interruptCount > 1 ? 'warning' : 'good');
+          } else {
+            addFeedback('insight', 'session ended. review your results in the dashboard.');
+          }
         } catch (e) {
           console.error('Failed to end session:', e);
+          addFeedback('insight', 'session ended.');
         }
       }
-      
+
       // Disconnect WebSocket
       if (ws) {
         ws.close();
         ws = null;
       }
-      
+
       sessionId = null;
       startTime = null;
-      
-      addFeedback('insight', 'session ended. review your results.');
     }
     
     // ==================== WEBSOCKET ====================
@@ -1077,17 +1144,17 @@
         try {
           const message = JSON.parse(event.data);
 
-          if (message.type === 'brutus_feedback') {
-            addFeedback(message.payload.type, message.payload.text);
+          if (message.type === 'brutus_feedback' && message.payload.code === 'OUT_OF_TOKENS') {
+            addFeedback('critical', "you're out of tokens. add credits at app.brutusai.coach to continue.");
+            stopSession();
+            return;
+          }
 
-            // Update metrics if included
-            if (message.payload.talkRatio !== undefined) {
-              updateTalkRatio(message.payload.talkRatio);
-            }
-            if (message.payload.type === 'critical' && message.payload.text.includes('interrupt')) {
-              interruptCount++;
-              document.getElementById('interrupt-count').textContent = interruptCount;
-              document.getElementById('interrupt-count').className = 'metric-value bad';
+          if (message.type === 'brutus_feedback') {
+            // Only show feedback when triage fires — complete silence otherwise
+            if (message.payload.coach === true) {
+              addFeedback('brutus', message.payload.feedback);
+              playFeedbackPing();
             }
           }
 
@@ -1148,72 +1215,19 @@
         });
         console.log('[Audio Capture] Microphone access granted');
 
-        // Step 2: Get system audio (loopback) - what's playing through speakers/headphones
-        console.log('[Audio Capture] Requesting system audio sources...');
-        let systemAudioStream = null;
-
-        try {
-          const sources = await window.brutus.getScreenSources();
-          console.log(`[Audio Capture] Found ${sources.length} sources`);
-
-          // Look for audio sources (loopback audio)
-          // On Windows, this might be labeled as speakers/system audio
-          const audioSource = sources.find(source =>
-            source.id.includes('screen') && source.name.toLowerCase().includes('entire')
-          );
-
-          if (audioSource) {
-            console.log('[Audio Capture] Found system audio source:', audioSource.name);
-
-            systemAudioStream = await navigator.mediaDevices.getUserMedia({
-              audio: {
-                mandatory: {
-                  chromeMediaSource: 'desktop',
-                  chromeMediaSourceId: audioSource.id
-                }
-              },
-              video: {
-                mandatory: {
-                  chromeMediaSource: 'desktop',
-                  chromeMediaSourceId: audioSource.id
-                }
-              }
-            });
-
-            console.log('[Audio Capture] System audio stream created');
-          } else {
-            console.warn('[Audio Capture] No system audio source found - will use microphone only');
-          }
-        } catch (sysAudioError) {
-          console.warn('[Audio Capture] Failed to capture system audio:', sysAudioError);
-          console.warn('[Audio Capture] Continuing with microphone only...');
-        }
-
-        // Step 3: Mix microphone and system audio using Web Audio API
+        // Set up audio mix — system audio is added by startScreenCapture once display stream is ready
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const destination = audioContext.createMediaStreamDestination();
+        audioMixNode = audioContext.createMediaStreamDestination();
 
         // Connect microphone
         const micSource = audioContext.createMediaStreamSource(micStream);
         const micGain = audioContext.createGain();
-        micGain.gain.value = 1.0;  // Full volume for mic
+        micGain.gain.value = 1.0;
         micSource.connect(micGain);
-        micGain.connect(destination);
+        micGain.connect(audioMixNode);
 
-        // Connect system audio if available
-        if (systemAudioStream) {
-          const systemSource = audioContext.createMediaStreamSource(systemAudioStream);
-          const systemGain = audioContext.createGain();
-          systemGain.gain.value = 1.0;  // Full volume for system audio
-          systemSource.connect(systemGain);
-          systemGain.connect(destination);
-          console.log('[Audio Capture] Both microphone and system audio mixed together');
-        } else {
-          console.log('[Audio Capture] Using microphone only');
-        }
-
-        // The mixed stream
-        mediaStream = destination.stream;
+        // The mixed stream (system audio will be spliced in by startScreenCapture)
+        mediaStream = audioMixNode.stream;
 
         // Set up audio visualization (from mic only for visual feedback)
         analyser = audioContext.createAnalyser();
@@ -1223,12 +1237,24 @@
         const bufferLength = analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
 
-        // Update visualization
+        // Update visualization and track talk ratio
+        let vizFrameCount = 0;
         function updateVisualization() {
           if (!analyser) return;
 
           analyser.getByteFrequencyData(dataArray);
           updateAudioBars(dataArray);
+
+          // Measure rep talk ratio from mic level
+          const avgLevel = dataArray.reduce((sum, v) => sum + v, 0) / dataArray.length;
+          if (avgLevel > TALK_SILENCE_THRESHOLD) repTalkingFrames++;
+          totalFrames++;
+
+          // Update display every ~300 frames (~5s at 60fps)
+          if (++vizFrameCount >= 300) {
+            vizFrameCount = 0;
+            if (totalFrames > 0) updateTalkRatio(Math.round((repTalkingFrames / totalFrames) * 100));
+          }
 
           requestAnimationFrame(updateVisualization);
         }
@@ -1255,13 +1281,18 @@
 
           // Convert to base64 and send
           const reader = new FileReader();
-          reader.onloadend = () => {
+          reader.onloadend = async () => {
             const audioBase64 = reader.result.split(',')[1];
+
+            chunkCounter++;
+            // Capture screenshot on-demand every 4th chunk (~2 minutes)
+            const shouldCapture = isScreenCaptureEnabled && screenStream && (chunkCounter % 4 === 0);
+            const screenshotData = shouldCapture ? await captureScreenshot() : null;
 
             sendToBackend('monitoring_data', {
               sessionId,
               audioData: audioBase64,
-              screenshot: (isScreenCaptureEnabled && lastScreenshot) ? lastScreenshot : null,
+              screenshot: screenshotData,
               timestamp: Date.now(),
               timeIntoCall: Math.floor((Date.now() - startTime) / 1000),
               mimeType: 'audio/webm',
@@ -1271,19 +1302,17 @@
           reader.readAsDataURL(blob);
         };
 
-        // Record in 5 second chunks
+        // Record in 30 second chunks
         mediaRecorder.start();
         recordingInterval = setInterval(() => {
           if (mediaRecorder && mediaRecorder.state === 'recording') {
             mediaRecorder.stop();
             mediaRecorder.start();
           }
-        }, 5000);
+        }, 30000);
 
         console.log('[Audio Capture] Audio capture started successfully');
-        addFeedback('insight', systemAudioStream ?
-          'capturing both sides of the conversation.' :
-          'capturing your voice only (system audio unavailable).');
+        addFeedback('insight', 'mic active. waiting for screen capture...');
 
       } catch (error) {
         console.error('[Audio Capture] ERROR: Failed to capture audio');
@@ -1318,6 +1347,7 @@
         audioContext.close();
         audioContext = null;
         analyser = null;
+        audioMixNode = null;
       }
       
       // Reset audio bars
@@ -1328,145 +1358,76 @@
     // ==================== SCREEN CAPTURE ====================
     async function startScreenCapture() {
       try {
-        console.log('[Screen Capture] Attempting to start screen capture...');
+        console.log('[Screen Capture] Attempting to start screen capture via getDisplayMedia...');
 
-        // Get screen sources using desktopCapturer
-        console.log('[Screen Capture] Requesting screen sources from desktopCapturer...');
-        const sources = await window.brutus.getScreenSources();
-        console.log(`[Screen Capture] Found ${sources.length} screen sources:`, sources);
+        // Request video + audio (loopback provided by main process handler)
+        screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { width: { max: 1920 }, height: { max: 1080 } },
+          audio: true
+        });
 
-        if (sources.length === 0) {
-          console.error('[Screen Capture] ERROR: No screen sources available');
-          addFeedback('warning', 'screen capture unavailable. audio-only mode.');
-          return;
+        console.log('[Screen Capture] Media stream created successfully');
+
+        // Connect system audio (loopback) to the mic mix if available
+        const audioTracks = screenStream.getAudioTracks();
+        if (audioTracks.length > 0 && audioContext && audioMixNode) {
+          try {
+            const sysSource = audioContext.createMediaStreamSource(new MediaStream(audioTracks));
+            const sysGain = audioContext.createGain();
+            sysGain.gain.value = 1.0;
+            sysSource.connect(sysGain);
+            sysGain.connect(audioMixNode);
+            console.log('[Screen Capture] System audio connected to mix');
+            addFeedback('insight', 'capturing both sides of the conversation.');
+          } catch (e) {
+            console.warn('[Screen Capture] Could not connect system audio:', e.message);
+            addFeedback('insight', 'screen capture active. audio mix unavailable.');
+          }
+        } else {
+          console.log('[Screen Capture] No system audio in display stream');
+          addFeedback('insight', 'screen capture active. capturing your voice only.');
         }
 
-        // Use the first screen (primary display)
-        const primarySource = sources[0];
-        console.log('[Screen Capture] Using primary source:', {
-          id: primarySource.id,
-          name: primarySource.name,
-          thumbnailSize: primarySource.thumbnail ? `${primarySource.thumbnail.getSize().width}x${primarySource.thumbnail.getSize().height}` : 'N/A'
-        });
-
-        // Create media stream from screen
-        console.log('[Screen Capture] Creating media stream with constraints:', {
-          chromeMediaSourceId: primarySource.id,
-          resolution: '1280-1920x720-1080'
-        });
-
-        screenStream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: {
-            mandatory: {
-              chromeMediaSource: 'desktop',
-              chromeMediaSourceId: primarySource.id,
-              minWidth: 1280,
-              maxWidth: 1920,
-              minHeight: 720,
-              maxHeight: 1080
-            }
-          }
-        });
-
-        console.log('[Screen Capture] Media stream created successfully:', {
-          active: screenStream.active,
-          tracks: screenStream.getTracks().length,
-          videoTrack: screenStream.getVideoTracks()[0]?.getSettings()
-        });
-
-        // Capture screenshot every 5 seconds
-        screenshotInterval = setInterval(captureScreenshot, 5000);
-
-        // Capture initial screenshot
-        captureScreenshot();
-
-        console.log('[Screen Capture] Screen capture started successfully');
-
       } catch (error) {
-        console.error('[Screen Capture] ERROR: Failed to capture screen');
-        console.error('[Screen Capture] Error name:', error.name);
-        console.error('[Screen Capture] Error message:', error.message);
-        console.error('[Screen Capture] Error stack:', error.stack);
-        console.error('[Screen Capture] Full error object:', error);
+        console.error('[Screen Capture] Failed:', error.name, error.message);
         addFeedback('warning', `screen capture failed: ${error.message}. continuing with audio only.`);
       }
     }
 
     async function captureScreenshot() {
-      if (!screenStream) {
-        console.warn('[Screenshot] Cannot capture: screenStream is null');
-        return;
-      }
+      if (!screenStream) return null;
 
       try {
-        console.log('[Screenshot] Capturing screenshot...');
-
         const video = document.createElement('video');
         video.srcObject = screenStream;
         video.autoplay = true;
 
-        // Wait for video to be ready
         await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            reject(new Error('Video metadata load timeout after 5 seconds'));
-          }, 5000);
-
-          video.onloadedmetadata = () => {
-            clearTimeout(timeout);
-            console.log('[Screenshot] Video metadata loaded:', {
-              width: video.videoWidth,
-              height: video.videoHeight,
-              duration: video.duration,
-              readyState: video.readyState
-            });
-            video.play();
-            resolve();
-          };
+          const timeout = setTimeout(() => reject(new Error('video metadata timeout')), 5000);
+          video.onloadedmetadata = () => { clearTimeout(timeout); video.play(); resolve(); };
         });
 
-        // Create canvas and capture frame
+        const MAX_W = 960, MAX_H = 540;
+        const scale = Math.min(MAX_W / video.videoWidth, MAX_H / video.videoHeight, 1);
         const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        console.log('[Screenshot] Created canvas:', {
-          width: canvas.width,
-          height: canvas.height
-        });
+        canvas.width = Math.round(video.videoWidth * scale);
+        canvas.height = Math.round(video.videoHeight * scale);
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-
-        // Convert to base64
-        lastScreenshot = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-        console.log('[Screenshot] Screenshot captured successfully, size:', lastScreenshot.length, 'characters');
-
-        // Clean up
         video.srcObject = null;
+        return canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
 
       } catch (error) {
-        console.error('[Screenshot] ERROR: Failed to capture screenshot');
-        console.error('[Screenshot] Error name:', error.name);
-        console.error('[Screenshot] Error message:', error.message);
-        console.error('[Screenshot] Error stack:', error.stack);
-        console.error('[Screenshot] Full error object:', error);
+        console.error('[Screenshot] Failed:', error.message);
+        return null;
       }
     }
 
     function stopScreenCapture() {
-      // Stop screenshot interval
-      if (screenshotInterval) {
-        clearInterval(screenshotInterval);
-        screenshotInterval = null;
-      }
-
-      // Stop screen stream
       if (screenStream) {
         screenStream.getTracks().forEach(track => track.stop());
         screenStream = null;
       }
-
-      lastScreenshot = null;
     }
 
     // ==================== UI UPDATES ====================
@@ -1541,6 +1502,66 @@
         `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
     
+    // ==================== AUDIO PING ====================
+    function playFeedbackPing() {
+      try {
+        const pingCtx = new AudioContext();
+        const osc = pingCtx.createOscillator();
+        const gain = pingCtx.createGain();
+        osc.connect(gain);
+        gain.connect(pingCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, pingCtx.currentTime);
+        gain.gain.setValueAtTime(0.08, pingCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, pingCtx.currentTime + 0.2);
+        osc.start(pingCtx.currentTime);
+        osc.stop(pingCtx.currentTime + 0.2);
+      } catch (e) {}
+    }
+
+    // ==================== POST-CALL SUMMARY ====================
+    function showPostCallSummary(analysis) {
+      const score = analysis.overallScore || 0;
+      const scoreClass = score >= 70 ? 'good' : score >= 50 ? 'warning' : 'bad';
+
+      const container = document.getElementById('feedback-container');
+      const emptyState = document.getElementById('empty-state');
+      if (emptyState) emptyState.style.display = 'none';
+
+      const item = document.createElement('div');
+      item.className = 'feedback-item';
+
+      const header = document.createElement('div');
+      header.className = 'feedback-header';
+
+      const typeSpan = document.createElement('span');
+      typeSpan.className = 'feedback-type type-brutus';
+      typeSpan.textContent = 'call complete';
+
+      const scoreSpan = document.createElement('span');
+      scoreSpan.className = `metric-value ${scoreClass}`;
+      scoreSpan.textContent = `${score}/100`;
+
+      header.appendChild(typeSpan);
+      header.appendChild(scoreSpan);
+
+      const roastDiv = document.createElement('div');
+      roastDiv.className = 'feedback-text';
+      roastDiv.textContent = analysis.overallRoast || 'call complete.';
+
+      item.appendChild(header);
+      item.appendChild(roastDiv);
+
+      if (analysis.actionItems?.length) {
+        const actionsDiv = document.createElement('div');
+        actionsDiv.style.cssText = 'margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.4;';
+        actionsDiv.textContent = 'next: ' + analysis.actionItems.slice(0, 2).join(' · ');
+        item.appendChild(actionsDiv);
+      }
+
+      container.insertBefore(item, container.firstChild);
+    }
+
     // ==================== WINDOW CONTROLS ====================
     document.getElementById('close-btn').addEventListener('click', async () => {
       await window.brutus.stopMonitoring();

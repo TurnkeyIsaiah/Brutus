@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brutus.ai</title>
+  <title>Brutus AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -569,127 +569,6 @@
       flex: 1;
     }
 
-    /* Wizard View */
-    .wizard-view {
-      height: 100%;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-
-    .wizard-container {
-      width: 100%;
-    }
-
-    .wizard-header {
-      margin-bottom: 24px;
-    }
-
-    .wizard-header h2 {
-      font-size: 22px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .wizard-subtitle {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.5);
-    }
-
-    .wizard-steps {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .wizard-step {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 16px;
-      transition: all 0.3s;
-    }
-
-    .wizard-step:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 80, 80, 0.3);
-    }
-
-    .step-number {
-      font-family: 'Space Mono', monospace;
-      font-size: 11px;
-      color: rgba(255, 80, 80, 0.8);
-      text-transform: uppercase;
-      margin-bottom: 6px;
-      font-weight: 700;
-    }
-
-    .step-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-
-    .step-content p {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.7);
-      margin-bottom: 8px;
-      line-height: 1.6;
-    }
-
-    .step-content code {
-      background: rgba(255, 80, 80, 0.1);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: 'Space Mono', monospace;
-      font-size: 12px;
-      color: rgba(255, 80, 80, 0.9);
-    }
-
-    .step-checkbox {
-      margin-top: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .step-checkbox input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-      accent-color: #ff5050;
-    }
-
-    .step-checkbox label {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.8);
-      cursor: pointer;
-    }
-
-    .wizard-note {
-      background: rgba(255, 176, 80, 0.1);
-      padding: 10px 12px;
-      border-radius: 8px;
-      border-left: 3px solid #ffb050;
-      color: #ffb050 !important;
-      font-size: 12px !important;
-      margin-top: 12px;
-    }
-
-    .wizard-success {
-      background: rgba(80, 255, 128, 0.1);
-      padding: 10px 12px;
-      border-radius: 8px;
-      border-left: 3px solid #50ff80;
-      color: #50ff80 !important;
-      font-size: 13px !important;
-      margin-top: 12px;
-    }
-
-    .wizard-footer {
-      margin-top: 24px;
-      padding-top: 20px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
   </style>
 </head>
 <body>
@@ -793,7 +672,6 @@
         <div class="footer-actions">
           <button class="footer-btn" id="dashboard-btn">open dashboard</button>
           <button class="footer-btn" id="settings-btn">settings</button>
-          <button class="footer-btn" id="audio-setup-btn">audio setup</button>
           <button class="footer-btn" id="logout-btn">logout</button>
         </div>
       </div>
@@ -857,13 +735,14 @@
                 <input type="number" id="min-feedback-interval" class="form-input" placeholder="20" min="10" max="120">
                 <p class="setting-hint">Minimum time between Brutus feedback messages (default: 20s)</p>
               </div>
+              <p class="setting-hint">System audio capture (prospect's voice) requires macOS Ventura 13+ or Windows — no virtual cable needed.</p>
             </div>
 
             <!-- About -->
             <div class="settings-section">
               <div class="section-title">about</div>
               <div class="about-info">
-                <p><strong>Brutus.ai Desktop</strong></p>
+                <p><strong>Brutus AI Desktop</strong></p>
                 <p>Version 1.0.0</p>
                 <p class="setting-hint">The brutally honest AI sales coach</p>
               </div>
@@ -877,115 +756,6 @@
         </div>
       </div>
 
-      <!-- Audio Setup Wizard View -->
-      <div class="view wizard-view" id="audio-setup-view">
-        <div class="wizard-container">
-          <div class="wizard-header">
-            <h2>audio setup wizard</h2>
-            <p class="wizard-subtitle">set up full conversation capture (both you and your prospect)</p>
-          </div>
-
-          <div class="wizard-steps">
-            <!-- Step 1 -->
-            <div class="wizard-step" data-step="1">
-              <div class="step-number">step 1</div>
-              <div class="step-title">download VB-Cable</div>
-              <div class="step-content">
-                <p>VB-Cable is a free virtual audio driver that lets Brutus capture both sides of your conversations.</p>
-                <button class="btn btn-primary" id="download-vbcable">download VB-Cable (free)</button>
-                <div class="step-checkbox">
-                  <input type="checkbox" id="step1-check">
-                  <label for="step1-check">I've downloaded VB-Cable</label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Step 2 -->
-            <div class="wizard-step" data-step="2">
-              <div class="step-number">step 2</div>
-              <div class="step-title">install VB-Cable</div>
-              <div class="step-content">
-                <p><strong>1.</strong> Extract the ZIP file you downloaded</p>
-                <p><strong>2.</strong> Right-click on <code>VBCABLE_Setup_x64.exe</code></p>
-                <p><strong>3.</strong> Select "Run as administrator"</p>
-                <p><strong>4.</strong> Click "Install Driver"</p>
-                <p><strong>5.</strong> Restart your computer when prompted</p>
-                <div class="step-checkbox">
-                  <input type="checkbox" id="step2-check">
-                  <label for="step2-check">VB-Cable is installed and I've restarted</label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Step 3 -->
-            <div class="wizard-step" data-step="3">
-              <div class="step-number">step 3</div>
-              <div class="step-title">configure windows audio</div>
-              <div class="step-content">
-                <p><strong>1.</strong> Right-click the speaker icon in your taskbar</p>
-                <p><strong>2.</strong> Click "Sounds" → "Playback" tab</p>
-                <p><strong>3.</strong> Set "CABLE Input" as your <strong>default playback device</strong></p>
-                <p><strong>4.</strong> Go to the "Recording" tab</p>
-                <p><strong>5.</strong> Set "CABLE Output" as your <strong>default recording device</strong></p>
-                <div class="step-checkbox">
-                  <input type="checkbox" id="step3-check">
-                  <label for="step3-check">Audio devices configured</label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Step 4 -->
-            <div class="wizard-step" data-step="4">
-              <div class="step-number">step 4</div>
-              <div class="step-title">route audio to your headphones</div>
-              <div class="step-content">
-                <p>Since CABLE Input is now your default playback, you need to hear the audio in your headphones:</p>
-                <p><strong>1.</strong> Open "Sound Control Panel" (search in Windows)</p>
-                <p><strong>2.</strong> Go to "Recording" tab</p>
-                <p><strong>3.</strong> Right-click "CABLE Output" → Properties</p>
-                <p><strong>4.</strong> Click the "Listen" tab</p>
-                <p><strong>5.</strong> Check "Listen to this device"</p>
-                <p><strong>6.</strong> Select your headphones/speakers in the dropdown</p>
-                <p><strong>7.</strong> Click "Apply" then "OK"</p>
-                <div class="step-checkbox">
-                  <input type="checkbox" id="step4-check">
-                  <label for="step4-check">I can hear audio through my headphones</label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Step 5 -->
-            <div class="wizard-step" data-step="5">
-              <div class="step-number">step 5</div>
-              <div class="step-title">configure your call app</div>
-              <div class="step-content">
-                <p>Finally, set your call software (Zoom, Teams, etc.) to use the virtual cable:</p>
-                <p><strong>Microphone:</strong> Select your real microphone</p>
-                <p><strong>Speakers:</strong> Select "CABLE Input"</p>
-                <p class="wizard-note">⚠️ Make sure to do this in your call app's audio settings!</p>
-                <div class="step-checkbox">
-                  <input type="checkbox" id="step5-check">
-                  <label for="step5-check">Call app is configured</label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Complete -->
-            <div class="wizard-step" data-step="6">
-              <div class="step-number">✓ complete</div>
-              <div class="step-title">you're all set!</div>
-              <div class="step-content">
-                <p>Brutus can now capture both sides of your conversations for complete context and better coaching.</p>
-                <p class="wizard-success">Start monitoring and make your next sales call!</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="wizard-footer">
-            <button class="btn btn-secondary" id="wizard-back">← back to dashboard</button>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
   
@@ -1197,10 +967,6 @@
       showLogin();
     });
 
-    document.getElementById('audio-setup-btn').addEventListener('click', () => {
-      showView('audio-setup-view');
-    });
-
     document.getElementById('settings-btn').addEventListener('click', () => {
       loadSettings();
       showView('settings-view');
@@ -1271,15 +1037,6 @@
     });
 
     document.getElementById('settings-back').addEventListener('click', () => {
-      showDashboard();
-    });
-
-    // ==================== AUDIO SETUP WIZARD ====================
-    document.getElementById('download-vbcable').addEventListener('click', () => {
-      window.brutus.openExternal('https://vb-audio.com/Cable/');
-    });
-
-    document.getElementById('wizard-back').addEventListener('click', () => {
       showDashboard();
     });
 

@@ -473,23 +473,70 @@
         }
         
         .performance-chart {
-            height: 120px;
+            height: 140px;
+            display: flex;
+            align-items: stretch;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .chart-subtitle {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-top: 2px;
+            margin-bottom: 6px;
+        }
+
+        .chart-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .chart-score-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Space Mono', monospace;
+            height: 14px;
+            line-height: 14px;
+        }
+
+        .chart-bar-wrap {
+            flex: 1;
             display: flex;
             align-items: flex-end;
-            gap: 8px;
-            margin-top: 10px;
+            width: 100%;
         }
-        
+
         .chart-bar {
-            flex: 1;
-            background: linear-gradient(to top, rgba(255, 80, 80, 0.6), rgba(255, 120, 80, 0.4));
-            border-radius: 6px 6px 0 0;
-            min-height: 20px;
+            width: 100%;
+            background: linear-gradient(to top, rgba(255, 80, 80, 0.7), rgba(255, 120, 80, 0.4));
+            border-radius: 4px 4px 0 0;
+            min-height: 4px;
             transition: height 0.5s ease;
         }
-        
-        .chart-bar:nth-child(odd) {
-            background: linear-gradient(to top, rgba(80, 150, 255, 0.6), rgba(100, 180, 255, 0.4));
+
+        .chart-bar.today {
+            background: linear-gradient(to top, rgba(255, 80, 80, 1), rgba(255, 120, 80, 0.8));
+            box-shadow: 0 0 8px rgba(255, 80, 80, 0.4);
+        }
+
+        .chart-bar-empty {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            height: 4px !important;
+        }
+
+        .chart-day-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .chart-day-label.today {
+            color: #ff5050;
         }
         
         /* Activity Panel */
@@ -526,8 +573,93 @@
             font-family: 'Space Mono', monospace;
             font-size: 11px;
             color: rgba(255, 80, 80, 0.7);
+            white-space: nowrap;
+            margin-left: 12px;
         }
-        
+
+        /* Call History Section */
+        .call-history-section {
+            margin-top: 32px;
+        }
+
+        .call-history-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+
+        .history-search {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            margin-bottom: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .history-search:focus {
+            border-color: rgba(255, 80, 80, 0.4);
+        }
+
+        .history-search::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .history-call-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .history-call-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-score {
+            font-family: 'Space Mono', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            min-width: 44px;
+            text-align: center;
+        }
+
+        .history-score.good { color: #4caf50; }
+        .history-score.warning { color: #ff9800; }
+        .history-score.bad { color: #ff5050; }
+
+        .history-call-meta {
+            flex: 1;
+        }
+
+        .history-call-date {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .history-call-stats {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .history-tag {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 8px;
+            background: rgba(255, 80, 80, 0.12);
+            border: 1px solid rgba(255, 80, 80, 0.25);
+            border-radius: 20px;
+            color: rgba(255, 120, 80, 0.9);
+            margin-left: 4px;
+        }
+
         /* Chat Panel */
         .chat-panel {
             bottom: 40px;
@@ -1225,15 +1357,8 @@
             <!-- Performance Panel -->
             <div class="floating-panel performance-panel" data-panel="performance">
                 <div class="panel-title">weekly performance</div>
-                <div class="performance-chart" id="performance-chart">
-                    <div class="chart-bar" style="height: 20%"></div>
-                    <div class="chart-bar" style="height: 20%"></div>
-                    <div class="chart-bar" style="height: 20%"></div>
-                    <div class="chart-bar" style="height: 20%"></div>
-                    <div class="chart-bar" style="height: 20%"></div>
-                    <div class="chart-bar" style="height: 20%"></div>
-                    <div class="chart-bar" style="height: 20%"></div>
-                </div>
+                <div class="chart-subtitle">avg call score · last 7 days</div>
+                <div class="performance-chart" id="performance-chart"></div>
             </div>
             
             <!-- Activity Panel -->
@@ -1316,6 +1441,15 @@
                         <h3>talk ratio trend</h3>
                         <div class="progress-value" id="progress-talk-ratio">--%</div>
                         <p style="color: rgba(255,255,255,0.5); font-size: 13px;">target: 40%</p>
+                    </div>
+                </div>
+
+                <!-- Call History -->
+                <div class="call-history-section">
+                    <h3>call history</h3>
+                    <input type="text" class="history-search" id="history-search" placeholder="search by score, tag, or date...">
+                    <div id="call-history-list">
+                        <p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 20px;">loading...</p>
                     </div>
                 </div>
             </div>
@@ -1847,17 +1981,8 @@
                     document.getElementById('progress-calls-week').textContent = 
                         `+${data.weeklyStats.callCount} this week`;
                     
-                    // Update chart
-                    const scores = data.weeklyStats.scores || [];
-                    const chartBars = document.querySelectorAll('.chart-bar');
-                    
-                    // Fill in scores from the end
-                    for (let i = 0; i < chartBars.length; i++) {
-                        const scoreIndex = scores.length - chartBars.length + i;
-                        if (scoreIndex >= 0 && scores[scoreIndex]) {
-                            chartBars[i].style.height = `${scores[scoreIndex].score}%`;
-                        }
-                    }
+                    // Build weekly chart
+                    buildWeeklyChart(data.weeklyStats.scores || []);
                     
                     // Calculate average score
                     if (scores.length > 0) {
@@ -1871,22 +1996,25 @@
                 }
                 
                 // Update recent activity
+                const activityList = document.getElementById('activity-list');
                 if (data.recentCalls && data.recentCalls.length > 0) {
-                    const activityList = document.getElementById('activity-list');
-                    activityList.innerHTML = data.recentCalls.map(call => {
-                        const feedback = call.brutusFeedback?.[0]?.text || 'no feedback yet';
-                        const timeAgo = getTimeAgo(new Date(call.createdAt));
-                        
+                    activityList.innerHTML = data.recentCalls.slice(0, 4).map(call => {
+                        const feedback = call.brutusFeedback?.[0]?.text || call.brutusFeedback?.[0]?.feedback || 'no feedback yet';
+                        const dateTime = formatDateTime(call.createdAt);
+                        const scoreColor = call.overallScore >= 70 ? '#4caf50' : call.overallScore >= 50 ? '#ff9800' : '#ff5050';
+
                         return `
                             <div class="activity-item">
                                 <div class="activity-content">
-                                    <h4>call analyzed (score: ${call.overallScore})</h4>
+                                    <h4>call analyzed — <span style="color:${scoreColor}">${call.overallScore}/100</span></h4>
                                     <p>${feedback}</p>
                                 </div>
-                                <div class="activity-time">${timeAgo}</div>
+                                <div class="activity-time">${dateTime}</div>
                             </div>
                         `;
                     }).join('');
+                } else {
+                    activityList.innerHTML = '<div class="activity-item"><div class="activity-content"><h4>no calls yet</h4><p>upload your first call to get roasted</p></div></div>';
                 }
                 
             } catch (error) {
@@ -1896,14 +2024,131 @@
         
         function getTimeAgo(date) {
             const seconds = Math.floor((new Date() - date) / 1000);
-            
+
             if (seconds < 60) return 'just now';
             if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
             if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
             if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
             return date.toLocaleDateString();
         }
-        
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return 'unknown';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return 'unknown';
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const month = months[d.getMonth()];
+            const day = d.getDate();
+            let hours = d.getHours();
+            const mins = String(d.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            return `${month} ${day} · ${hours}:${mins} ${ampm}`;
+        }
+
+        function buildWeeklyChart(scores) {
+            const chart = document.getElementById('performance-chart');
+            if (!chart) return;
+
+            const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            const today = new Date();
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                days.push(d);
+            }
+
+            // Group scores by day
+            const scoreByDay = {};
+            scores.forEach(s => {
+                const key = new Date(s.date).toDateString();
+                if (!scoreByDay[key]) scoreByDay[key] = [];
+                scoreByDay[key].push(s.score);
+            });
+
+            chart.innerHTML = days.map(day => {
+                const key = day.toDateString();
+                const isToday = key === today.toDateString();
+                const dayScores = scoreByDay[key] || [];
+                const avgScore = dayScores.length
+                    ? Math.round(dayScores.reduce((a, b) => a + b, 0) / dayScores.length)
+                    : null;
+
+                const barClass = avgScore !== null
+                    ? (isToday ? 'chart-bar today' : 'chart-bar')
+                    : 'chart-bar chart-bar-empty';
+                const height = avgScore !== null ? `${avgScore}%` : '4px';
+
+                return `
+                    <div class="chart-col">
+                        <div class="chart-score-label">${avgScore !== null ? avgScore : ''}</div>
+                        <div class="chart-bar-wrap">
+                            <div class="${barClass}" style="height: ${height}"></div>
+                        </div>
+                        <div class="chart-day-label${isToday ? ' today' : ''}">${DAY_NAMES[day.getDay()]}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==================== CALL HISTORY ====================
+        let allCalls = [];
+
+        async function loadCallHistory() {
+            try {
+                const data = await apiCall('/calls?limit=100');
+                allCalls = data.calls || [];
+                renderCallHistory(allCalls);
+
+                const searchInput = document.getElementById('history-search');
+                if (searchInput && !searchInput.dataset.bound) {
+                    searchInput.dataset.bound = '1';
+                    searchInput.addEventListener('input', (e) => {
+                        const q = e.target.value.toLowerCase();
+                        if (!q) { renderCallHistory(allCalls); return; }
+                        const filtered = allCalls.filter(call => {
+                            const score = String(call.overallScore);
+                            const date = formatDateTime(call.createdAt).toLowerCase();
+                            const tags = (call.tags || []).join(' ').toLowerCase();
+                            return score.includes(q) || date.includes(q) || tags.includes(q);
+                        });
+                        renderCallHistory(filtered);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load call history:', error);
+            }
+        }
+
+        function renderCallHistory(calls) {
+            const list = document.getElementById('call-history-list');
+            if (!list) return;
+
+            if (calls.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 20px;">no calls yet — upload one to get started</p>';
+                return;
+            }
+
+            list.innerHTML = calls.map(call => {
+                const score = call.overallScore;
+                const scoreClass = score >= 70 ? 'good' : score >= 50 ? 'warning' : 'bad';
+                const mins = Math.floor((call.durationSeconds || 0) / 60);
+                const duration = mins > 0 ? `${mins}m` : '<1m';
+                const tags = (call.tags || []).map(t => `<span class="history-tag">${t}</span>`).join('');
+
+                return `
+                    <div class="history-call-item">
+                        <div class="history-score ${scoreClass}">${score}</div>
+                        <div class="history-call-meta">
+                            <div class="history-call-date">${formatDateTime(call.createdAt)}</div>
+                            <div class="history-call-stats">${duration} · talk ratio ${Math.round(call.talkRatio || 0)}%${tags ? ' · ' + tags : ''}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // ==================== NAVIGATION ====================
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
@@ -1921,6 +2166,7 @@
                 if (viewName === 'notes') loadNotes();
                 if (viewName === 'research') loadResearch();
                 if (viewName === 'credits') loadBalance();
+                if (viewName === 'progress') loadCallHistory();
             });
         });
         

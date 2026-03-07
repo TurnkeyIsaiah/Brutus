@@ -11,6 +11,13 @@ const anthropic = new Anthropic({
 // Track last AI note time per session
 const lastAiNoteTime = new Map();
 
+// In-memory session context (two-layer context system)
+// Structure: { runningSummary, segments: [{text, timestamp}], lastSummaryUpdateAt }
+const sessionContexts = new Map();
+
+const SLIDING_WINDOW_SECONDS = 60;   // raw transcript window sent to Claude
+const SUMMARY_UPDATE_INTERVAL = 180; // seconds between summary compressions (3 min)
+
 // ==================== START SESSION ====================
 
 async function startSession(userId) {
@@ -51,13 +58,8 @@ async function handleTranscriptChunk(userId, payload) {
   try {
     const { sessionId, transcriptChunk, timeIntoCall, audioData, mimeType, screenshot, aiNotesEnabled } = payload;
 
-    // Get active session
     const session = await prisma.session.findFirst({
-      where: {
-        id: sessionId,
-        userId,
-        status: 'active'
-      }
+      where: { id: sessionId, userId, status: 'active' }
     });
 
     if (!session) {
@@ -65,7 +67,6 @@ async function handleTranscriptChunk(userId, payload) {
       return null;
     }
 
-    // Reject if user is out of tokens
     const hasFunds = await hasTokens(userId);
     if (!hasFunds) {
       return { type: 'error', code: 'OUT_OF_TOKENS', text: "you're out of tokens. add credits to keep brutus watching." };
@@ -73,91 +74,161 @@ async function handleTranscriptChunk(userId, payload) {
 
     let transcript = transcriptChunk;
 
-    // If audio data provided, transcribe it first
     if (audioData && !transcriptChunk) {
       const audioBuffer = Buffer.from(audioData, 'base64');
       transcript = await transcribeChunk(audioBuffer, mimeType || 'audio/webm');
-
-      if (!transcript) {
-        return null;
-      }
+      if (!transcript) return null;
     }
 
-    // Skip if no transcript
-    if (!transcript || transcript.trim().length === 0) {
-      return null;
+    if (!transcript || transcript.trim().length === 0) return null;
+
+    const timestamp = timeIntoCall || 0;
+
+    // ── Two-layer context ──────────────────────────────────────────────────────
+    if (!sessionContexts.has(sessionId)) {
+      sessionContexts.set(sessionId, {
+        runningSummary: '',
+        segments: [],          // all segments for this session
+        lastSummaryUpdateAt: 0,
+        lastVisualSummary: '' // Haiku visual analysis output (text only)
+      });
     }
+    const ctx = sessionContexts.get(sessionId);
 
-    // Update session with new transcript
-    const updatedTranscript = session.transcriptSoFar + '\n' + transcript;
+    // Append new segment
+    ctx.segments.push({ text: transcript, timestamp });
 
+    // Sliding window: last 60 seconds of raw transcript
+    const recentTranscript = ctx.segments
+      .filter(s => s.timestamp >= timestamp - SLIDING_WINDOW_SECONDS)
+      .map(s => s.text)
+      .join('\n');
+
+    // Persist full transcript to DB (needed by endSession for call analysis)
+    const fullTranscript = ctx.segments.map(s => s.text).join('\n');
     await prisma.session.update({
       where: { id: sessionId },
-      data: {
-        transcriptSoFar: updatedTranscript
-      }
+      data: { transcriptSoFar: fullTranscript }
     });
 
-    // Get real-time feedback from Brutus (with screenshot if available)
+    // Trigger background summary compression every 3 minutes (non-blocking)
+    if (timestamp >= SUMMARY_UPDATE_INTERVAL &&
+        timestamp - ctx.lastSummaryUpdateAt >= SUMMARY_UPDATE_INTERVAL) {
+      ctx.lastSummaryUpdateAt = timestamp; // optimistic lock prevents double-fire
+      updateRunningSummary(userId, sessionId, ctx).catch(console.error);
+    }
+    // ──────────────────────────────────────────────────────────────────────────
+
+    // ── Haiku visual analysis (runs before Sonnet on screenshot chunks) ────────
+    if (screenshot) {
+      try {
+        ctx.lastVisualSummary = await analyzeScreenshot(userId, screenshot, recentTranscript);
+        console.log('[Visual] Haiku visual summary updated');
+      } catch (err) {
+        console.error('[Visual] Haiku screenshot analysis failed:', err.message);
+      }
+    }
+    // ──────────────────────────────────────────────────────────────────────────
+
+    // Sonnet coaching — text only, never sees image tokens
     const feedback = await getRealTimeFeedback(
       userId,
-      transcript,
+      recentTranscript,
       {
         feedbackGiven: session.feedbackGiven,
-        timeIntoCall: timeIntoCall || 0,
-        fullTranscript: updatedTranscript
-      },
-      screenshot || null  // Pass the screenshot to Brutus
+        timeIntoCall: timestamp,
+        runningSummary: ctx.runningSummary,
+        visualSummary: ctx.lastVisualSummary  // 100-token Haiku text, not raw image
+      }
     );
 
-    // If Brutus has feedback, check if enough time has passed since last feedback
-    if (feedback) {
-      // Get the timestamp of the last feedback
-      const lastFeedback = session.feedbackGiven[session.feedbackGiven.length - 1];
-      const lastFeedbackTime = lastFeedback ? lastFeedback.timestamp : 0;
-      const timeSinceLastFeedback = (timeIntoCall || 0) - lastFeedbackTime;
-
-      // Only send feedback if at least 20 seconds have passed (configurable minimum)
-      const MIN_FEEDBACK_INTERVAL = 20; // seconds
-
-      if (timeSinceLastFeedback < MIN_FEEDBACK_INTERVAL && session.feedbackGiven.length > 0) {
-        console.log(`[Brutus] Skipping feedback - only ${timeSinceLastFeedback}s since last feedback (min: ${MIN_FEEDBACK_INTERVAL}s)`);
-        return null;
-      }
-
-      const updatedFeedback = [
-        ...session.feedbackGiven,
-        {
-          ...feedback,
-          timestamp: timeIntoCall || 0,
-          createdAt: new Date().toISOString()
-        }
-      ];
-
+    if (feedback && feedback.coach === true) {
       await prisma.session.update({
         where: { id: sessionId },
         data: {
-          feedbackGiven: updatedFeedback
+          feedbackGiven: [
+            ...session.feedbackGiven,
+            { feedback: feedback.feedback, timestamp, createdAt: new Date().toISOString() }
+          ]
         }
       });
 
-      return {
-        ...feedback,
-        timestamp: timeIntoCall
-      };
+      return { ...feedback, timestamp };
     }
 
-    // Generate AI notes if enabled and enough time has passed
     if (aiNotesEnabled && transcript.trim().length > 0) {
-      await generateAiNote(userId, sessionId, transcript, updatedTranscript, timeIntoCall);
+      await generateAiNote(userId, sessionId, transcript, fullTranscript, timestamp);
     }
 
     return null;
-    
+
   } catch (error) {
     console.error('Handle transcript chunk error:', error);
     return null;
   }
+}
+
+// ==================== RUNNING SUMMARY (background, non-blocking) ====================
+
+async function updateRunningSummary(userId, sessionId, ctx) {
+  try {
+    // Build transcript for the last 3-minute window
+    const windowStart = ctx.lastSummaryUpdateAt - SUMMARY_UPDATE_INTERVAL;
+    const recentText = ctx.segments
+      .filter(s => s.timestamp > windowStart)
+      .map(s => s.text)
+      .join('\n');
+
+    if (!recentText.trim()) return;
+
+    const response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 350,
+      messages: [{
+        role: 'user',
+        content: `Compress this sales call context into a brief factual summary under 300 tokens.
+
+${ctx.runningSummary ? `Previous summary:\n${ctx.runningSummary}\n\n` : ''}New transcript (last 3 minutes):
+"${recentText}"
+
+Write one concise paragraph covering: topics discussed, prospect's situation/pain points, objections raised, rapport level, and where the call stands now. Facts only, no formatting or bullet points.`
+      }]
+    });
+
+    deductTokens(userId, response.usage).catch(console.error);
+    ctx.runningSummary = response.content[0].text.trim();
+    console.log(`[Summary] Updated for session ${sessionId} at t=${ctx.lastSummaryUpdateAt}s`);
+
+  } catch (error) {
+    console.error('[Summary] Failed to update running summary:', error.message);
+  }
+}
+
+// ==================== HAIKU VISUAL ANALYSIS ====================
+
+async function analyzeScreenshot(userId, screenshot, recentTranscript) {
+  const response = await anthropic.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 120,
+    messages: [{
+      role: 'user',
+      content: [
+        {
+          type: 'image',
+          source: { type: 'base64', media_type: 'image/jpeg', data: screenshot }
+        },
+        {
+          type: 'text',
+          text: `Sales call screenshot. Recent speech: "${recentTranscript.slice(-300)}"
+
+Provide a visual summary under 100 tokens covering: prospect engagement level, attention/distraction signals, visible body language or facial cues, and any notable on-screen content relevant to the call. Be direct and factual.`
+        }
+      ]
+    }]
+  });
+
+  deductTokens(userId, response.usage).catch(console.error);
+  return response.content[0].text.trim();
 }
 
 // ==================== GENERATE AI NOTE ====================
@@ -314,9 +385,10 @@ async function endSession(userId, sessionId) {
         }
       });
 
-      // Clean up AI notes tracking
+      // Clean up in-memory state
       lastAiNoteTime.delete(sessionId);
-      
+      sessionContexts.delete(sessionId);
+
       return {
         callId: call.id,
         analysis,
@@ -332,8 +404,9 @@ async function endSession(userId, sessionId) {
         }
       });
 
-      // Clean up AI notes tracking
+      // Clean up in-memory state
       lastAiNoteTime.delete(sessionId);
+      sessionContexts.delete(sessionId);
 
       return {
         callId: null,

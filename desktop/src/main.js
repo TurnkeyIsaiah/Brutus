@@ -101,6 +101,15 @@ function createOverlayWindow() {
   overlayWindow.loadFile(path.join(__dirname, '../renderer/overlay.html'));
   overlayWindow.setIgnoreMouseEvents(false);
 
+  // Grant screen capture permission automatically (Electron 20+ requirement)
+  overlayWindow.webContents.session.setDisplayMediaRequestHandler((request, callback) => {
+    desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
+      callback({ video: sources[0], audio: 'loopback' });
+    }).catch(() => {
+      callback({});
+    });
+  }, { useSystemPicker: false });
+
   // DevTools keyboard shortcuts (F12 and Ctrl+Shift+I)
   overlayWindow.webContents.on('before-input-event', (event, input) => {
     if (input.key === 'F12' ||
@@ -113,6 +122,10 @@ function createOverlayWindow() {
     overlayWindow = null;
     isMonitoring = false;
   });
+
+  // Apply stored opacity
+  const savedSettings = store.get('settings', { overlayOpacity: 0.95 });
+  overlayWindow.setOpacity(savedSettings.overlayOpacity || 0.95);
 }
 
 function showOverlay() {
@@ -320,6 +333,9 @@ ipcMain.handle('get-settings', () => {
 
 ipcMain.handle('set-settings', (event, settings) => {
   store.set('settings', settings);
+  if (overlayWindow && settings.overlayOpacity !== undefined) {
+    overlayWindow.setOpacity(settings.overlayOpacity);
+  }
   return true;
 });
 

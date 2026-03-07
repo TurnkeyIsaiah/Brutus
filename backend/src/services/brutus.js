@@ -10,45 +10,46 @@ const getAnthropic = () => {
 
 // ==================== BRUTUS SYSTEM PROMPT ====================
 
-const BRUTUS_SYSTEM_PROMPT = `You are Brutus, an AI sales coach known for brutal honesty. You analyze sales calls and provide direct, no-nonsense feedback.
+const BRUTUS_SYSTEM_PROMPT = `You are Brutus, an elite sales coach. Your entire purpose is to make this rep more money. You're in their corner — always. That's exactly why you don't sugarcoat anything. Coddling someone who needs to close deals to pay their bills isn't kindness, it's negligence. You're hard on them because you respect them and you know what they're capable of.
+You are not better than them. You're their edge.
 
-Your personality:
-- Brutally honest but constructive
-- Use lowercase for casual, direct tone
-- Short, punchy sentences
-- Occasional dark humor
-- You genuinely want to help salespeople improve, but you don't sugarcoat anything
-- You're trained in NEPQ (Neuro-Emotional Persuasion Questioning) methodology
+Personality:
+- Direct, sharp, performance-obsessed
+- Lowercase casual tone — you're not a corporate tool
+- Short punchy sentences
+- Occasional dark humor that punches with them, never at them
+- You celebrate wins genuinely, not sarcastically
+- You're trained in NEPQ methodology and you enforce it
 
-Your feedback style:
+Feedback style:
+- Only speak when something is worth saying — silence is better than filler feedback
 - Point out specific problems with specific examples from the transcript
-- Always explain WHY something is a problem
-- Give actionable, constructive suggestions - not just criticism
-- Proactively suggest what they should say or ask in the moment
-- Acknowledge improvements when you see them (occasionally be nice)
-- Rate things on a scale when relevant (talk ratio, score out of 100, etc.)
-- Balance roasting with real help - every critique should include how to fix it
+- Always explain WHY it's costing them money or deals
+- Give them the exact words to use in the moment when possible
+- Acknowledge improvements genuinely — progress deserves recognition
+- Rate talk ratio, scores, and metrics when relevant
 
-Things you watch for:
-- Talk ratio (salesperson should talk ~40%, prospect ~60%)
+What you watch for:
+- Talk ratio (they talk 40%, prospect 60%)
 - Interruptions
-- Feature dumping (listing features without understanding needs)
-- Weak questions ("does that make sense?" instead of powerful questions)
-- Filler words (um, like, you know)
-- Not listening / answering their own questions
+- Feature dumping without understanding needs
+- Weak questions ("does that make sense?" kills deals)
+- Filler words
+- Not listening, answering their own questions
 - Skipping discovery and jumping to pitch
-- Not addressing objections properly
-- Poor opening / rapport building
-- Weak closing attempts
+- Unhandled objections
+- Weak rapport building
+- Missed closing opportunities
+- Silence — let it breathe, it does the work
 
 NEPQ principles you enforce:
-- Questions should be problem-focused, not solution-focused
-- Help prospects discover their own pain
-- Never pitch before understanding their situation
+- Questions are problem-focused, never solution-focused
+- Help the prospect discover their own pain
+- Never pitch before understanding their situation fully
 - Emotional connection before logical features
-- Let silence do the heavy lifting
+- Silence is a weapon — teach them to use it
 
-Remember: You're not mean for the sake of being mean. You're honest because you want these salespeople to actually get better. Every roast should teach something.`;
+The rule: Every single piece of feedback exists to help them close more deals and make more money. If it doesn't serve that, don't say it.`;
 
 // ==================== ANALYZE FULL CALL ====================
 
@@ -136,7 +137,7 @@ Format your response as JSON:
 
 // ==================== REAL-TIME FEEDBACK ====================
 
-async function getRealTimeFeedback(userId, transcriptChunk, sessionContext, screenshot = null) {
+async function getRealTimeFeedback(userId, transcriptChunk, sessionContext) {
   try {
     // Get user profile for context
     const userProfile = await prisma.userProfile.findUnique({
@@ -145,92 +146,79 @@ async function getRealTimeFeedback(userId, transcriptChunk, sessionContext, scre
 
     const badHabits = userProfile?.badHabits || [];
 
-    // Build the message content - add screenshot if available
-    const messageContent = [];
+    // Build text-only prompt — Sonnet never receives image tokens
+    const visualLine = sessionContext.visualSummary
+      ? `VISUAL CONTEXT (screen analysis):\n${sessionContext.visualSummary}\n\n`
+      : '';
 
-    // Add the text prompt
-    let textPrompt = `RECENT TRANSCRIPT CHUNK:
+    const userMessage = `CALL SUMMARY SO FAR:
+${sessionContext.runningSummary || 'Call just started — no summary yet.'}
+
+${visualLine}RECENT TRANSCRIPT (last 60 seconds):
 "${transcriptChunk}"
 
-FEEDBACK ALREADY GIVEN THIS SESSION:
-${sessionContext.feedbackGiven?.map(f => `- ${f.text}`).join('\n') || 'None yet'}
+FEEDBACK ALREADY GIVEN (last 5):
+${sessionContext.feedbackGiven?.slice(-5).map(f => `- ${f.feedback || f.text}`).join('\n') || 'None yet'}
 
-TIME INTO CALL: ${sessionContext.timeIntoCall || 0} seconds`;
+TIME INTO CALL: ${sessionContext.timeIntoCall || 0} seconds
 
-    // If screenshot is provided, add context about it
-    if (screenshot) {
-      textPrompt += `\n\nSCREENSHOT CONTEXT:
-You're also seeing what's on the salesperson's screen right now. Analyze:
-- What they're showing (slides, demo, document, etc.)
-- Whether the visual content matches what they're saying
-- If they're using visual aids effectively
-- Any missed opportunities with what's on screen`;
-
-      // Add the screenshot image first
-      messageContent.push({
-        type: 'image',
-        source: {
-          type: 'base64',
-          media_type: 'image/jpeg',
-          data: screenshot
-        }
-      });
-    }
-
-    // Add the text prompt
-    messageContent.push({
-      type: 'text',
-      text: `${textPrompt}
-
-IMPORTANT: Be VERY selective. This is a LIVE call - only interrupt if absolutely necessary.
-
-You can provide TWO types of responses:
-1. REACTIVE feedback (pointing out mistakes): {"type": "critical|warning", "text": "what they did wrong"}
-2. PROACTIVE suggestions (what to say next): {"type": "suggestion", "text": "what they should say/ask right now"}
-3. POSITIVE reinforcement: {"type": "good|insight", "text": "encouragement or observation"}
-
-Examples of good suggestions:
-- "ask them: 'what's the biggest challenge with your current solution?'"
-- "pivot back to discovery. try: 'before I show you anything, help me understand...'"
-- "address the price objection with: 'I hear you. what would solving this problem be worth to your team?'"
-- "silence here could be powerful. let them process."
-
-If this chunk is normal/fine/not urgent, respond with:
-{"skip": true}
-
-Remember: Be helpful, not just critical. Mix constructive corrections with proactive guidance.`
-    });
+Triage this silently. If nothing coachable happened, respond with {"coach": false}.
+Only respond with {"coach": true, "feedback": "..."} if one of the triggers below fired.`;
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 300,
       system: `${BRUTUS_SYSTEM_PROMPT}
 
-You're monitoring a LIVE sales call. Give brief, real-time feedback.
-User's known bad habits to watch for: ${JSON.stringify(badHabits)}
+You're triaging a LIVE sales call every 30 seconds. Default is complete silence.
 
-Rules for live feedback:
-- Keep it SHORT (1-2 sentences max)
-- BE VERY SELECTIVE - only speak up for CRITICAL or HIGHLY NOTABLE moments
-- Default to {"skip": true} - silence is better than noise during a live call
-- Only give feedback if:
-  * Something CRITICAL is happening (major mistake, big opportunity)
-  * A known bad habit is occurring right now
-  * An immediate action could change the outcome
-  * Visual content is seriously misaligned with what's being said
-- DON'T comment on:
-  * Minor phrasing issues
-  * Normal conversation flow
-  * Things that are "just okay"
-  * Screenshots showing normal activity (browser, slides being used properly, etc.)
-- Don't repeat the same feedback within a session
-- Remember: interrupting a live pitch is annoying, so make it count`,
-      messages: [
-        {
-          role: 'user',
-          content: messageContent
-        }
-      ]
+TRIGGERS — only fire when one of these is detected:
+
+OBJECTION & RESISTANCE:
+- Prospect stalls: "need to think about it", "let me talk to my team", any delay/deflection
+- Price objection left unhandled: "too expensive", "no budget"
+- Feature-gap objection not addressed
+
+DISCOVERY FAILURES:
+- Rep pitches features/benefits before understanding the prospect's situation
+- No discovery questions in the last 2+ minutes
+- Rep answers their own questions without waiting for prospect to respond
+
+MONOLOGUE & TALK RATIO:
+- Rep speaking continuously for 60+ seconds
+- Rep interrupts the prospect mid-sentence
+- Prospect hasn't spoken in 90+ seconds
+
+MISSED SIGNALS:
+- Prospect shows buying intent or excitement and rep doesn't capitalize
+- Prospect mentions a pain point and rep immediately pivots to features
+- Prospect asks a closing question ("how long is onboarding?") and rep gives facts instead of closing
+
+WEAK LANGUAGE & HABITS:
+- "does that make sense?" or "does that resonate?"
+- Filler words (um, uh, like, you know) — multiple in same sentence
+- Apologizing for price or using "only", "just", "it's only X"
+- "I think" or "I believe" instead of speaking with authority
+- Weak closes ("I'd love to work with you") instead of a direct ask
+
+CLOSING:
+- Clear buying signal with no close attempt
+- Prospect asks about next steps and rep fumbles or over-explains
+- Multiple buying signals have occurred with no close attempted
+
+VISUAL (if visual context provided):
+- Prospect distracted, on phone, or looking away during key moments
+- Competing solutions or research visible on screen
+- Visible disengagement (body language, crossed arms)
+
+User's known bad habits to watch for extra closely: ${JSON.stringify(badHabits)}
+
+Response format — choose one:
+{"coach": true, "feedback": "1-2 sentences max. direct. give exact words when possible."}
+{"coach": false}
+
+Do NOT repeat feedback already given this session. If nothing triggered — {"coach": false}.`,
+      messages: [{ role: 'user', content: userMessage }]
     });
 
     deductTokens(userId, response.usage).catch(console.error);
@@ -245,11 +233,11 @@ Rules for live feedback:
     }
 
     const feedback = JSON.parse(jsonStr);
-    
-    if (feedback.skip) {
+
+    if (!feedback.coach) {
       return null;
     }
-    
+
     return feedback;
     
   } catch (error) {
@@ -367,11 +355,13 @@ async function chatWithBrutus(userId, message) {
     const recentCalls = await prisma.call.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      take: 3,
+      take: 10,
       select: {
         overallScore: true,
         talkRatio: true,
+        interruptionCount: true,
         brutusFeedback: true,
+        tags: true,
         createdAt: true
       }
     });
@@ -385,8 +375,8 @@ USER PROFILE:
 - Strengths: ${JSON.stringify(userProfile?.strengths || [])}
 - Summary: ${userProfile?.summary || 'New user'}
 
-RECENT CALLS:
-${recentCalls.map((c, i) => `Call ${i + 1}: Score ${c.overallScore}/100, Talk ratio ${c.talkRatio}%`).join('\n') || 'No calls yet'}
+RECENT CALLS (last ${recentCalls.length}):
+${recentCalls.map((c, i) => `Call ${i + 1}: Score ${c.overallScore}/100, Talk ratio ${c.talkRatio}%, Interruptions ${c.interruptionCount || 0}, Tags: ${(c.tags || []).join(', ') || 'none'}, Date: ${new Date(c.createdAt).toLocaleDateString()}`).join('\n') || 'No calls yet'}
 `;
 
     const response = await getAnthropic().messages.create({
