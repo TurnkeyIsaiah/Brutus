@@ -152,12 +152,15 @@ async function handleTranscriptChunk(userId, payload) {
           ]
         }
       });
-
-      return { ...feedback, timestamp };
     }
 
+    // Generate AI note independently — runs regardless of whether Brutus coached
     if (aiNotesEnabled && transcript.trim().length > 0) {
-      await generateAiNote(userId, sessionId, transcript, fullTranscript, timestamp);
+      generateAiNote(userId, sessionId, transcript, fullTranscript, timestamp).catch(console.error);
+    }
+
+    if (feedback && feedback.coach === true) {
+      return { ...feedback, timestamp };
     }
 
     return null;
@@ -360,7 +363,7 @@ async function endSession(userId, sessionId) {
           talkRatio: analysis.talkRatio || 50,
           interruptionCount: analysis.interruptionCount || 0,
           overallScore: analysis.overallScore || 50,
-          brutusFeedback: analysis.feedback || [],
+          brutusFeedback: analysis,
           tags: detectCallTags(session.transcriptSoFar)
         }
       });
