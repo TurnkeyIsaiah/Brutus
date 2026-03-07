@@ -155,16 +155,16 @@ model PasswordResetToken {
 
 model Research {
   id          String    @id @default(uuid())
-  sessionId   String    @map("session_id")
+  sessionId   String?   @map("session_id")
   userId      String    @map("user_id")
   query       String    // Company or prospect name to research
   results     String?   @db.Text // AI-generated research results
-  status      String    @default("pending") // "pending" or "completed"
+  status      String    @default("pending") // "pending", "completed", or "failed"
   requestedAt DateTime  @default(now()) @map("requested_at")
   completedAt DateTime? @map("completed_at")
 
   // Relations
-  session     Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session     Session?  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@map("research")
 }

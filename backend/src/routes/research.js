@@ -2,6 +2,7 @@ const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const Anthropic = require('@anthropic-ai/sdk');
 const { authenticate } = require('../middleware/auth');
+const { deductTokens } = require('../lib/tokens');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -16,19 +17,19 @@ router.post('/', authenticate, async (req, res) => {
     const { sessionId, query, requestedAt } = req.body;
     const userId = req.user.id;
 
-    // Create research request
-    const research = await prisma.research.create({
-      data: {
-        sessionId,
-        userId,
-        query,
-        status: 'pending',
-        requestedAt: requestedAt ? new Date(requestedAt) : new Date()
-      }
-    });
+    // sessionId is optional — web frontend requests won't have one
+    const data = {
+      userId,
+      query,
+      status: 'pending',
+      requestedAt: requestedAt ? new Date(requestedAt) : new Date()
+    };
+    if (sessionId) data.sessionId = sessionId;
+
+    const research = await prisma.research.create({ data });
 
     // Process research in background (don't wait for it)
-    processResearch(research.id, query).catch(err => {
+    processResearch(research.id, userId, query, sessionId || null).catch(err => {
       console.error('Failed to process research:', err);
     });
 
@@ -133,58 +134,57 @@ router.delete('/:id', authenticate, async (req, res) => {
 
 // ==================== BACKGROUND RESEARCH PROCESSOR ====================
 
-async function processResearch(researchId, query) {
+async function processResearch(researchId, userId, query, sessionId) {
   try {
     console.log(`[Research] Processing: "${query}"`);
 
-    // Use Claude to research the company/prospect
+    // Pull call transcript from DB if there's an active session
+    let transcriptContext = '';
+    if (sessionId) {
+      const session = await prisma.session.findUnique({
+        where: { id: sessionId },
+        select: { transcriptSoFar: true }
+      });
+      if (session?.transcriptSoFar?.trim().length > 50) {
+        transcriptContext = `\n\nCALL TRANSCRIPT CONTEXT (what the prospect has said so far on this call):\n"""\n${session.transcriptSoFar.slice(-2000)}\n"""\nUse any details from this transcript — company name, role, pain points, team size, budget, goals — to make the brief more specific and accurate.`;
+      }
+    }
+
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2000,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1500,
       messages: [
         {
           role: 'user',
-          content: `You are a sales research assistant. Research this company or prospect: "${query}"
+          content: `You are a sales research assistant. Research this company or prospect for an active sales rep: "${query}"${transcriptContext}
 
-Provide a comprehensive sales research brief including:
-1. Company overview (if applicable)
-2. Industry and market position
-3. Key decision makers (if known)
-4. Recent news or developments
-5. Potential pain points or needs
-6. Competitor landscape
-7. Best approach for sales outreach
+Provide a concise sales research brief covering:
+1. Company overview — industry, size, what they do
+2. Likely pain points and business needs
+3. Potential objections and how to handle them
+4. Best angle for this sales rep to take
+5. Key questions to ask on the call
 
-Format your response in clear, actionable sections. Be concise but thorough.
-
-Note: You don't have access to real-time web search, so provide the best analysis you can based on your knowledge. Mention if information might be outdated.`
+Be direct and actionable. Flag anything that might be outdated or uncertain. Skip sections where you have no useful information rather than guessing.`
         }
       ]
     });
 
+    deductTokens(userId, response.usage).catch(console.error);
+
     const results = response.content[0].text;
 
-    // Update research with results
     await prisma.research.update({
       where: { id: researchId },
-      data: {
-        results,
-        status: 'completed',
-        completedAt: new Date()
-      }
+      data: { results, status: 'completed', completedAt: new Date() }
     });
 
     console.log(`[Research] Completed: "${query}"`);
   } catch (error) {
     console.error(`[Research] Failed: "${query}"`, error);
-
-    // Mark as failed
     await prisma.research.update({
       where: { id: researchId },
-      data: {
-        status: 'failed',
-        results: `Research failed: ${error.message}`
-      }
+      data: { status: 'failed', results: `Research failed: ${error.message}` }
     });
   }
 }

@@ -1795,10 +1795,17 @@
         <!-- Research View -->
         <div id="research-view" class="view">
             <div class="progress-view-content">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <h2 class="view-title">research</h2>
                     <button class="auth-btn" id="export-research-btn" style="width: auto; padding: 10px 20px;">export to PDF</button>
                 </div>
+
+                <!-- Research input -->
+                <div style="display: flex; gap: 12px; margin-bottom: 32px;">
+                    <input type="text" id="research-query-input" class="auth-input" placeholder="company or prospect name (e.g. Salesforce, John Smith at Acme Corp)..." style="flex: 1;">
+                    <button class="auth-btn" id="research-submit-btn" style="width: auto; padding: 14px 24px; white-space: nowrap;">research</button>
+                </div>
+
                 <div id="research-list">
                     <p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">Loading research...</p>
                 </div>
@@ -2800,7 +2807,7 @@
                 const researchList = document.getElementById('research-list');
 
                 if (!data.research || data.research.length === 0) {
-                    researchList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">No research yet. Request research during your calls!</p>';
+                    researchList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">No research yet. Type a company or prospect name above to get started.</p>';
                     return;
                 }
 
@@ -2833,6 +2840,36 @@
                 document.getElementById('research-list').innerHTML = '<p style="text-align: center; color: #ff5050; margin-top: 40px;">Failed to load research</p>';
             }
         }
+
+        // Submit research from web frontend
+        async function submitResearch() {
+            const input = document.getElementById('research-query-input');
+            const btn = document.getElementById('research-submit-btn');
+            const query = input.value.trim();
+            if (!query) return;
+
+            btn.disabled = true;
+            btn.textContent = 'researching...';
+
+            try {
+                await apiCall('/research', {
+                    method: 'POST',
+                    body: JSON.stringify({ query })
+                });
+                input.value = '';
+                await loadResearch();
+            } catch (error) {
+                console.error('Research request failed:', error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'research';
+            }
+        }
+
+        document.getElementById('research-submit-btn').addEventListener('click', submitResearch);
+        document.getElementById('research-query-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') submitResearch();
+        });
 
         // Export research to PDF (simplified - creates downloadable text file)
         document.getElementById('export-research-btn').addEventListener('click', async () => {
@@ -2874,18 +2911,6 @@
                 console.error('Failed to export research:', error);
                 alert('Failed to export research');
             }
-        });
-
-        // Load notes/research when switching to those views
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const viewName = item.dataset.view;
-                if (viewName === 'notes') {
-                    loadNotes();
-                } else if (viewName === 'research') {
-                    loadResearch();
-                }
-            });
         });
 
         // ==================== INIT ====================
