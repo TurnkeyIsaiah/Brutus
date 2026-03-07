@@ -241,7 +241,7 @@ async function generateAiNote(userId, sessionId, recentTranscript, fullTranscrip
     // Only generate notes every 30 seconds
     const lastNoteTime = lastAiNoteTime.get(sessionId) || 0;
     const timeSinceLastNote = timeIntoCall - lastNoteTime;
-    const MIN_NOTE_INTERVAL = 30; // seconds
+    const MIN_NOTE_INTERVAL = 60; // seconds
 
     if (timeSinceLastNote < MIN_NOTE_INTERVAL && lastNoteTime > 0) {
       console.log(`[AI Notes] Skipping - only ${timeSinceLastNote}s since last note (min: ${MIN_NOTE_INTERVAL}s)`);
@@ -258,7 +258,7 @@ async function generateAiNote(userId, sessionId, recentTranscript, fullTranscrip
 
     // Generate concise note using Claude
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 200,
       messages: [{
         role: 'user',
