@@ -409,6 +409,9 @@
             cursor: grab;
             transition: box-shadow 0.3s ease, transform 0.1s ease;
             user-select: none;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         
         .floating-panel:hover {
@@ -526,7 +529,8 @@
         }
         
         .performance-chart {
-            height: 140px;
+            flex: 1;
+            min-height: 80px;
             display: flex;
             align-items: stretch;
             gap: 6px;
@@ -598,6 +602,16 @@
             left: 60px;
             width: 340px;
         }
+
+        .activity-panel #activity-list {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        .activity-panel #activity-list::-webkit-scrollbar { width: 3px; }
+        .activity-panel #activity-list::-webkit-scrollbar-track { background: transparent; }
+        .activity-panel #activity-list::-webkit-scrollbar-thumb { background: rgba(255,80,80,0.2); border-radius: 2px; }
         
         .activity-item {
             display: flex;
@@ -866,13 +880,12 @@
             right: 60px;
             width: 380px;
             height: 420px;
-            display: flex;
-            flex-direction: column;
         }
-        
+
         .chat-messages {
             flex: 1;
             overflow-y: auto;
+            min-height: 0;
             padding-right: 10px;
             margin-bottom: 16px;
         }
