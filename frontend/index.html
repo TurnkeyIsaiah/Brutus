@@ -421,6 +421,59 @@
             box-shadow: 0 20px 60px rgba(255, 80, 80, 0.25);
             z-index: 100;
         }
+
+        .floating-panel.resizing {
+            transition: none;
+            z-index: 100;
+        }
+
+        /* Resize handles */
+        .resize-handle {
+            position: absolute;
+            z-index: 20;
+        }
+
+        .resize-s {
+            height: 8px;
+            bottom: 0;
+            left: 20px;
+            right: 20px;
+            cursor: s-resize;
+        }
+
+        .resize-e {
+            width: 8px;
+            right: 0;
+            top: 20px;
+            bottom: 20px;
+            cursor: e-resize;
+        }
+
+        .resize-se {
+            width: 20px;
+            height: 20px;
+            bottom: 0;
+            right: 0;
+            cursor: se-resize;
+            border-radius: 0 0 20px 0;
+        }
+
+        .resize-se::after {
+            content: '';
+            position: absolute;
+            right: 6px;
+            bottom: 6px;
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid rgba(255, 80, 80, 0.3);
+            border-bottom: 2px solid rgba(255, 80, 80, 0.3);
+            border-radius: 0 0 2px 0;
+            transition: border-color 0.2s;
+        }
+
+        .floating-panel:hover .resize-se::after {
+            border-color: rgba(255, 80, 80, 0.7);
+        }
         
         .panel-title {
             font-family: 'Space Mono', monospace;
@@ -2416,25 +2469,68 @@
             });
         });
         
-        // ==================== DRAGGABLE PANELS ====================
+        // ==================== DRAGGABLE & RESIZABLE PANELS ====================
         let draggedPanel = null;
         let dragOffset = { x: 0, y: 0 };
-        
+        let resizingPanel = null;
+        let resizeDir = null;
+        let resizeStart = {};
+
+        // Inject resize handles into every panel
+        document.querySelectorAll('.floating-panel').forEach(panel => {
+            ['s', 'e', 'se'].forEach(dir => {
+                const handle = document.createElement('div');
+                handle.className = `resize-handle resize-${dir}`;
+                handle.dataset.dir = dir;
+                panel.appendChild(handle);
+            });
+        });
+
+        // Drag — ignore resize handles and interactive elements
         document.querySelectorAll('.floating-panel').forEach(panel => {
             panel.addEventListener('mousedown', (e) => {
-                if (e.target.classList.contains('chat-input') || 
+                if (e.target.classList.contains('resize-handle') ||
+                    e.target.closest('.resize-handle') ||
+                    e.target.classList.contains('chat-input') ||
                     e.target.classList.contains('chat-send-btn') ||
-                    e.target.classList.contains('suggestion-btn')) return;
-                
+                    e.target.classList.contains('suggestion-btn') ||
+                    e.target.classList.contains('history-call-item') ||
+                    e.target.closest('.history-call-item')) return;
+
                 draggedPanel = panel;
                 draggedPanel.classList.add('dragging');
-                
+
                 const rect = panel.getBoundingClientRect();
                 dragOffset.x = e.clientX - rect.left;
                 dragOffset.y = e.clientY - rect.top;
             });
         });
-        
+
+        // Resize — mousedown on handles
+        document.addEventListener('mousedown', (e) => {
+            const handle = e.target.closest('.resize-handle');
+            if (!handle) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            resizingPanel = handle.closest('.floating-panel');
+            resizeDir = handle.dataset.dir;
+            resizingPanel.classList.add('resizing');
+
+            const rect = resizingPanel.getBoundingClientRect();
+            resizeStart = {
+                x: e.clientX,
+                y: e.clientY,
+                w: rect.width,
+                h: rect.height
+            };
+
+            // Lock dimensions so CSS width/height take over
+            resizingPanel.style.width = rect.width + 'px';
+            resizingPanel.style.height = rect.height + 'px';
+        });
+
         document.addEventListener('mousemove', (e) => {
             if (draggedPanel) {
                 draggedPanel.style.left = (e.clientX - dragOffset.x) + 'px';
@@ -2442,12 +2538,30 @@
                 draggedPanel.style.right = 'auto';
                 draggedPanel.style.bottom = 'auto';
             }
+
+            if (resizingPanel) {
+                const dx = e.clientX - resizeStart.x;
+                const dy = e.clientY - resizeStart.y;
+                const MIN_W = 220, MIN_H = 120;
+
+                if (resizeDir === 'e' || resizeDir === 'se') {
+                    resizingPanel.style.width = Math.max(MIN_W, resizeStart.w + dx) + 'px';
+                }
+                if (resizeDir === 's' || resizeDir === 'se') {
+                    resizingPanel.style.height = Math.max(MIN_H, resizeStart.h + dy) + 'px';
+                }
+            }
         });
-        
+
         document.addEventListener('mouseup', () => {
             if (draggedPanel) {
                 draggedPanel.classList.remove('dragging');
                 draggedPanel = null;
+            }
+            if (resizingPanel) {
+                resizingPanel.classList.remove('resizing');
+                resizingPanel = null;
+                resizeDir = null;
             }
         });
         
