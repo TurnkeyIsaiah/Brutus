@@ -614,9 +614,7 @@
         .activity-panel #activity-list::-webkit-scrollbar-thumb { background: rgba(255,80,80,0.2); border-radius: 2px; }
         
         .activity-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            display: block;
             padding: 14px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -638,10 +636,10 @@
         
         .activity-time {
             font-family: 'Space Mono', monospace;
-            font-size: 11px;
-            color: rgba(255, 80, 80, 0.7);
-            white-space: nowrap;
-            margin-left: 12px;
+            font-size: 10px;
+            color: rgba(255, 80, 80, 0.6);
+            margin-top: 5px;
+            display: block;
         }
 
         /* Call History Section */
@@ -2239,8 +2237,8 @@
                                 <div class="activity-content">
                                     <h4>call analyzed — <span style="color:${scoreColor}">${call.overallScore}/100</span></h4>
                                     <p>${feedback}</p>
+                                    <span class="activity-time">${dateTime}</span>
                                 </div>
-                                <div class="activity-time">${dateTime}</div>
                             </div>
                         `;
                     }).join('');
