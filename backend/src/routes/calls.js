@@ -76,7 +76,7 @@ router.post('/analyze', checkTokenBalance, upload.single('audio'), async (req, r
         talkRatio: analysis.talkRatio || 50,
         interruptionCount: analysis.interruptionCount || 0,
         overallScore: analysis.overallScore || 50,
-        brutusFeedback: analysis.feedback || [],
+        brutusFeedback: analysis,
         tags: analysis.tags || []
       }
     });
@@ -145,7 +145,7 @@ router.post('/analyze-transcript', checkTokenBalance, async (req, res, next) => 
         talkRatio: analysis.talkRatio || 50,
         interruptionCount: analysis.interruptionCount || 0,
         overallScore: analysis.overallScore || 50,
-        brutusFeedback: analysis.feedback || [],
+        brutusFeedback: analysis,
         tags: []
       }
     });

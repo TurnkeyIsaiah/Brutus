@@ -660,6 +660,153 @@
             margin-left: 4px;
         }
 
+        /* Call Detail Modal */
+        .call-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .call-modal-overlay.hidden { display: none; }
+
+        .call-modal {
+            background: rgba(20, 20, 35, 0.97);
+            border: 1px solid rgba(255, 80, 80, 0.2);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 680px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        .call-modal::-webkit-scrollbar { width: 4px; }
+        .call-modal::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+        .call-modal::-webkit-scrollbar-thumb { background: rgba(255,80,80,0.3); border-radius: 2px; }
+
+        .call-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .call-modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .call-modal-meta {
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 4px;
+        }
+
+        .call-modal-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.4);
+            font-size: 22px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px;
+        }
+
+        .call-modal-close:hover { color: white; }
+
+        .call-modal-score {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .call-modal-score-num {
+            font-family: 'Space Mono', monospace;
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .call-modal-roast {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .call-modal-section {
+            margin-bottom: 20px;
+        }
+
+        .call-modal-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(255,80,80,0.8);
+            margin-bottom: 10px;
+        }
+
+        .call-feedback-item {
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .call-feedback-item.critical {
+            background: rgba(255, 50, 50, 0.1);
+            border-left: 3px solid rgba(255, 50, 50, 0.6);
+        }
+
+        .call-feedback-item.warning {
+            background: rgba(255, 150, 0, 0.1);
+            border-left: 3px solid rgba(255, 150, 0, 0.5);
+        }
+
+        .call-feedback-item.insight {
+            background: rgba(80, 150, 255, 0.1);
+            border-left: 3px solid rgba(80, 150, 255, 0.4);
+        }
+
+        .call-action-item {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 13px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .call-action-item:last-child { border-bottom: none; }
+
+        .call-action-item::before {
+            content: '→ ';
+            color: #ff5050;
+        }
+
+        .history-call-item {
+            cursor: pointer;
+            transition: background 0.2s;
+            border-radius: 8px;
+            padding-left: 8px;
+            padding-right: 8px;
+            margin-left: -8px;
+            margin-right: -8px;
+        }
+
+        .history-call-item:hover {
+            background: rgba(255,255,255,0.04);
+        }
+
         /* Chat Panel */
         .chat-panel {
             bottom: 40px;
@@ -1455,6 +1602,20 @@
             </div>
         </div>
 
+        <!-- Call Detail Modal -->
+        <div class="call-modal-overlay hidden" id="call-modal-overlay">
+            <div class="call-modal" id="call-modal">
+                <div class="call-modal-header">
+                    <div>
+                        <div class="call-modal-title">call analysis</div>
+                        <div class="call-modal-meta" id="call-modal-meta"></div>
+                    </div>
+                    <button class="call-modal-close" id="call-modal-close">✕</button>
+                </div>
+                <div id="call-modal-body"></div>
+            </div>
+        </div>
+
         <!-- Notes View -->
         <div id="notes-view" class="view">
             <div class="progress-view-content">
@@ -1982,8 +2143,9 @@
                         `+${data.weeklyStats.callCount} this week`;
                     
                     // Build weekly chart
-                    buildWeeklyChart(data.weeklyStats.scores || []);
-                    
+                    const scores = data.weeklyStats.scores || [];
+                    buildWeeklyChart(scores);
+
                     // Calculate average score
                     if (scores.length > 0) {
                         const avgScore = Math.round(
@@ -1999,7 +2161,10 @@
                 const activityList = document.getElementById('activity-list');
                 if (data.recentCalls && data.recentCalls.length > 0) {
                     activityList.innerHTML = data.recentCalls.slice(0, 4).map(call => {
-                        const feedback = call.brutusFeedback?.[0]?.text || call.brutusFeedback?.[0]?.feedback || 'no feedback yet';
+                        const raw = call.brutusFeedback;
+                        const feedbackArr = Array.isArray(raw) ? raw : (raw?.feedback || []);
+                        const roast = !Array.isArray(raw) ? (raw?.overallRoast || '') : '';
+                        const feedback = roast || feedbackArr[0]?.text || 'no feedback yet';
                         const dateTime = formatDateTime(call.createdAt);
                         const scoreColor = call.overallScore >= 70 ? '#4caf50' : call.overallScore >= 50 ? '#ff9800' : '#ff5050';
 
@@ -2138,7 +2303,7 @@
                 const tags = (call.tags || []).map(t => `<span class="history-tag">${t}</span>`).join('');
 
                 return `
-                    <div class="history-call-item">
+                    <div class="history-call-item" data-id="${call.id}" onclick="openCallModal('${call.id}')">
                         <div class="history-score ${scoreClass}">${score}</div>
                         <div class="history-call-meta">
                             <div class="history-call-date">${formatDateTime(call.createdAt)}</div>
@@ -2148,6 +2313,87 @@
                 `;
             }).join('');
         }
+
+        // ==================== CALL DETAIL MODAL ====================
+        async function openCallModal(id) {
+            const overlay = document.getElementById('call-modal-overlay');
+            const body = document.getElementById('call-modal-body');
+            const meta = document.getElementById('call-modal-meta');
+
+            body.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.4);padding:40px 0;">loading...</p>';
+            overlay.classList.remove('hidden');
+
+            try {
+                const data = await apiCall(`/calls/${id}`);
+                const call = data.call;
+
+                const scoreClass = call.overallScore >= 70 ? 'good' : call.overallScore >= 50 ? 'warning' : 'bad';
+                const scoreColors = { good: '#4caf50', warning: '#ff9800', bad: '#ff5050' };
+                const mins = Math.floor((call.durationSeconds || 0) / 60);
+
+                // Handle both old format (array) and new format (full analysis object)
+                const raw = call.brutusFeedback;
+                const isFullAnalysis = raw && !Array.isArray(raw) && raw.feedback;
+                const feedback = isFullAnalysis ? (raw.feedback || []) : (Array.isArray(raw) ? raw : []);
+                const overallRoast = isFullAnalysis ? (raw.overallRoast || '') : '';
+                const actionItems = isFullAnalysis ? (raw.actionItems || []) : [];
+
+                meta.textContent = `${formatDateTime(call.createdAt)} · ${mins > 0 ? mins + 'm' : '<1m'} · talk ratio ${Math.round(call.talkRatio || 0)}%`;
+
+                const criticals = feedback.filter(f => f.type === 'critical');
+                const warnings = feedback.filter(f => f.type === 'warning');
+                const insights = feedback.filter(f => f.type === 'insight');
+
+                body.innerHTML = `
+                    <div class="call-modal-score">
+                        <div class="call-modal-score-num" style="color:${scoreColors[scoreClass]}">${call.overallScore}</div>
+                        <div class="call-modal-roast">${overallRoast || 'no summary available'}</div>
+                    </div>
+
+                    ${criticals.length ? `
+                    <div class="call-modal-section">
+                        <div class="call-modal-section-title">critical issues</div>
+                        ${criticals.map(f => `<div class="call-feedback-item critical">${f.text}</div>`).join('')}
+                    </div>` : ''}
+
+                    ${warnings.length ? `
+                    <div class="call-modal-section">
+                        <div class="call-modal-section-title">warnings</div>
+                        ${warnings.map(f => `<div class="call-feedback-item warning">${f.text}</div>`).join('')}
+                    </div>` : ''}
+
+                    ${insights.length ? `
+                    <div class="call-modal-section">
+                        <div class="call-modal-section-title">insights</div>
+                        ${insights.map(f => `<div class="call-feedback-item insight">${f.text}</div>`).join('')}
+                    </div>` : ''}
+
+                    ${actionItems.length ? `
+                    <div class="call-modal-section">
+                        <div class="call-modal-section-title">action items</div>
+                        ${actionItems.map(a => `<div class="call-action-item">${a}</div>`).join('')}
+                    </div>` : ''}
+
+                    ${!criticals.length && !warnings.length && !insights.length && feedback.length ? `
+                    <div class="call-modal-section">
+                        <div class="call-modal-section-title">feedback</div>
+                        ${feedback.map(f => `<div class="call-feedback-item ${f.type || 'insight'}">${f.text}</div>`).join('')}
+                    </div>` : ''}
+                `;
+            } catch (err) {
+                body.innerHTML = '<p style="text-align:center;color:#ff5050;padding:40px 0;">failed to load call details</p>';
+            }
+        }
+
+        document.getElementById('call-modal-close').addEventListener('click', () => {
+            document.getElementById('call-modal-overlay').classList.add('hidden');
+        });
+
+        document.getElementById('call-modal-overlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                e.currentTarget.classList.add('hidden');
+            }
+        });
 
         // ==================== NAVIGATION ====================
         document.querySelectorAll('.nav-item').forEach(item => {
