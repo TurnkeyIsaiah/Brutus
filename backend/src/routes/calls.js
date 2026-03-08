@@ -5,6 +5,7 @@ const { authenticate } = require('../middleware/auth');
 const { checkTokenBalance } = require('../middleware/subscription');
 const { transcribeAudio } = require('../services/transcription');
 const { analyzeCall, updateUserSummary, chatWithBrutus } = require('../services/brutus');
+const { scrubPii } = require('../lib/scrub');
 
 const router = express.Router();
 
@@ -60,7 +61,8 @@ router.post('/analyze', checkTokenBalance, upload.single('audio'), async (req, r
         error: { message: 'Audio too short or unclear to analyze' }
       });
     }
-    
+    transcription.text = scrubPii(transcription.text);
+
     // Analyze with Brutus
     const analysis = await analyzeCall(
       req.user.id,
@@ -129,19 +131,20 @@ router.post('/analyze-transcript', checkTokenBalance, async (req, res, next) => 
         error: { message: 'Transcript too short to analyze (minimum 50 characters)' }
       });
     }
-    
+    const cleanTranscript = scrubPii(transcript);
+
     // Analyze with Brutus
     const analysis = await analyzeCall(
       req.user.id,
-      transcript,
+      cleanTranscript,
       durationSeconds || 0
     );
-    
+
     // Save the call
     const call = await prisma.call.create({
       data: {
         userId: req.user.id,
-        transcript,
+        transcript: cleanTranscript,
         durationSeconds: durationSeconds || 0,
         talkRatio: analysis.talkRatio || 50,
         interruptionCount: analysis.interruptionCount || 0,

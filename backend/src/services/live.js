@@ -3,6 +3,7 @@ const { getRealTimeFeedback, updateUserSummary, analyzeCall } = require('./brutu
 const { transcribeChunk } = require('./transcription');
 const { deductTokens, hasTokens } = require('../lib/tokens');
 const { braveSearch, formatSearchResults } = require('./brave');
+const { scrubPii } = require('../lib/scrub');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const anthropic = new Anthropic({
@@ -89,6 +90,7 @@ async function handleTranscriptChunk(userId, payload) {
     }
 
     if (!transcript || transcript.trim().length === 0) return null;
+    transcript = scrubPii(transcript);
 
     const timestamp = timeIntoCall || 0;
 
