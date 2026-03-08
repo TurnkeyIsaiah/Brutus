@@ -107,4 +107,34 @@ async function addTokens(userId, amount) {
   });
 }
 
-module.exports = { deductTokens, hasTokens, addTokens, TOKENS_PER_CENT };
+// Deduct a flat cost (in cents) — used for Whisper, Brave, etc.
+// e.g. deductFlat(userId, 0.3) for a $0.003 Brave search
+async function deductFlat(userId, cents) {
+  const tokens = BigInt(Math.ceil(cents * TOKENS_PER_CENT));
+  if (tokens === 0n) return;
+
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      tokenBalance: { decrement: tokens },
+      tokensUsed: { increment: tokens }
+    },
+    select: {
+      tokenBalance: true,
+      autoTopUpEnabled: true,
+      autoTopUpAmountCents: true,
+      autoTopUpThresholdCents: true,
+      autoTopUpLastTriggeredAt: true,
+      stripeCustomerId: true,
+      stripePaymentMethodId: true
+    }
+  });
+
+  if (shouldAutoTopUp(updated)) {
+    triggerAutoTopUp(userId, updated).catch(err =>
+      console.error('[AutoTopUp] Failed:', err.message)
+    );
+  }
+}
+
+module.exports = { deductTokens, deductFlat, hasTokens, addTokens, TOKENS_PER_CENT };

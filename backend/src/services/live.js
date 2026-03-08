@@ -2,6 +2,7 @@ const prisma = require('../lib/prisma');
 const { getRealTimeFeedback, updateUserSummary, analyzeCall } = require('./brutus');
 const { transcribeChunk } = require('./transcription');
 const { deductTokens, hasTokens } = require('../lib/tokens');
+const { braveSearch, formatSearchResults } = require('./brave');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const anthropic = new Anthropic({
@@ -10,6 +11,9 @@ const anthropic = new Anthropic({
 
 // Track last AI note time per session
 const lastAiNoteTime = new Map();
+
+// Track what prospects have been auto-researched per session (prevent duplicates)
+const sessionAutoResearched = new Map();
 
 // In-memory session context (two-layer context system)
 // Structure: { runningSummary, segments: [{text, timestamp}], lastSummaryUpdateAt }
@@ -76,7 +80,7 @@ async function handleTranscriptChunk(userId, payload) {
 
     if (audioData && !transcriptChunk) {
       const audioBuffer = Buffer.from(audioData, 'base64');
-      transcript = await transcribeChunk(audioBuffer, mimeType || 'audio/webm');
+      transcript = await transcribeChunk(audioBuffer, mimeType || 'audio/webm', userId);
       if (!transcript) return null;
     }
 
@@ -122,8 +126,21 @@ async function handleTranscriptChunk(userId, payload) {
     // ── Haiku visual analysis (runs before Sonnet on screenshot chunks) ────────
     if (screenshot) {
       try {
-        ctx.lastVisualSummary = await analyzeScreenshot(userId, screenshot, recentTranscript);
+        const visual = await analyzeScreenshot(userId, screenshot, recentTranscript);
+        ctx.lastVisualSummary = visual.summary;
         console.log('[Visual] Haiku visual summary updated');
+
+        // Auto-research: if Haiku spotted a prospect name/company not yet researched
+        if (visual.prospect) {
+          const researched = sessionAutoResearched.get(sessionId) || new Set();
+          const key = visual.prospect.toLowerCase().trim();
+          if (!researched.has(key)) {
+            researched.add(key);
+            sessionAutoResearched.set(sessionId, researched);
+            triggerAutoResearch(userId, sessionId, visual.prospect).catch(console.error);
+            console.log(`[AutoResearch] Triggered for: "${visual.prospect}"`);
+          }
+        }
       } catch (err) {
         console.error('[Visual] Haiku screenshot analysis failed:', err.message);
       }
@@ -212,7 +229,7 @@ Write one concise paragraph covering: topics discussed, prospect's situation/pai
 async function analyzeScreenshot(userId, screenshot, recentTranscript) {
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 120,
+    max_tokens: 200,
     messages: [{
       role: 'user',
       content: [
@@ -224,14 +241,87 @@ async function analyzeScreenshot(userId, screenshot, recentTranscript) {
           type: 'text',
           text: `Sales call screenshot. Recent speech: "${recentTranscript.slice(-300)}"
 
-Provide a visual summary under 100 tokens covering: prospect engagement level, attention/distraction signals, visible body language or facial cues, and any notable on-screen content relevant to the call. Be direct and factual.`
+Respond with JSON only (no markdown):
+{
+  "summary": "<under 100 tokens: prospect engagement, attention signals, body language, notable on-screen content>",
+  "prospect": "<full name or company name visible on screen (LinkedIn profile, email header, website, calendar invite), or null if none visible>"
+}
+
+For prospect: only extract if you can see a clear name/company on screen (e.g. LinkedIn profile page, email from/to field, company website header). Do not guess from speech.`
         }
       ]
     }]
   });
 
   deductTokens(userId, response.usage).catch(console.error);
-  return response.content[0].text.trim();
+
+  try {
+    return JSON.parse(response.content[0].text.trim());
+  } catch {
+    // Fallback if Haiku doesn't return valid JSON
+    return { summary: response.content[0].text.trim(), prospect: null };
+  }
+}
+
+// ==================== AUTO RESEARCH ====================
+
+async function triggerAutoResearch(userId, sessionId, prospect) {
+  try {
+    // Get session transcript for context
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+      select: { transcriptSoFar: true }
+    });
+
+    // Search Brave for live info
+    const searchResults = await braveSearch(userId, prospect, 5);
+    const searchContext = searchResults.length > 0
+      ? `\n\nLIVE WEB SEARCH RESULTS:\n${formatSearchResults(searchResults)}`
+      : '';
+
+    const transcriptContext = session?.transcriptSoFar?.trim().length > 50
+      ? `\n\nCALL TRANSCRIPT (so far):\n"""\n${session.transcriptSoFar.slice(-1500)}\n"""`
+      : '';
+
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      messages: [{
+        role: 'user',
+        content: `You are a sales research assistant. A sales rep just started a call and the prospect's name/company "${prospect}" appeared on screen. Research them quickly.${searchContext}${transcriptContext}
+
+Give a punchy sales brief (5 bullets max):
+• Who they are / what the company does
+• Likely pain points
+• Best angle to take
+• Key objection to expect
+• One sharp question to ask
+
+Be specific and use search results where available. Skip any bullet you have nothing real to say about.`
+      }]
+    });
+
+    deductTokens(userId, response.usage).catch(console.error);
+
+    const results = response.content[0].text.trim();
+
+    // Save to Research table so the overlay can surface it
+    await prisma.research.create({
+      data: {
+        userId,
+        sessionId,
+        query: prospect,
+        status: 'completed',
+        results,
+        requestedAt: new Date(),
+        completedAt: new Date()
+      }
+    });
+
+    console.log(`[AutoResearch] Completed for "${prospect}"`);
+  } catch (err) {
+    console.error(`[AutoResearch] Failed for "${prospect}":`, err.message);
+  }
 }
 
 // ==================== GENERATE AI NOTE ====================
@@ -391,6 +481,7 @@ async function endSession(userId, sessionId) {
       // Clean up in-memory state
       lastAiNoteTime.delete(sessionId);
       sessionContexts.delete(sessionId);
+      sessionAutoResearched.delete(sessionId);
 
       return {
         callId: call.id,
@@ -410,6 +501,7 @@ async function endSession(userId, sessionId) {
       // Clean up in-memory state
       lastAiNoteTime.delete(sessionId);
       sessionContexts.delete(sessionId);
+      sessionAutoResearched.delete(sessionId);
 
       return {
         callId: null,

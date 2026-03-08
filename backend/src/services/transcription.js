@@ -2,6 +2,10 @@ const OpenAI = require('openai');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const { deductFlat } = require('../lib/tokens');
+
+// Whisper pricing: $0.006/minute = 0.6 cents/minute
+const WHISPER_CENTS_PER_SECOND = 0.6 / 60;
 
 let _openai = null;
 const getOpenAI = () => {
@@ -11,7 +15,7 @@ const getOpenAI = () => {
 
 // ==================== TRANSCRIBE AUDIO FILE ====================
 
-async function transcribeAudio(audioBuffer, mimeType = 'audio/webm') {
+async function transcribeAudio(audioBuffer, mimeType = 'audio/webm', userId = null) {
   try {
     // Create a temporary file (Whisper API requires a file)
     const tempDir = path.join(__dirname, '../../temp');
@@ -47,6 +51,11 @@ async function transcribeAudio(audioBuffer, mimeType = 'audio/webm') {
         timestamp_granularities: ['segment']
       });
       
+      const duration = transcription.duration || 0;
+      if (userId && duration > 0) {
+        deductFlat(userId, duration * WHISPER_CENTS_PER_SECOND).catch(console.error);
+      }
+
       return {
         text: transcription.text,
         segments: transcription.segments?.map(seg => ({
@@ -54,7 +63,7 @@ async function transcribeAudio(audioBuffer, mimeType = 'audio/webm') {
           end: seg.end,
           text: seg.text
         })) || [],
-        duration: transcription.duration || 0
+        duration
       };
       
     } finally {
@@ -72,7 +81,7 @@ async function transcribeAudio(audioBuffer, mimeType = 'audio/webm') {
 
 // ==================== TRANSCRIBE AUDIO CHUNK (for real-time) ====================
 
-async function transcribeChunk(audioBuffer, mimeType = 'audio/webm') {
+async function transcribeChunk(audioBuffer, mimeType = 'audio/webm', userId = null) {
   try {
     // For smaller chunks, we use a simpler approach
     const tempDir = path.join(__dirname, '../../temp');
@@ -99,7 +108,12 @@ async function transcribeChunk(audioBuffer, mimeType = 'audio/webm') {
         model: 'whisper-1',
         response_format: 'text'
       });
-      
+
+      // Chunks are ~30 seconds — deduct flat cost
+      if (userId) {
+        deductFlat(userId, 30 * WHISPER_CENTS_PER_SECOND).catch(console.error);
+      }
+
       return transcription;
       
     } finally {

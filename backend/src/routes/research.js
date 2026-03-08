@@ -3,6 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const Anthropic = require('@anthropic-ai/sdk');
 const { authenticate } = require('../middleware/auth');
 const { deductTokens } = require('../lib/tokens');
+const { braveSearch, formatSearchResults } = require('../services/brave');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -150,13 +151,24 @@ async function processResearch(researchId, userId, query, sessionId) {
       }
     }
 
+    // Brave search for live web data
+    let searchContext = '';
+    try {
+      const searchResults = await braveSearch(userId, query, 5);
+      if (searchResults.length > 0) {
+        searchContext = `\n\nLIVE WEB SEARCH RESULTS for "${query}":\n${formatSearchResults(searchResults)}\n\nUse these search results as your primary source of factual, current information.`;
+      }
+    } catch (err) {
+      console.error('[Research] Brave search failed:', err.message);
+    }
+
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1500,
       messages: [
         {
           role: 'user',
-          content: `You are a sales research assistant. Research this company or prospect for an active sales rep: "${query}"${transcriptContext}
+          content: `You are a sales research assistant. Research this company or prospect for an active sales rep: "${query}"${searchContext}${transcriptContext}
 
 Provide a concise sales research brief covering:
 1. Company overview — industry, size, what they do
@@ -165,7 +177,7 @@ Provide a concise sales research brief covering:
 4. Best angle for this sales rep to take
 5. Key questions to ask on the call
 
-Be direct and actionable. Flag anything that might be outdated or uncertain. Skip sections where you have no useful information rather than guessing.`
+Be direct and actionable. Cite specific details from the search results where available. Skip sections where you have no useful information.`
         }
       ]
     });

@@ -51,7 +51,8 @@ router.post('/analyze', checkTokenBalance, upload.single('audio'), async (req, r
     // Transcribe the audio
     const transcription = await transcribeAudio(
       req.file.buffer,
-      req.file.mimetype
+      req.file.mimetype,
+      req.user.id
     );
     
     if (!transcription.text || transcription.text.trim().length < 50) {
