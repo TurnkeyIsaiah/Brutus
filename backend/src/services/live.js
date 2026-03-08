@@ -12,6 +12,10 @@ const anthropic = new Anthropic({
 // Track last AI note time per session
 const lastAiNoteTime = new Map();
 
+// Minimum seconds between Sonnet coaching calls per session
+const MIN_COACHING_INTERVAL = 25;
+const lastCoachingTime = new Map();
+
 // Track what prospects have been auto-researched per session (prevent duplicates)
 const sessionAutoResearched = new Map();
 
@@ -147,7 +151,13 @@ async function handleTranscriptChunk(userId, payload) {
     }
     // ──────────────────────────────────────────────────────────────────────────
 
-    // Sonnet coaching — text only, never sees image tokens
+    // Sonnet coaching — throttled to MIN_COACHING_INTERVAL seconds
+    const lastCoached = lastCoachingTime.get(sessionId) || 0;
+    if (timestamp - lastCoached < MIN_COACHING_INTERVAL) {
+      return null;
+    }
+    lastCoachingTime.set(sessionId, timestamp);
+
     const feedback = await getRealTimeFeedback(
       userId,
       recentTranscript,
@@ -480,6 +490,7 @@ async function endSession(userId, sessionId) {
 
       // Clean up in-memory state
       lastAiNoteTime.delete(sessionId);
+      lastCoachingTime.delete(sessionId);
       sessionContexts.delete(sessionId);
       sessionAutoResearched.delete(sessionId);
 
@@ -500,6 +511,7 @@ async function endSession(userId, sessionId) {
 
       // Clean up in-memory state
       lastAiNoteTime.delete(sessionId);
+      lastCoachingTime.delete(sessionId);
       sessionContexts.delete(sessionId);
       sessionAutoResearched.delete(sessionId);
 
