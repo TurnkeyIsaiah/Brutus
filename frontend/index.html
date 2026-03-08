@@ -1132,6 +1132,84 @@
             color: rgba(255, 255, 255, 0.4);
         }
         
+        /* Research hint chips */
+        .research-hint-btn {
+            padding: 4px 10px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px;
+            color: rgba(255,255,255,0.5);
+            font-size: 11px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        .research-hint-btn:hover {
+            background: rgba(255,80,80,0.15);
+            border-color: rgba(255,80,80,0.4);
+            color: rgba(255,255,255,0.85);
+        }
+
+        /* Research / Notes cards */
+        .history-card {
+            background: rgba(20,20,35,0.6);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .history-card:hover {
+            border-color: rgba(255,255,255,0.14);
+        }
+
+        .history-card-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .history-card-title {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-card-meta {
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+            white-space: nowrap;
+        }
+
+        .history-card-chevron {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            transition: transform 0.2s;
+        }
+
+        .history-card-body {
+            display: none;
+            padding: 0 20px 18px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .history-card.expanded .history-card-chevron {
+            transform: rotate(180deg);
+        }
+
+        .history-card.expanded .history-card-body {
+            display: block;
+        }
+
         /* Progress View */
         .progress-view-content {
             padding: 40px;
@@ -1684,12 +1762,15 @@
         <!-- Notes View -->
         <div id="notes-view" class="view">
             <div class="progress-view-content">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <h2 class="view-title">your notes</h2>
                     <button class="auth-btn" id="export-notes-btn" style="width: auto; padding: 10px 20px;">export to CSV</button>
                 </div>
-                <div id="notes-list">
-                    <p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">Loading notes...</p>
+                <div class="call-history-section" style="margin-top: 0;">
+                    <input type="text" class="history-search" id="notes-search" placeholder="search by content or date...">
+                    <div id="notes-list">
+                        <p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 20px;">loading...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1806,35 +1887,60 @@
                     <p style="font-size: 12px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 20px;">prospect info</p>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                         <div>
-                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">name</label>
-                            <input type="text" id="research-name" class="auth-input" placeholder="John Smith">
+                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">name <span style="color: rgba(255,80,80,0.7);">*</span></label>
+                            <input type="text" id="research-name" class="auth-input" placeholder="Jane Doe">
                         </div>
                         <div>
-                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">company</label>
-                            <input type="text" id="research-company" class="auth-input" placeholder="Acme Corp">
+                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">city / state</label>
+                            <input type="text" id="research-location" class="auth-input" placeholder="Miami, FL">
                         </div>
                         <div>
-                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">role / title</label>
-                            <input type="text" id="research-role" class="auth-input" placeholder="VP of Sales">
+                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">phone</label>
+                            <input type="text" id="research-phone" class="auth-input" placeholder="555-867-5309">
                         </div>
                         <div>
-                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">linkedin (optional)</label>
-                            <input type="text" id="research-linkedin" class="auth-input" placeholder="linkedin.com/in/johnsmith">
+                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">email</label>
+                            <input type="text" id="research-email" class="auth-input" placeholder="jane@example.com">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">company / organization</label>
+                            <input type="text" id="research-company" class="auth-input" placeholder="Acme Corp, self-employed...">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">role / relationship</label>
+                            <input type="text" id="research-role" class="auth-input" placeholder="homeowner, VP of Sales, retiree...">
                         </div>
                         <div style="grid-column: 1 / -1;">
-                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">company website (optional)</label>
-                            <input type="text" id="research-website" class="auth-input" placeholder="acmecorp.com">
+                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">linkedin / social</label>
+                            <input type="text" id="research-linkedin" class="auth-input" placeholder="linkedin.com/in/janedoe or @janedoe">
                         </div>
                     </div>
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">context / notes (optional)</label>
-                        <textarea id="research-notes" class="auth-input" rows="3" placeholder="anything you already know: pain points, deal size, how you connected, company size..." style="resize: vertical; min-height: 80px; font-family: inherit;"></textarea>
+                    <div style="margin-bottom: 8px;">
+                        <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">context / notes</label>
+                        <textarea id="research-notes" class="auth-input" rows="3" placeholder="life events, interests, how you got their info, what they mentioned..." style="resize: vertical; min-height: 80px; font-family: inherit;"></textarea>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; align-items: center;">
+                        <span style="font-size: 11px; color: rgba(255,255,255,0.28); flex-shrink: 0;">add context:</span>
+                        <button type="button" class="research-hint-btn" data-hint="recently switched jobs">recently switched jobs</button>
+                        <button type="button" class="research-hint-btn" data-hint="has young family / kids">has young family</button>
+                        <button type="button" class="research-hint-btn" data-hint="homeowner">homeowner</button>
+                        <button type="button" class="research-hint-btn" data-hint="self-employed / small business owner">self-employed</button>
+                        <button type="button" class="research-hint-btn" data-hint="nearing retirement age">nearing retirement</button>
+                        <button type="button" class="research-hint-btn" data-hint="recently lost employer-based health coverage">lost employer coverage</button>
+                        <button type="button" class="research-hint-btn" data-hint="turning 65 / approaching Medicare eligibility">turning 65</button>
+                        <button type="button" class="research-hint-btn" data-hint="high income / executive level">high income</button>
+                        <button type="button" class="research-hint-btn" data-hint="recently married or had a child">life event (marriage / baby)</button>
                     </div>
                     <button class="auth-btn" id="research-submit-btn" style="width: 100%; padding: 14px 24px;">research this prospect</button>
                 </div>
 
-                <div id="research-list">
-                    <p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">Loading research...</p>
+                <!-- Research History -->
+                <div class="call-history-section">
+                    <h3>research history</h3>
+                    <input type="text" class="history-search" id="research-search" placeholder="search by name, company, or date...">
+                    <div id="research-list">
+                        <p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 20px;">loading...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2710,6 +2816,11 @@
             if (targetView) targetView.classList.add('active');
         }
 
+        function toggleCard(id) {
+            const card = document.getElementById(id);
+            if (card) card.classList.toggle('expanded');
+        }
+
         async function sendChatMessage() {
             const text = chatInput.value.trim();
             if (!text) return;
@@ -2765,59 +2876,89 @@
         });
         
         // ==================== NOTES ====================
-        async function loadNotes() {
-            try {
-                const data = await apiCall('/notes');
-                const notesList = document.getElementById('notes-list');
+        let allNoteGroups = [];
 
-                if (!data.notes || data.notes.length === 0) {
-                    notesList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">No notes yet. Take notes during your calls!</p>';
-                    return;
-                }
+        function renderNotes(groups) {
+            const notesList = document.getElementById('notes-list');
+            if (!notesList) return;
 
-                // Group notes by session
-                const notesBySession = {};
-                data.notes.forEach(note => {
-                    if (!notesBySession[note.sessionId]) {
-                        notesBySession[note.sessionId] = {
-                            session: note.session,
-                            notes: []
-                        };
-                    }
-                    notesBySession[note.sessionId].notes.push(note);
-                });
+            if (groups.length === 0) {
+                notesList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 20px;">no notes yet — they appear here automatically during live sessions</p>';
+                return;
+            }
 
-                notesList.innerHTML = Object.values(notesBySession).map(group => {
-                    const sessionDate = new Date(group.session.startedAt).toLocaleDateString();
-                    const sessionTime = new Date(group.session.startedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            notesList.innerHTML = groups.map((group, i) => {
+                const dt = formatDateTime(group.session.startedAt);
+                const noteCount = group.notes.length;
+                const aiCount = group.notes.filter(n => n.type !== 'manual').length;
+                const meta = `${noteCount} note${noteCount !== 1 ? 's' : ''} · ${aiCount} ai`;
 
+                const notesHtml = group.notes.map(note => {
+                    const noteTime = new Date(note.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    const typeColor = note.type === 'manual' ? 'rgba(80,150,255,0.35)' : 'rgba(255,80,80,0.35)';
+                    const typeLabel = note.type === 'manual' ? '📝 manual' : '🤖 ai';
                     return `
-                        <div style="background: rgba(20,20,35,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 24px; margin-bottom: 20px;">
-                            <h3 style="color: rgba(255,80,80,0.8); font-size: 14px; margin-bottom: 16px; font-family: 'Space Mono', monospace;">
-                                Call - ${sessionDate} at ${sessionTime}
-                            </h3>
-                            ${group.notes.map(note => {
-                                const noteTime = new Date(note.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                                const typeColor = note.type === 'manual' ? 'rgba(80,150,255,0.3)' : 'rgba(255,80,80,0.3)';
-                                const typeLabel = note.type === 'manual' ? '📝 manual' : '🤖 ai';
-
-                                return `
-                                    <div style="background: rgba(255,255,255,0.03); border-left: 3px solid ${typeColor}; padding: 14px; margin-bottom: 12px; border-radius: 8px;">
-                                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                            <span style="font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase;">${typeLabel}</span>
-                                            <span style="font-size: 11px; color: rgba(255,255,255,0.4);">${noteTime}</span>
-                                        </div>
-                                        <p style="font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.85);">${note.content}</p>
-                                    </div>
-                                `;
-                            }).join('')}
+                        <div style="background: rgba(255,255,255,0.03); border-left: 3px solid ${typeColor}; padding: 12px 14px; margin-bottom: 10px; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <span style="font-size: 11px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.06em;">${typeLabel}</span>
+                                <span style="font-size: 11px; color: rgba(255,255,255,0.35);">${noteTime}</span>
+                            </div>
+                            <p style="font-size: 14px; line-height: 1.65; color: rgba(255,255,255,0.85); margin: 0;">${note.content}</p>
                         </div>
                     `;
                 }).join('');
 
+                return `
+                    <div class="history-card" id="notes-card-${i}">
+                        <div class="history-card-header" onclick="toggleCard('notes-card-${i}')">
+                            <div class="history-card-title">session — ${dt}</div>
+                            <div class="history-card-meta">${meta}</div>
+                            <div class="history-card-chevron">▼</div>
+                        </div>
+                        <div class="history-card-body">
+                            <div style="padding-top: 14px;">
+                                ${notesHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadNotes() {
+            try {
+                const data = await apiCall('/notes');
+
+                // Group notes by session
+                const groupMap = {};
+                (data.notes || []).forEach(note => {
+                    if (!groupMap[note.sessionId]) {
+                        groupMap[note.sessionId] = { session: note.session, notes: [] };
+                    }
+                    groupMap[note.sessionId].notes.push(note);
+                });
+                allNoteGroups = Object.values(groupMap);
+                renderNotes(allNoteGroups);
+
+                const searchInput = document.getElementById('notes-search');
+                if (searchInput && !searchInput.dataset.bound) {
+                    searchInput.dataset.bound = '1';
+                    searchInput.addEventListener('input', (e) => {
+                        const q = e.target.value.toLowerCase();
+                        if (!q) { renderNotes(allNoteGroups); return; }
+                        const filtered = allNoteGroups.map(group => ({
+                            ...group,
+                            notes: group.notes.filter(n =>
+                                n.content.toLowerCase().includes(q) ||
+                                formatDateTime(n.timestamp).toLowerCase().includes(q)
+                            )
+                        })).filter(g => g.notes.length > 0);
+                        renderNotes(filtered);
+                    });
+                }
             } catch (error) {
                 console.error('Failed to load notes:', error);
-                document.getElementById('notes-list').innerHTML = '<p style="text-align: center; color: #ff5050; margin-top: 40px;">Failed to load notes</p>';
+                document.getElementById('notes-list').innerHTML = '<p style="text-align: center; color: #ff5050; margin-top: 20px;">failed to load notes</p>';
             }
         }
 
@@ -2857,67 +2998,91 @@
         });
 
         // ==================== RESEARCH ====================
+        let allResearch = [];
+
+        function renderResearch(items) {
+            const list = document.getElementById('research-list');
+            if (!list) return;
+
+            if (items.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 20px;">no research yet — fill in the form above to get started</p>';
+                return;
+            }
+
+            list.innerHTML = items.map((item, i) => {
+                const dt = formatDateTime(item.requestedAt);
+                const statusColor = item.status === 'completed' ? '#50ff80' : item.status === 'pending' ? '#ffb050' : '#ff5050';
+                const statusLabel = item.status === 'pending' ? '⏳ researching...' : item.status === 'completed' ? '✓ done' : '✗ failed';
+                const shortQuery = item.query.length > 60 ? item.query.slice(0, 60) + '…' : item.query;
+                const resultsHtml = item.results
+                    ? `<div style="padding-top: 14px; white-space: pre-wrap; font-size: 14px; line-height: 1.75; color: rgba(255,255,255,0.82);">${item.results}</div>`
+                    : `<p style="padding-top: 14px; color: rgba(255,255,255,0.4); font-style: italic;">research in progress...</p>`;
+
+                return `
+                    <div class="history-card" id="research-card-${i}">
+                        <div class="history-card-header" onclick="toggleCard('research-card-${i}')">
+                            <div class="history-card-title">${shortQuery}</div>
+                            <div class="history-card-meta">
+                                <span style="color: ${statusColor}; margin-right: 12px;">${statusLabel}</span>${dt}
+                            </div>
+                            <div class="history-card-chevron">▼</div>
+                        </div>
+                        <div class="history-card-body">
+                            ${resultsHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         async function loadResearch() {
             try {
                 const data = await apiCall('/research');
-                const researchList = document.getElementById('research-list');
+                allResearch = data.research || [];
+                renderResearch(allResearch);
 
-                if (!data.research || data.research.length === 0) {
-                    researchList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 40px;">No research yet. Type a company or prospect name above to get started.</p>';
-                    return;
+                const searchInput = document.getElementById('research-search');
+                if (searchInput && !searchInput.dataset.bound) {
+                    searchInput.dataset.bound = '1';
+                    searchInput.addEventListener('input', (e) => {
+                        const q = e.target.value.toLowerCase();
+                        if (!q) { renderResearch(allResearch); return; }
+                        renderResearch(allResearch.filter(item =>
+                            item.query.toLowerCase().includes(q) ||
+                            formatDateTime(item.requestedAt).toLowerCase().includes(q)
+                        ));
+                    });
                 }
-
-                researchList.innerHTML = data.research.map(item => {
-                    const requestDate = new Date(item.requestedAt).toLocaleDateString();
-                    const requestTime = new Date(item.requestedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                    const statusColor = item.status === 'completed' ? '#50ff80' : item.status === 'pending' ? '#ffb050' : '#ff5050';
-                    const statusLabel = item.status === 'pending' ? '⏳ researching...' : item.status === 'completed' ? '✓ completed' : '✗ failed';
-
-                    return `
-                        <div style="background: rgba(20,20,35,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 24px; margin-bottom: 20px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                                <h3 style="color: rgba(255,80,80,0.8); font-size: 18px; font-weight: 600;">${item.query}</h3>
-                                <span style="font-size: 12px; color: ${statusColor}; font-weight: 600;">${statusLabel}</span>
-                            </div>
-                            <p style="font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 16px;">
-                                Requested: ${requestDate} at ${requestTime}
-                            </p>
-                            ${item.results ? `
-                                <div style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px; white-space: pre-wrap; font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.85);">
-                                    ${item.results}
-                                </div>
-                            ` : '<p style="color: rgba(255,255,255,0.5); font-style: italic;">Research in progress...</p>'}
-                        </div>
-                    `;
-                }).join('');
-
             } catch (error) {
                 console.error('Failed to load research:', error);
-                document.getElementById('research-list').innerHTML = '<p style="text-align: center; color: #ff5050; margin-top: 40px;">Failed to load research</p>';
+                document.getElementById('research-list').innerHTML = '<p style="text-align: center; color: #ff5050; margin-top: 20px;">failed to load research</p>';
             }
         }
 
         // Submit research from web frontend
-        async function submitResearch(prefillName, prefillCompany) {
+        async function submitResearch(prefillName) {
             const nameInput = document.getElementById('research-name');
+            const locationInput = document.getElementById('research-location');
+            const phoneInput = document.getElementById('research-phone');
+            const emailInput = document.getElementById('research-email');
             const companyInput = document.getElementById('research-company');
             const roleInput = document.getElementById('research-role');
             const linkedinInput = document.getElementById('research-linkedin');
-            const websiteInput = document.getElementById('research-website');
             const notesInput = document.getElementById('research-notes');
             const btn = document.getElementById('research-submit-btn');
 
             if (prefillName) nameInput.value = prefillName;
-            if (prefillCompany) companyInput.value = prefillCompany;
 
             const name = nameInput.value.trim();
+            const location = locationInput.value.trim();
+            const phone = phoneInput.value.trim();
+            const email = emailInput.value.trim();
             const company = companyInput.value.trim();
             const role = roleInput.value.trim();
             const linkedin = linkedinInput.value.trim();
-            const website = websiteInput.value.trim();
             const notes = notesInput.value.trim();
 
-            if (!name && !company) {
+            if (!name) {
                 nameInput.style.borderColor = 'rgba(255,80,80,0.6)';
                 setTimeout(() => nameInput.style.borderColor = '', 1500);
                 return false;
@@ -2927,11 +3092,12 @@
             const parts = [];
             if (name && role && company) parts.push(`${name}, ${role} at ${company}`);
             else if (name && company) parts.push(`${name} at ${company}`);
-            else if (name) parts.push(name);
-            else parts.push(company);
-            if (role && !name) parts.push(role);
-            if (linkedin) parts.push(`LinkedIn: ${linkedin}`);
-            if (website) parts.push(`website: ${website}`);
+            else parts.push(name);
+            if (location) parts.push(`location: ${location}`);
+            if (phone) parts.push(`phone: ${phone}`);
+            if (email) parts.push(`email: ${email}`);
+            if (role && !company) parts.push(`role: ${role}`);
+            if (linkedin) parts.push(`social: ${linkedin}`);
             if (notes) parts.push(`context: ${notes}`);
             const query = parts.join(', ');
 
@@ -2945,10 +3111,12 @@
                 });
                 // Clear form
                 nameInput.value = '';
+                locationInput.value = '';
+                phoneInput.value = '';
+                emailInput.value = '';
                 companyInput.value = '';
                 roleInput.value = '';
                 linkedinInput.value = '';
-                websiteInput.value = '';
                 notesInput.value = '';
                 await loadResearch();
                 return true;
@@ -2962,6 +3130,16 @@
         }
 
         document.getElementById('research-submit-btn').addEventListener('click', () => submitResearch());
+
+        // Context hint chips — append to notes textarea
+        document.querySelectorAll('.research-hint-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const notes = document.getElementById('research-notes');
+                const current = notes.value.trim();
+                notes.value = current ? current + ', ' + btn.dataset.hint : btn.dataset.hint;
+                notes.focus();
+            });
+        });
 
         // Export research to PDF (simplified - creates downloadable text file)
         document.getElementById('export-research-btn').addEventListener('click', async () => {
