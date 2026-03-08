@@ -1609,6 +1609,7 @@
                     <button class="suggestion-btn" data-msg="how can i improve my close rate?">💡 improve close rate</button>
                     <button class="suggestion-btn" data-msg="what's wrong with my talk ratio?">📊 talk ratio help</button>
                     <button class="suggestion-btn" data-msg="roast my last call">🔥 roast me</button>
+                    <button class="suggestion-btn" id="chat-research-btn">🔍 research a prospect</button>
                 </div>
             </div>
         </div>
@@ -1800,10 +1801,36 @@
                     <button class="auth-btn" id="export-research-btn" style="width: auto; padding: 10px 20px;">export to PDF</button>
                 </div>
 
-                <!-- Research input -->
-                <div style="display: flex; gap: 12px; margin-bottom: 32px;">
-                    <input type="text" id="research-query-input" class="auth-input" placeholder="company or prospect name (e.g. Salesforce, John Smith at Acme Corp)..." style="flex: 1;">
-                    <button class="auth-btn" id="research-submit-btn" style="width: auto; padding: 14px 24px; white-space: nowrap;">research</button>
+                <!-- Prospect Research Form -->
+                <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px; margin-bottom: 32px;">
+                    <p style="font-size: 12px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 20px;">prospect info</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">name</label>
+                            <input type="text" id="research-name" class="auth-input" placeholder="John Smith">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">company</label>
+                            <input type="text" id="research-company" class="auth-input" placeholder="Acme Corp">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">role / title</label>
+                            <input type="text" id="research-role" class="auth-input" placeholder="VP of Sales">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">linkedin (optional)</label>
+                            <input type="text" id="research-linkedin" class="auth-input" placeholder="linkedin.com/in/johnsmith">
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">company website (optional)</label>
+                            <input type="text" id="research-website" class="auth-input" placeholder="acmecorp.com">
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 11px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">context / notes (optional)</label>
+                        <textarea id="research-notes" class="auth-input" rows="3" placeholder="anything you already know: pain points, deal size, how you connected, company size..." style="resize: vertical; min-height: 80px; font-family: inherit;"></textarea>
+                    </div>
+                    <button class="auth-btn" id="research-submit-btn" style="width: 100%; padding: 14px 24px;">research this prospect</button>
                 </div>
 
                 <div id="research-list">
@@ -2674,20 +2701,43 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
         
+        function switchToView(viewName) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            const navItem = document.querySelector(`.nav-item[data-view="${viewName}"]`);
+            if (navItem) navItem.classList.add('active');
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            const targetView = document.getElementById(viewName + '-view');
+            if (targetView) targetView.classList.add('active');
+        }
+
         async function sendChatMessage() {
             const text = chatInput.value.trim();
             if (!text) return;
-            
+
+            // Intercept research intent
+            const researchMatch = text.match(/^(?:research|look up|lookup|find|pull up|get info on|dig up|what do you know about)\s+(.+)/i);
+            if (researchMatch) {
+                const subject = researchMatch[1].trim();
+                addChatMessage(text, true);
+                chatInput.value = '';
+                addChatMessage(`on it. pulling a brief on "${subject}" now — check the research tab in about a minute.`, false);
+                switchToView('research');
+                loadResearch();
+                document.getElementById('research-name').value = subject;
+                submitResearch();
+                return;
+            }
+
             addChatMessage(text, true);
             chatInput.value = '';
             chatSendBtn.disabled = true;
-            
+
             try {
                 const data = await apiCall('/calls/chat', {
                     method: 'POST',
                     body: JSON.stringify({ message: text })
                 });
-                
+
                 addChatMessage(data.response, false);
             } catch (error) {
                 addChatMessage('sorry, something went wrong. try again.', false);
@@ -2703,6 +2753,12 @@
         
         document.querySelectorAll('.suggestion-btn').forEach(btn => {
             btn.addEventListener('click', () => {
+                if (btn.id === 'chat-research-btn') {
+                    switchToView('research');
+                    loadResearch();
+                    document.getElementById('research-name').focus();
+                    return;
+                }
                 chatInput.value = btn.dataset.msg;
                 sendChatMessage();
             });
@@ -2842,11 +2898,42 @@
         }
 
         // Submit research from web frontend
-        async function submitResearch() {
-            const input = document.getElementById('research-query-input');
+        async function submitResearch(prefillName, prefillCompany) {
+            const nameInput = document.getElementById('research-name');
+            const companyInput = document.getElementById('research-company');
+            const roleInput = document.getElementById('research-role');
+            const linkedinInput = document.getElementById('research-linkedin');
+            const websiteInput = document.getElementById('research-website');
+            const notesInput = document.getElementById('research-notes');
             const btn = document.getElementById('research-submit-btn');
-            const query = input.value.trim();
-            if (!query) return;
+
+            if (prefillName) nameInput.value = prefillName;
+            if (prefillCompany) companyInput.value = prefillCompany;
+
+            const name = nameInput.value.trim();
+            const company = companyInput.value.trim();
+            const role = roleInput.value.trim();
+            const linkedin = linkedinInput.value.trim();
+            const website = websiteInput.value.trim();
+            const notes = notesInput.value.trim();
+
+            if (!name && !company) {
+                nameInput.style.borderColor = 'rgba(255,80,80,0.6)';
+                setTimeout(() => nameInput.style.borderColor = '', 1500);
+                return false;
+            }
+
+            // Build a rich query string for the AI
+            const parts = [];
+            if (name && role && company) parts.push(`${name}, ${role} at ${company}`);
+            else if (name && company) parts.push(`${name} at ${company}`);
+            else if (name) parts.push(name);
+            else parts.push(company);
+            if (role && !name) parts.push(role);
+            if (linkedin) parts.push(`LinkedIn: ${linkedin}`);
+            if (website) parts.push(`website: ${website}`);
+            if (notes) parts.push(`context: ${notes}`);
+            const query = parts.join(', ');
 
             btn.disabled = true;
             btn.textContent = 'researching...';
@@ -2856,20 +2943,25 @@
                     method: 'POST',
                     body: JSON.stringify({ query })
                 });
-                input.value = '';
+                // Clear form
+                nameInput.value = '';
+                companyInput.value = '';
+                roleInput.value = '';
+                linkedinInput.value = '';
+                websiteInput.value = '';
+                notesInput.value = '';
                 await loadResearch();
+                return true;
             } catch (error) {
                 console.error('Research request failed:', error);
+                return false;
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'research';
+                btn.textContent = 'research this prospect';
             }
         }
 
-        document.getElementById('research-submit-btn').addEventListener('click', submitResearch);
-        document.getElementById('research-query-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') submitResearch();
-        });
+        document.getElementById('research-submit-btn').addEventListener('click', () => submitResearch());
 
         // Export research to PDF (simplified - creates downloadable text file)
         document.getElementById('export-research-btn').addEventListener('click', async () => {
