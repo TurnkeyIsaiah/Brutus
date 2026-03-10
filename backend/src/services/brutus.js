@@ -63,8 +63,10 @@ async function analyzeCall(userId, transcript, duration) {
     const contextPrompt = userProfile ? `
 USER CONTEXT:
 - Total calls analyzed: ${userProfile.totalCallsAnalyzed}
-- Average talk ratio: ${userProfile.talkRatioAvg}%
+- Close rate: ${parseFloat(userProfile.closeRate || 0).toFixed(1)}%
+- Average talk ratio: ${parseFloat(userProfile.talkRatioAvg || 0).toFixed(1)}%
 - Known bad habits: ${JSON.stringify(userProfile.badHabits)}
+- Strengths: ${JSON.stringify(userProfile.strengths)}
 - Areas they're working on: ${JSON.stringify(userProfile.areasImproving)}
 - Previous summary: ${userProfile.summary}
 ` : 'NEW USER - First call being analyzed.';
@@ -250,7 +252,7 @@ Do NOT repeat feedback already given this session. If nothing triggered — {"co
 
 async function updateUserSummary(userId) {
   try {
-    // Get recent calls
+    // Get recent calls with outcome and rating data
     const recentCalls = await prisma.call.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
@@ -260,41 +262,79 @@ async function updateUserSummary(userId) {
         talkRatio: true,
         interruptionCount: true,
         brutusFeedback: true,
+        feedbackRatings: true,
+        outcome: true,
         tags: true,
         createdAt: true
       }
     });
-    
-    if (recentCalls.length === 0) {
-      return;
-    }
-    
-    const profile = await prisma.userProfile.findUnique({
-      where: { userId }
-    });
-    
+
+    if (recentCalls.length === 0) return;
+
+    const profile = await prisma.userProfile.findUnique({ where: { userId } });
+
     // Calculate averages
-    const avgScore = recentCalls.reduce((sum, c) => sum + c.overallScore, 0) / recentCalls.length;
     const avgTalkRatio = recentCalls.reduce((sum, c) => sum + parseFloat(c.talkRatio), 0) / recentCalls.length;
-    
-    // Generate new summary using Brutus
+
+    // Recompute close rate from all calls with an outcome
+    const allOutcomeCalls = await prisma.call.findMany({
+      where: { userId, outcome: { not: null } },
+      select: { outcome: true }
+    });
+    const closeRate = allOutcomeCalls.length > 0
+      ? (allOutcomeCalls.filter(c => c.outcome === 'closed').length / allOutcomeCalls.length) * 100
+      : 0;
+
+    // Pull live session coaching patterns (last 5 completed sessions)
+    const recentSessions = await prisma.session.findMany({
+      where: { userId, status: 'completed' },
+      orderBy: { endedAt: 'desc' },
+      take: 5,
+      select: { feedbackGiven: true, endedAt: true }
+    });
+
+    // Build call data summary — fixing the brutusFeedback?.slice() bug
+    const callSummaries = recentCalls.map((c, i) => {
+      const fb = c.brutusFeedback;
+      const feedbackItems = Array.isArray(fb) ? fb : (fb?.feedback || []);
+      const ratings = c.feedbackRatings || {};
+      const ratedUseful = feedbackItems.filter((_, idx) => ratings[idx] === 'up').map(f => f.text);
+      const badReads = feedbackItems.filter((_, idx) => ratings[idx] === 'down').map(f => f.text);
+
+      return `Call ${i + 1} (${new Date(c.createdAt).toLocaleDateString()}):
+- Score: ${c.overallScore}/100
+- Talk ratio: ${c.talkRatio}%
+- Interruptions: ${c.interruptionCount}
+- Outcome: ${c.outcome || 'not logged'}
+- Key feedback: ${JSON.stringify(feedbackItems.slice(0, 3).map(f => f.text))}
+${ratedUseful.length ? `- Rep confirmed useful: ${JSON.stringify(ratedUseful)}` : ''}
+${badReads.length ? `- Rep flagged as bad reads: ${JSON.stringify(badReads)}` : ''}`;
+    }).join('\n\n');
+
+    // Build live session patterns
+    const sessionPatterns = recentSessions.length > 0
+      ? `\nLIVE COACHING PATTERNS (from ${recentSessions.length} recent sessions):\n` +
+        recentSessions.map(s => {
+          const items = Array.isArray(s.feedbackGiven) ? s.feedbackGiven : [];
+          const topics = items.slice(0, 4).map(f => f.feedback || f.text || '').filter(Boolean);
+          return `- ${new Date(s.endedAt).toLocaleDateString()}: ${items.length} tips given${topics.length ? ' — ' + topics.join(' | ') : ''}`;
+        }).join('\n')
+      : '';
+
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 500,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 600,
       system: BRUTUS_SYSTEM_PROMPT,
       messages: [
         {
           role: 'user',
-          content: `Based on these recent calls, update this user's profile summary:
+          content: `Update this rep's coaching profile based on their recent data.
 
 RECENT CALL DATA (last ${recentCalls.length} calls):
-${recentCalls.map((c, i) => `
-Call ${i + 1}:
-- Score: ${c.overallScore}/100
-- Talk ratio: ${c.talkRatio}%
-- Interruptions: ${c.interruptionCount}
-- Feedback highlights: ${JSON.stringify(c.brutusFeedback?.slice(0, 3) || [])}
-`).join('\n')}
+${callSummaries}
+${sessionPatterns}
+
+CURRENT CLOSE RATE: ${closeRate.toFixed(1)}% (${allOutcomeCalls.length} calls with logged outcomes)
 
 PREVIOUS PROFILE:
 - Bad habits: ${JSON.stringify(profile?.badHabits || [])}
@@ -302,12 +342,18 @@ PREVIOUS PROFILE:
 - Areas improving: ${JSON.stringify(profile?.areasImproving || [])}
 - Previous summary: ${profile?.summary || 'New user'}
 
-Generate an updated profile in JSON format:
+Instructions:
+- Treat "rep confirmed useful" feedback as patterns worth reinforcing
+- Treat "rep flagged as bad reads" as areas where your coaching missed — adjust
+- Weight outcomes heavily: closed calls reveal what works, lost calls reveal what doesn't
+- Track habits that appear across multiple calls, not one-offs
+
+Generate an updated profile in JSON:
 {
-  "badHabits": ["...", "..."],
-  "strengths": ["...", "..."],
-  "areasImproving": ["...", "..."],
-  "summary": "2-3 sentence brutus-style summary of this salesperson's current state and what they need to work on"
+  "badHabits": ["habit that keeps appearing across calls", "..."],
+  "strengths": ["genuine strength shown across multiple calls", "..."],
+  "areasImproving": ["something getting measurably better", "..."],
+  "summary": "2-3 sentence brutus-style summary of where they're at and what to fix next"
 }`
         }
       ]
@@ -318,27 +364,24 @@ Generate an updated profile in JSON format:
     const content = response.content[0].text;
     let jsonStr = content;
     const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      jsonStr = jsonMatch[1] || jsonMatch[0];
-    }
+    if (jsonMatch) jsonStr = jsonMatch[1] || jsonMatch[0];
 
     const updates = JSON.parse(jsonStr);
-    
-    // Update profile
+
     await prisma.userProfile.update({
       where: { userId },
       data: {
         talkRatioAvg: avgTalkRatio,
+        closeRate,
         badHabits: updates.badHabits,
         strengths: updates.strengths,
         areasImproving: updates.areasImproving,
-        summary: updates.summary,
-        totalCallsAnalyzed: { increment: 0 } // Just trigger updatedAt
+        summary: updates.summary
       }
     });
-    
-    console.log(`Updated profile summary for user ${userId}`);
-    
+
+    console.log(`[Brutus] Profile updated for user ${userId} — close rate ${closeRate.toFixed(1)}%`);
+
   } catch (error) {
     console.error('Failed to update user summary:', error);
   }

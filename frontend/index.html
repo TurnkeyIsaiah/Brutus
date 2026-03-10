@@ -1132,6 +1132,76 @@
             color: rgba(255, 255, 255, 0.4);
         }
         
+        /* Outcome buttons */
+        .outcome-btns {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .outcome-btn {
+            padding: 7px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.55);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .outcome-btn:hover { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.85); }
+        .outcome-btn.closed  { background: rgba(80,220,100,0.15); border-color: rgba(80,220,100,0.4); color: #50dc64; }
+        .outcome-btn.lost    { background: rgba(255,80,80,0.15);  border-color: rgba(255,80,80,0.4);  color: #ff5050; }
+        .outcome-btn.follow_up { background: rgba(255,180,50,0.15); border-color: rgba(255,180,50,0.4); color: #ffb432; }
+        .outcome-btn.no_show { background: rgba(120,120,180,0.15); border-color: rgba(120,120,180,0.4); color: #9090c8; }
+
+        /* Feedback rating buttons */
+        .feedback-item-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .feedback-item-text { flex: 1; }
+
+        .rating-btns {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .rating-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.35;
+            padding: 0 2px;
+            transition: opacity 0.15s, transform 0.15s;
+            line-height: 1;
+        }
+
+        .rating-btn:hover { opacity: 0.8; transform: scale(1.2); }
+        .rating-btn.active { opacity: 1; }
+
+        /* Outcome badge on call history items */
+        .outcome-badge {
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .outcome-badge.closed   { background: rgba(80,220,100,0.15); color: #50dc64; }
+        .outcome-badge.lost     { background: rgba(255,80,80,0.15);  color: #ff5050; }
+        .outcome-badge.follow_up{ background: rgba(255,180,50,0.15); color: #ffb432; }
+        .outcome-badge.no_show  { background: rgba(120,120,180,0.15);color: #9090c8; }
+
         /* Research hint chips */
         .research-hint-btn {
             padding: 4px 10px;
@@ -2505,12 +2575,16 @@
                 const mins = Math.floor((call.durationSeconds || 0) / 60);
                 const duration = mins > 0 ? `${mins}m` : '<1m';
                 const tags = (call.tags || []).map(t => `<span class="history-tag">${t}</span>`).join('');
+                const outcomeLabels = { closed: '✓ closed', lost: '✗ lost', follow_up: '↩ follow up', no_show: '○ no show' };
+                const outcomeBadge = call.outcome
+                    ? `<span class="outcome-badge ${call.outcome}">${outcomeLabels[call.outcome] || call.outcome}</span>`
+                    : '';
 
                 return `
                     <div class="history-call-item" data-id="${call.id}" onclick="openCallModal('${call.id}')">
                         <div class="history-score ${scoreClass}">${score}</div>
                         <div class="history-call-meta">
-                            <div class="history-call-date">${formatDateTime(call.createdAt)}</div>
+                            <div class="history-call-date">${formatDateTime(call.createdAt)}${outcomeBadge ? '&nbsp;&nbsp;' + outcomeBadge : ''}</div>
                             <div class="history-call-stats">${duration} · talk ratio ${Math.round(call.talkRatio || 0)}%${tags ? ' · ' + tags : ''}</div>
                         </div>
                     </div>
@@ -2541,14 +2615,51 @@
                 const feedback = isFullAnalysis ? (raw.feedback || []) : (Array.isArray(raw) ? raw : []);
                 const overallRoast = isFullAnalysis ? (raw.overallRoast || '') : '';
                 const actionItems = isFullAnalysis ? (raw.actionItems || []) : [];
+                const ratings = (call.feedbackRatings && typeof call.feedbackRatings === 'object')
+                    ? call.feedbackRatings : {};
 
                 meta.textContent = `${formatDateTime(call.createdAt)} · ${mins > 0 ? mins + 'm' : '<1m'} · talk ratio ${Math.round(call.talkRatio || 0)}%`;
 
-                const criticals = feedback.filter(f => f.type === 'critical');
-                const warnings = feedback.filter(f => f.type === 'warning');
-                const insights = feedback.filter(f => f.type === 'insight');
+                // Helper: render a feedback item with thumbs up/down
+                function feedbackItemHtml(f, origIdx) {
+                    const r = ratings[origIdx];
+                    return `
+                        <div class="call-feedback-item ${f.type || 'insight'}">
+                            <div class="feedback-item-row">
+                                <span class="feedback-item-text">${f.text}</span>
+                                <div class="rating-btns">
+                                    <button class="rating-btn ${r === 'up' ? 'active' : ''}"
+                                        title="good read"
+                                        onclick="rateCallFeedback('${call.id}', ${origIdx}, 'up', this)">👍</button>
+                                    <button class="rating-btn ${r === 'down' ? 'active' : ''}"
+                                        title="bad read"
+                                        onclick="rateCallFeedback('${call.id}', ${origIdx}, 'down', this)">👎</button>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+
+                const criticals = feedback.map((f, i) => ({f, i})).filter(({f}) => f.type === 'critical');
+                const warnings  = feedback.map((f, i) => ({f, i})).filter(({f}) => f.type === 'warning');
+                const insights  = feedback.map((f, i) => ({f, i})).filter(({f}) => f.type === 'insight');
+                const others    = feedback.map((f, i) => ({f, i})).filter(({f}) => !['critical','warning','insight'].includes(f.type));
+
+                const outcomeLabels = { closed: '✓ closed', lost: '✗ lost', follow_up: '↩ follow up', no_show: '○ no show' };
+                const currentOutcome = call.outcome || null;
 
                 body.innerHTML = `
+                    <div class="call-modal-section" style="margin-top: 0; padding-top: 0; border-top: none;">
+                        <div class="call-modal-section-title">how did it go?</div>
+                        <div class="outcome-btns">
+                            ${['closed','lost','follow_up','no_show'].map(o => `
+                                <button class="outcome-btn ${currentOutcome === o ? o : ''}"
+                                    id="outcome-btn-${o}"
+                                    onclick="setCallOutcome('${call.id}', '${o}', this)">
+                                    ${outcomeLabels[o]}
+                                </button>`).join('')}
+                        </div>
+                    </div>
+
                     <div class="call-modal-score">
                         <div class="call-modal-score-num" style="color:${scoreColors[scoreClass]}">${call.overallScore}</div>
                         <div class="call-modal-roast">${overallRoast || 'no summary available'}</div>
@@ -2556,20 +2667,26 @@
 
                     ${criticals.length ? `
                     <div class="call-modal-section">
-                        <div class="call-modal-section-title">critical issues</div>
-                        ${criticals.map(f => `<div class="call-feedback-item critical">${f.text}</div>`).join('')}
+                        <div class="call-modal-section-title">critical issues <span style="font-size:11px;color:rgba(255,255,255,0.3);font-weight:400;text-transform:none;letter-spacing:0;">— 👍 good read &nbsp;👎 missed the mark</span></div>
+                        ${criticals.map(({f, i}) => feedbackItemHtml(f, i)).join('')}
                     </div>` : ''}
 
                     ${warnings.length ? `
                     <div class="call-modal-section">
                         <div class="call-modal-section-title">warnings</div>
-                        ${warnings.map(f => `<div class="call-feedback-item warning">${f.text}</div>`).join('')}
+                        ${warnings.map(({f, i}) => feedbackItemHtml(f, i)).join('')}
                     </div>` : ''}
 
                     ${insights.length ? `
                     <div class="call-modal-section">
                         <div class="call-modal-section-title">insights</div>
-                        ${insights.map(f => `<div class="call-feedback-item insight">${f.text}</div>`).join('')}
+                        ${insights.map(({f, i}) => feedbackItemHtml(f, i)).join('')}
+                    </div>` : ''}
+
+                    ${others.length ? `
+                    <div class="call-modal-section">
+                        <div class="call-modal-section-title">feedback</div>
+                        ${others.map(({f, i}) => feedbackItemHtml(f, i)).join('')}
                     </div>` : ''}
 
                     ${actionItems.length ? `
@@ -2577,15 +2694,55 @@
                         <div class="call-modal-section-title">action items</div>
                         ${actionItems.map(a => `<div class="call-action-item">${a}</div>`).join('')}
                     </div>` : ''}
-
-                    ${!criticals.length && !warnings.length && !insights.length && feedback.length ? `
-                    <div class="call-modal-section">
-                        <div class="call-modal-section-title">feedback</div>
-                        ${feedback.map(f => `<div class="call-feedback-item ${f.type || 'insight'}">${f.text}</div>`).join('')}
-                    </div>` : ''}
                 `;
             } catch (err) {
                 body.innerHTML = '<p style="text-align:center;color:#ff5050;padding:40px 0;">failed to load call details</p>';
+            }
+        }
+
+        async function setCallOutcome(callId, outcome, clickedBtn) {
+            // Toggle off if already active
+            const isActive = clickedBtn.classList.contains(outcome);
+            const newOutcome = isActive ? null : outcome;
+
+            // Update button states optimistically
+            document.querySelectorAll('.outcome-btn').forEach(b => b.className = 'outcome-btn');
+            if (!isActive) clickedBtn.classList.add(outcome);
+
+            try {
+                if (newOutcome) {
+                    await apiCall(`/calls/${callId}/outcome`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ outcome: newOutcome })
+                    });
+                }
+                // Refresh call list to show updated badge
+                renderCallHistory(allCalls.map(c => c.id === callId ? { ...c, outcome: newOutcome } : c));
+                allCalls = allCalls.map(c => c.id === callId ? { ...c, outcome: newOutcome } : c);
+            } catch (err) {
+                console.error('Failed to set outcome:', err);
+            }
+        }
+
+        async function rateCallFeedback(callId, index, rating, clickedBtn) {
+            const siblings = clickedBtn.closest('.rating-btns').querySelectorAll('.rating-btn');
+            const wasActive = clickedBtn.classList.contains('active');
+            const newRating = wasActive ? null : rating;
+
+            // Update UI optimistically
+            siblings.forEach(b => b.classList.remove('active'));
+            if (!wasActive) clickedBtn.classList.add('active');
+
+            try {
+                await apiCall(`/calls/${callId}/feedback-rating`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ index, rating: newRating })
+                });
+            } catch (err) {
+                console.error('Failed to rate feedback:', err);
+                // Revert on failure
+                siblings.forEach(b => b.classList.remove('active'));
+                if (wasActive) clickedBtn.classList.add('active');
             }
         }
 

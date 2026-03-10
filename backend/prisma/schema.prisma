@@ -84,6 +84,8 @@ model Call {
   brutusFeedback    Json         @default("[]") @map("brutus_feedback")
   overallScore      Int          @default(0) @map("overall_score")
   tags              Json         @default("[]")
+  outcome           String?      // "closed", "lost", "follow_up", "no_show"
+  feedbackRatings   Json         @default("{}") @map("feedback_ratings") // {index: "up"|"down"}
   createdAt         DateTime     @default(now()) @map("created_at")
   
   // Relations

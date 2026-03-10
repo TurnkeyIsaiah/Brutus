@@ -208,6 +208,7 @@ router.get('/', async (req, res, next) => {
           talkRatio: true,
           interruptionCount: true,
           tags: true,
+          outcome: true,
           createdAt: true
         }
       }),
@@ -297,6 +298,85 @@ router.delete('/:id', async (req, res, next) => {
       message: 'Call deleted. brutus forgets nothing though.'
     });
     
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ==================== LOG CALL OUTCOME ====================
+
+router.patch('/:id/outcome', async (req, res, next) => {
+  try {
+    const { outcome } = req.body;
+    const valid = ['closed', 'lost', 'follow_up', 'no_show'];
+    if (!outcome || !valid.includes(outcome)) {
+      return res.status(400).json({ error: { message: `outcome must be one of: ${valid.join(', ')}` } });
+    }
+
+    const call = await prisma.call.findFirst({
+      where: { id: req.params.id, userId: req.user.id }
+    });
+    if (!call) return res.status(404).json({ error: { message: 'Call not found' } });
+
+    await prisma.call.update({
+      where: { id: req.params.id },
+      data: { outcome }
+    });
+
+    // Recompute close rate across all outcome-logged calls
+    const outcomeCalls = await prisma.call.findMany({
+      where: { userId: req.user.id, outcome: { not: null } },
+      select: { outcome: true }
+    });
+    const closeRate = outcomeCalls.length > 0
+      ? (outcomeCalls.filter(c => c.outcome === 'closed').length / outcomeCalls.length) * 100
+      : 0;
+
+    await prisma.userProfile.update({
+      where: { userId: req.user.id },
+      data: { closeRate }
+    });
+
+    // Trigger profile summary update in background
+    updateUserSummary(req.user.id).catch(console.error);
+
+    res.json({ outcome, closeRate: parseFloat(closeRate.toFixed(1)) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ==================== RATE FEEDBACK ITEM ====================
+
+router.patch('/:id/feedback-rating', async (req, res, next) => {
+  try {
+    const { index, rating } = req.body;
+    if (typeof index !== 'number' || !['up', 'down', null].includes(rating)) {
+      return res.status(400).json({ error: { message: 'index (number) and rating ("up"|"down"|null) required' } });
+    }
+
+    const call = await prisma.call.findFirst({
+      where: { id: req.params.id, userId: req.user.id },
+      select: { feedbackRatings: true }
+    });
+    if (!call) return res.status(404).json({ error: { message: 'Call not found' } });
+
+    const ratings = (call.feedbackRatings && typeof call.feedbackRatings === 'object')
+      ? { ...call.feedbackRatings }
+      : {};
+
+    if (rating === null) {
+      delete ratings[index];
+    } else {
+      ratings[index] = rating;
+    }
+
+    await prisma.call.update({
+      where: { id: req.params.id },
+      data: { feedbackRatings: ratings }
+    });
+
+    res.json({ feedbackRatings: ratings });
   } catch (error) {
     next(error);
   }
