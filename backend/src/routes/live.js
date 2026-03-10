@@ -1,4 +1,5 @@
 const express = require('express');
+const prisma = require('../lib/prisma');
 const { authenticate } = require('../middleware/auth');
 const {
   startSession,
@@ -122,10 +123,14 @@ router.post('/end', async (req, res, next) => {
 router.post('/cancel', async (req, res, next) => {
   try {
     const { sessionId } = req.body;
-    
-    // Just update status, don't analyze
+
+    if (!sessionId) {
+      return res.status(400).json({ error: { message: 'Session ID is required' } });
+    }
+
+    // Just update status, don't analyze. userId check prevents cross-user tampering.
     await prisma.session.update({
-      where: { id: sessionId },
+      where: { id: sessionId, userId: req.user.id },
       data: {
         status: 'cancelled',
         endedAt: new Date()

@@ -11,7 +11,13 @@ prisma/migrations/
 
 # Temp files
 temp/
+tmp/
 *.log
+
+# RAG seeding output (can be gigabytes)
+src/scripts/data/youtube_urls.json
+src/scripts/data/progress.json
+src/scripts/data/seeding_summary.json
 
 # IDE
 .vscode/

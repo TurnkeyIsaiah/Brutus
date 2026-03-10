@@ -155,6 +155,25 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+model TrainingMoment {
+  id              String     @id @default(uuid())
+  videoId         String     @map("video_id")
+  videoTitle      String     @map("video_title") @db.Text
+  startTime       Float      @map("start_time")
+  endTime         Float      @map("end_time")
+  transcriptChunk String     @map("transcript_chunk") @db.Text
+  momentType      MomentType @default(other) @map("moment_type")
+  isPositive      Boolean    @default(false) @map("is_positive")
+  whatWentWrong   String?    @map("what_went_wrong") @db.Text
+  whatWentRight   String?    @map("what_went_right") @db.Text
+  idealResponse   String?    @map("ideal_response") @db.Text
+  coachingNote    String?    @map("coaching_note") @db.Text
+  createdAt       DateTime   @default(now()) @map("created_at")
+  // NOTE: embedding vector(1536) column is added via setup_pgvector.sql — not tracked by Prisma
+
+  @@map("training_moments")
+}
+
 model Research {
   id          String    @id @default(uuid())
   sessionId   String?   @map("session_id")

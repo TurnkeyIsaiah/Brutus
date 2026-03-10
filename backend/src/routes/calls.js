@@ -185,8 +185,12 @@ router.post('/analyze-transcript', checkTokenBalance, async (req, res, next) => 
 
 router.get('/', async (req, res, next) => {
   try {
-    const { limit = 20, offset = 0, tag } = req.query;
-    
+    const limitRaw = req.query.limit;
+    const offsetRaw = req.query.offset;
+    const tag = req.query.tag;
+    const limit = Math.min(Math.max(parseInt(limitRaw) || 20, 1), 100);
+    const offset = Math.max(parseInt(offsetRaw) || 0, 0);
+
     const where = { userId: req.user.id };
     
     // Filter by tag if provided
@@ -198,8 +202,8 @@ router.get('/', async (req, res, next) => {
       prisma.call.findMany({
         where,
         orderBy: { createdAt: 'desc' },
-        take: parseInt(limit),
-        skip: parseInt(offset),
+        take: limit,
+        skip: offset,
         select: {
           id: true,
           recordedAt: true,
@@ -222,9 +226,9 @@ router.get('/', async (req, res, next) => {
       })),
       pagination: {
         total,
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-        hasMore: parseInt(offset) + calls.length < total
+        limit,
+        offset,
+        hasMore: offset + calls.length < total
       }
     });
     

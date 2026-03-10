@@ -1,4 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
+const OpenAI = require('openai');
 const prisma = require('../lib/prisma');
 const { deductTokens } = require('../lib/tokens');
 
@@ -6,6 +7,12 @@ let _anthropic = null;
 const getAnthropic = () => {
   if (!_anthropic) _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   return _anthropic;
+};
+
+let _openai = null;
+const getOpenAI = () => {
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return _openai;
 };
 
 // ==================== BRUTUS SYSTEM PROMPT ====================
@@ -71,8 +78,23 @@ USER CONTEXT:
 - Previous summary: ${userProfile.summary}
 ` : 'NEW USER - First call being analyzed.';
 
+    // RAG: find similar call moments to ground the analysis in real examples
+    let ragContext = '';
+    try {
+      const similar = await retrieveSimilar(transcript.slice(0, 1000), 3);
+      if (similar.length > 0) {
+        ragContext = '\n\nREAL RECORDED EXAMPLES (similar situations from top closers):\n' +
+          similar.map((ex, i) =>
+            `Example ${i + 1} [${ex.moment_type}]: "${ex.transcript_chunk.slice(0, 200)}"\n` +
+            (ex.is_positive
+              ? `What worked: ${ex.what_went_right}`
+              : `Mistake: ${ex.what_went_wrong}\nBetter response: ${ex.ideal_response}`)
+          ).join('\n\n');
+      }
+    } catch (err) { console.error('[RAG] analyzeCall:', err.message); }
+
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2000,
       system: BRUTUS_SYSTEM_PROMPT,
       messages: [
@@ -91,7 +113,7 @@ Analyze this sales call and provide:
 5. 1-2 things they did right (if any)
 6. Specific actionable advice for next call
 7. Any patterns you notice compared to their history (if available)
-
+${ragContext}
 Format your response as JSON:
 {
   "overallScore": number,
@@ -119,7 +141,8 @@ Format your response as JSON:
     deductTokens(userId, response.usage).catch(console.error);
 
     // Parse the response
-    const content = response.content[0].text;
+    const content = response.content?.[0]?.text;
+    if (!content) throw new Error('Empty response from Claude');
 
     // Extract JSON from response (handle potential markdown code blocks)
     let jsonStr = content;
@@ -148,6 +171,17 @@ async function getRealTimeFeedback(userId, transcriptChunk, sessionContext) {
 
     const badHabits = userProfile?.badHabits || [];
 
+    // RAG: inject real example for detected moment type (no embed call on hot path)
+    let ragContext = '';
+    const detectedType = detectMomentType(transcriptChunk);
+    if (detectedType) {
+      const examples = await retrieveByMomentType(detectedType, false, 1);
+      if (examples.length > 0) {
+        const ex = examples[0];
+        ragContext = `\n\nREAL EXAMPLE — how a top closer handled ${detectedType}:\n"${ex.transcriptChunk.slice(0, 200)}"\nNote: ${ex.coachingNote}`;
+      }
+    }
+
     // Build text-only prompt — Sonnet never receives image tokens
     const visualLine = sessionContext.visualSummary
       ? `VISUAL CONTEXT (screen analysis):\n${sessionContext.visualSummary}\n\n`
@@ -162,7 +196,7 @@ ${visualLine}RECENT TRANSCRIPT (last 60 seconds):
 FEEDBACK ALREADY GIVEN (last 5):
 ${sessionContext.feedbackGiven?.slice(-5).map(f => `- ${f.feedback || f.text}`).join('\n') || 'None yet'}
 
-TIME INTO CALL: ${sessionContext.timeIntoCall || 0} seconds
+TIME INTO CALL: ${sessionContext.timeIntoCall || 0} seconds${ragContext}
 
 Triage this silently. If nothing coachable happened, respond with {"coach": false}.
 Only respond with {"coach": true, "feedback": "..."} if one of the triggers below fired.`;
@@ -225,7 +259,8 @@ Do NOT repeat feedback already given this session. If nothing triggered — {"co
 
     deductTokens(userId, response.usage).catch(console.error);
 
-    const content = response.content[0].text;
+    const content = response.content?.[0]?.text;
+    if (!content) return null;
 
     // Parse response
     let jsonStr = content;
@@ -274,7 +309,7 @@ async function updateUserSummary(userId) {
     const profile = await prisma.userProfile.findUnique({ where: { userId } });
 
     // Calculate averages
-    const avgTalkRatio = recentCalls.reduce((sum, c) => sum + parseFloat(c.talkRatio), 0) / recentCalls.length;
+    const avgTalkRatio = recentCalls.reduce((sum, c) => sum + (parseFloat(c.talkRatio) || 0), 0) / recentCalls.length;
 
     // Recompute close rate from all calls with an outcome
     const allOutcomeCalls = await prisma.call.findMany({
@@ -361,7 +396,8 @@ Generate an updated profile in JSON:
 
     deductTokens(userId, response.usage).catch(console.error);
 
-    const content = response.content[0].text;
+    const content = response.content?.[0]?.text;
+    if (!content) return;
     let jsonStr = content;
     const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || content.match(/\{[\s\S]*\}/);
     if (jsonMatch) jsonStr = jsonMatch[1] || jsonMatch[0];
@@ -422,8 +458,18 @@ RECENT CALLS (last ${recentCalls.length}):
 ${recentCalls.map((c, i) => `Call ${i + 1}: Score ${c.overallScore}/100, Talk ratio ${c.talkRatio}%, Interruptions ${c.interruptionCount || 0}, Tags: ${(c.tags || []).join(', ') || 'none'}, Date: ${new Date(c.createdAt).toLocaleDateString()}`).join('\n') || 'No calls yet'}
 `;
 
+    // RAG: pull real examples relevant to the user's question
+    let ragContext = '';
+    try {
+      const similar = await retrieveSimilar(message, 2);
+      if (similar.length > 0) {
+        ragContext = '\n\nREAL EXAMPLES FROM TOP CLOSERS:\n' +
+          similar.map(ex => `"${ex.transcript_chunk.slice(0, 150)}" — ${ex.coaching_note}`).join('\n');
+      }
+    } catch (err) { console.error('[RAG] chat:', err.message); }
+
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 500,
       system: `${BRUTUS_SYSTEM_PROMPT}
 
@@ -431,7 +477,7 @@ You're chatting with a user who wants sales coaching advice. Use their profile d
       messages: [
         {
           role: 'user',
-          content: `${contextPrompt}
+          content: `${contextPrompt}${ragContext}
 
 USER MESSAGE: "${message}"
 
@@ -442,7 +488,7 @@ Respond as Brutus. Keep it conversational but valuable. 2-4 sentences usually.`
 
     deductTokens(userId, response.usage).catch(console.error);
 
-    return response.content[0].text;
+    return response.content?.[0]?.text || "something went wrong on my end. try again.";
 
   } catch (error) {
     console.error('Chat error:', error);
@@ -450,9 +496,73 @@ Respond as Brutus. Keep it conversational but valuable. 2-4 sentences usually.`
   }
 }
 
+// ==================== RAG RETRIEVAL ====================
+
+// Keyword heuristic — zero latency, no API call. Used on the live hot path.
+function detectMomentType(text) {
+  const t = text.toLowerCase();
+  if (/too expensive|no budget|can't afford|price|cost/.test(t)) return 'pricing';
+  if (/think about it|need to talk|get back to you|not sure/.test(t)) return 'objection';
+  if (/move forward|next steps|get started|sign|ready to/.test(t)) return 'closing';
+  if (/tell me about|walk me through|currently using|situation/.test(t)) return 'discovery';
+  if (/negotiate|discount|better deal|competitor/.test(t)) return 'negotiation';
+  return null;
+}
+
+// Simple DB query — no vectors. Used by getRealTimeFeedback (hot path).
+async function retrieveByMomentType(momentType, isPositive, limit = 2) {
+  try {
+    return await prisma.trainingMoment.findMany({
+      where: { momentType, isPositive, coachingNote: { not: null } },
+      select: {
+        transcriptChunk: true,
+        momentType: true,
+        isPositive: true,
+        whatWentWrong: true,
+        whatWentRight: true,
+        idealResponse: true,
+        coachingNote: true
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit
+    });
+  } catch (err) {
+    console.error('[RAG] retrieveByMomentType:', err.message);
+    return [];
+  }
+}
+
+// Cosine vector search — used by analyzeCall and chatWithBrutus.
+// Returns objects with snake_case column names (raw SQL result).
+async function retrieveSimilar(text, limit = 3) {
+  try {
+    const resp = await getOpenAI().embeddings.create({
+      model: 'text-embedding-3-small',
+      input: text,
+      dimensions: 1536
+    });
+    const vectorStr = `[${resp.data[0].embedding.join(',')}]`;
+    const results = await prisma.$queryRaw`
+      SELECT transcript_chunk, moment_type, is_positive,
+             what_went_wrong, what_went_right, ideal_response, coaching_note,
+             1 - (embedding <=> ${vectorStr}::vector) AS similarity
+      FROM training_moments
+      WHERE embedding IS NOT NULL AND coaching_note IS NOT NULL
+      ORDER BY embedding <=> ${vectorStr}::vector
+      LIMIT ${limit}
+    `;
+    return results;
+  } catch (err) {
+    console.error('[RAG] retrieveSimilar:', err.message);
+    return [];
+  }
+}
+
 module.exports = {
   analyzeCall,
   getRealTimeFeedback,
   updateUserSummary,
-  chatWithBrutus
+  chatWithBrutus,
+  retrieveByMomentType,
+  retrieveSimilar
 };

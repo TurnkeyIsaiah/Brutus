@@ -10,9 +10,12 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "seed:youtube": "node src/scripts/seedFromYouTube.js",
+    "seed:synthetic": "node src/scripts/seedSynthetic.js"
   },
   "dependencies": {
+    "node-fetch": "^2.7.0",
     "@anthropic-ai/sdk": "^0.24.0",
     "@prisma/client": "^5.20.0",
     "bcryptjs": "^2.4.3",
