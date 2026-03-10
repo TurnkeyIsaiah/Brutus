@@ -16,6 +16,7 @@ let mainWindow = null;
 let overlayWindow = null;
 let tray = null;
 let isMonitoring = false;
+let selectedSourceId = null;
 
 // Helper to get icon path (returns null if doesn't exist)
 function getIconPath(filename) {
@@ -101,10 +102,17 @@ function createOverlayWindow() {
   overlayWindow.loadFile(path.join(__dirname, '../renderer/overlay.html'));
   overlayWindow.setIgnoreMouseEvents(false);
 
-  // Grant screen capture permission automatically (Electron 20+ requirement)
+  // Grant screen capture permission — uses user-selected source if set, else first screen
   overlayWindow.webContents.session.setDisplayMediaRequestHandler((request, callback) => {
-    desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
-      callback({ video: sources[0], audio: 'loopback' });
+    desktopCapturer.getSources({ types: ['screen', 'window'] }).then((sources) => {
+      let source;
+      if (selectedSourceId) {
+        source = sources.find(s => s.id === selectedSourceId) || sources[0];
+        selectedSourceId = null; // reset after use
+      } else {
+        source = sources[0];
+      }
+      callback({ video: source, audio: 'loopback' });
     }).catch(() => {
       callback({});
     });
@@ -351,27 +359,26 @@ ipcMain.handle('open-external', async (event, url) => {
 
 ipcMain.handle('get-screen-sources', async () => {
   try {
-    console.log('[Main Process] Getting screen sources via desktopCapturer...');
     const sources = await desktopCapturer.getSources({
-      types: ['screen'],
-      thumbnailSize: { width: 1920, height: 1080 }
+      types: ['screen', 'window'],
+      thumbnailSize: { width: 320, height: 180 }
     });
-    console.log(`[Main Process] Found ${sources.length} screen sources`);
-    sources.forEach((source, index) => {
-      console.log(`[Main Process] Source ${index}:`, {
-        id: source.id,
-        name: source.name,
-        display_id: source.display_id
-      });
-    });
-    return sources;
+    // Serialize NativeImage thumbnails to data URLs for IPC transfer
+    return sources.map(s => ({
+      id: s.id,
+      name: s.name,
+      display_id: s.display_id,
+      thumbnail: s.thumbnail.toDataURL()
+    }));
   } catch (error) {
-    console.error('[Main Process] ERROR: Failed to get screen sources');
-    console.error('[Main Process] Error name:', error.name);
-    console.error('[Main Process] Error message:', error.message);
-    console.error('[Main Process] Error stack:', error.stack);
+    console.error('[Main Process] Failed to get screen sources:', error.message);
     throw error;
   }
+});
+
+ipcMain.handle('set-selected-source', (event, sourceId) => {
+  selectedSourceId = sourceId;
+  return true;
 });
 
 // ==================== APP LIFECYCLE ====================

@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('brutus', {
   // Screen capture
+  setSelectedSource: (sourceId) => ipcRenderer.invoke('set-selected-source', sourceId),
   getScreenSources: async () => {
     try {
       console.log('[Preload] Requesting screen sources via IPC...');

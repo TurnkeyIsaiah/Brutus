@@ -616,6 +616,79 @@
       margin-bottom: 4px;
       opacity: 0.6;
     }
+
+
+    /* ==================== SOURCE PICKER ==================== */
+    .source-picker-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 18, 0.98);
+      z-index: 1000;
+      border-radius: 20px;
+      flex-direction: column;
+      padding: 20px;
+      overflow: hidden;
+    }
+    .source-picker-overlay.active { display: flex; }
+    .source-picker-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .source-picker-subtitle {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 14px;
+    }
+    .source-picker-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .source-item {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .source-item:hover {
+      border-color: rgba(255,80,80,0.6);
+      background: rgba(255,80,80,0.08);
+    }
+    .source-item img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      border-radius: 5px;
+      background: #111;
+    }
+    .source-item-name {
+      font-size: 10px;
+      color: rgba(255,255,255,0.65);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .source-picker-skip {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      transition: color 0.15s;
+    }
+    .source-picker-skip:hover { color: rgba(255,255,255,0.6); }
   </style>
 </head>
 <body>
@@ -983,8 +1056,11 @@
       // Init audio visualizer bars
       initAudioBars();
       
-      // Listen for monitoring events
-      window.brutus.onMonitoringStarted(() => {
+      // Listen for monitoring events — show source picker first if screen capture is on
+      window.brutus.onMonitoringStarted(async () => {
+        if (isScreenCaptureEnabled) {
+          await showSourcePicker();
+        }
         startSession();
       });
       
@@ -1566,9 +1642,63 @@
     document.getElementById('close-btn').addEventListener('click', async () => {
       await window.brutus.stopMonitoring();
     });
-    
+
+    // ==================== SOURCE PICKER ====================
+    function showSourcePicker() {
+      return new Promise(async (resolve) => {
+        const modal = document.getElementById('source-picker');
+        const grid = document.getElementById('source-picker-grid');
+        const skip = document.getElementById('source-picker-skip');
+
+        modal.classList.add('active');
+        grid.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:11px;grid-column:1/-1;text-align:center;padding:20px;">loading windows...</div>';
+
+        let sources = [];
+        try {
+          sources = await window.brutus.getScreenSources();
+        } catch (e) {
+          console.error('[SourcePicker] Failed:', e);
+        }
+
+        if (sources.length === 0) {
+          modal.classList.remove('active');
+          resolve(null);
+          return;
+        }
+
+        grid.innerHTML = '';
+        sources.forEach(source => {
+          const item = document.createElement('div');
+          item.className = 'source-item';
+          item.innerHTML = `
+            <img src="${source.thumbnail}" alt="${source.name}">
+            <div class="source-item-name">${source.name}</div>
+          `;
+          item.addEventListener('click', async () => {
+            modal.classList.remove('active');
+            await window.brutus.setSelectedSource(source.id);
+            resolve(source.id);
+          });
+          grid.appendChild(item);
+        });
+
+        skip.onclick = () => {
+          modal.classList.remove('active');
+          resolve(null);
+        };
+      });
+    }
+
     // ==================== START ====================
     init();
   </script>
+
+  <!-- Source Picker Modal -->
+  <div class="source-picker-overlay" id="source-picker">
+    <div class="source-picker-title">choose your call window</div>
+    <div class="source-picker-subtitle">Brutus will only watch this — nothing else on your screen.</div>
+    <div class="source-picker-grid" id="source-picker-grid"></div>
+    <div class="source-picker-skip" id="source-picker-skip">skip — audio only</div>
+  </div>
 </body>
 </html>
