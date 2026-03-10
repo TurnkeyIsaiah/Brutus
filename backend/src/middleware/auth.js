@@ -12,7 +12,7 @@ const authenticate = async (req, res, next) => {
     
     const token = authHeader.split(' ')[1];
     
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -47,7 +47,7 @@ const authenticateWS = async (req) => {
       return null;
     }
     
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId }
@@ -65,7 +65,7 @@ const generateToken = (userId) => {
   return jwt.sign(
     { userId },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d', algorithm: 'HS256' }
   );
 };
 

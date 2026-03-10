@@ -1,15 +1,43 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 const prisma = require('../lib/prisma');
 const { generateToken, authenticate } = require('../middleware/auth');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../services/email');
 
 const router = express.Router();
 
+// 5 login attempts per 15 minutes per IP
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: 'Too many login attempts. Try again in 15 minutes.' } }
+});
+
+// 10 signups per hour per IP
+const signupLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: 'Too many accounts created from this IP.' } }
+});
+
+// 3 password reset requests per hour per IP
+const resetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: 'Too many password reset attempts. Try again in an hour.' } }
+});
+
 // ==================== SIGNUP ====================
 
-router.post('/signup', async (req, res, next) => {
+router.post('/signup', signupLimiter, async (req, res, next) => {
   try {
     const { email, password, name } = req.body;
     
@@ -83,7 +111,7 @@ router.post('/signup', async (req, res, next) => {
 
 // ==================== LOGIN ====================
 
-router.post('/login', async (req, res, next) => {
+router.post('/login', loginLimiter, async (req, res, next) => {
   try {
     const { email, password } = req.body;
     
@@ -160,7 +188,7 @@ router.get('/me', authenticate, async (req, res) => {
 
 // ==================== FORGOT PASSWORD ====================
 
-router.post('/forgot-password', async (req, res, next) => {
+router.post('/forgot-password', resetLimiter, async (req, res, next) => {
   try {
     const { email } = req.body;
     if (!email) {

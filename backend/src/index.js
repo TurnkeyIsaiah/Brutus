@@ -1,8 +1,8 @@
 require('dotenv').config();
 
-
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const { createServer } = require('http');
 const { WebSocketServer } = require('ws');
@@ -21,9 +21,28 @@ const server = createServer(app);
 
 // ==================== MIDDLEWARE ====================
 
+// CORS — allow Electron (null origin), production frontend, and localhost dev
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    const allowed = [
+      process.env.FRONTEND_URL,
+      'http://localhost:3000',
+      'http://localhost:3001'
+    ].filter(Boolean);
+    // null origin = Electron app or direct API call — allow
+    if (!origin || allowed.includes(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
+}));
+
+// Global rate limit — 200 requests per minute per IP
+app.use(rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: 'Too many requests, slow down.' } }
 }));
 
 // Stripe webhook must receive raw body — register before express.json()

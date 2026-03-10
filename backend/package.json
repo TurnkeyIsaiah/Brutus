@@ -15,15 +15,16 @@
     "seed:synthetic": "node src/scripts/seedSynthetic.js"
   },
   "dependencies": {
-    "node-fetch": "^2.7.0",
     "@anthropic-ai/sdk": "^0.24.0",
     "@prisma/client": "^5.20.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-rate-limit": "^8.3.1",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+    "node-fetch": "^2.7.0",
     "openai": "^4.47.0",
     "resend": "^4.0.0",
     "stripe": "^16.0.0",

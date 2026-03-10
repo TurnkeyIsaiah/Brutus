@@ -527,7 +527,7 @@ async function endSession(userId, sessionId) {
     
   } catch (error) {
     console.error('End session error:', error);
-    throw new Error('Failed to end session: ' + error.message);
+    throw new Error('Failed to end session. Please try again.');
   }
 }
 
