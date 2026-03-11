@@ -1079,6 +1079,12 @@
       window.brutus.close();
     });
     
+    // ==================== MONITORING EVENTS FROM MAIN PROCESS ====================
+    window.brutus.onMonitoringStopped(() => {
+      isMonitoring = false;
+      updateMonitoringUI();
+    });
+
     // ==================== START ====================
     init();
   </script>

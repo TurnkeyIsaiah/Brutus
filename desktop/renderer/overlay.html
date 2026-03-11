@@ -43,7 +43,7 @@
       padding: 16px 20px;
       background: rgba(0, 0, 0, 0.3);
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      -webkit-app-region: drag;
+      cursor: grab;
     }
     
     .header-left {
@@ -1641,6 +1641,57 @@
     // ==================== WINDOW CONTROLS ====================
     document.getElementById('close-btn').addEventListener('click', async () => {
       await window.brutus.stopMonitoring();
+    });
+
+    // ==================== DRAG TO MOVE ====================
+    const overlayHeader = document.querySelector('.overlay-header');
+    let dragState = null;
+
+    overlayHeader.addEventListener('mousedown', (e) => {
+      if (e.target.closest('button, input, label, .header-controls')) return;
+      dragState = { startX: e.screenX, startY: e.screenY };
+      overlayHeader.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', async (e) => {
+      if (!dragState) return;
+      const dx = e.screenX - dragState.startX;
+      const dy = e.screenY - dragState.startY;
+      dragState.startX = e.screenX;
+      dragState.startY = e.screenY;
+      const pos = await window.brutus.getOverlayBounds();
+      await window.brutus.moveOverlay(pos.x + dx, pos.y + dy);
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (dragState) {
+        dragState = null;
+        overlayHeader.style.cursor = 'grab';
+      }
+    });
+
+    // ==================== RESIZE HANDLE ====================
+    const resizeHandle = document.getElementById('resize-handle');
+    let resizeState = null;
+
+    resizeHandle.addEventListener('mousedown', (e) => {
+      resizeState = { startX: e.screenX, startY: e.screenY };
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', async (e) => {
+      if (!resizeState) return;
+      const dx = e.screenX - resizeState.startX;
+      const dy = e.screenY - resizeState.startY;
+      resizeState.startX = e.screenX;
+      resizeState.startY = e.screenY;
+      const bounds = await window.brutus.getOverlayBounds();
+      await window.brutus.resizeOverlay(Math.max(280, bounds.width + dx), Math.max(200, bounds.height + dy));
+    });
+
+    document.addEventListener('mouseup', () => {
+      resizeState = null;
     });
 
     // ==================== SOURCE PICKER ====================

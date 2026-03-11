@@ -129,6 +129,8 @@ function createOverlayWindow() {
   overlayWindow.on('closed', () => {
     overlayWindow = null;
     isMonitoring = false;
+    if (mainWindow) mainWindow.webContents.send('monitoring-stopped');
+    updateTrayMenu();
   });
 
   // Apply stored opacity
@@ -317,6 +319,14 @@ ipcMain.handle('stop-monitoring', () => {
 
 ipcMain.handle('is-monitoring', () => {
   return isMonitoring;
+});
+
+ipcMain.handle('get-overlay-bounds', () => {
+  if (overlayWindow) {
+    const bounds = overlayWindow.getBounds();
+    return bounds;
+  }
+  return { x: 0, y: 0, width: 380, height: 450 };
 });
 
 ipcMain.handle('move-overlay', (event, { x, y }) => {
