@@ -41,6 +41,7 @@ contextBridge.exposeInMainWorld('brutus', {
   startMonitoring: () => ipcRenderer.invoke('start-monitoring'),
   stopMonitoring: () => ipcRenderer.invoke('stop-monitoring'),
   isMonitoring: () => ipcRenderer.invoke('is-monitoring'),
+  showOverlay: () => ipcRenderer.invoke('show-overlay'),
 
   // Overlay
   getOverlayBounds: () => ipcRenderer.invoke('get-overlay-bounds'),

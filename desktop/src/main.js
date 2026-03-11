@@ -91,6 +91,8 @@ function createOverlayWindow() {
     alwaysOnTop: true,
     skipTaskbar: true,
     resizable: true,
+    minimizable: false,
+    maximizable: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -124,6 +126,18 @@ function createOverlayWindow() {
         (input.control && input.shift && input.key === 'I')) {
       overlayWindow.webContents.toggleDevTools();
     }
+  });
+
+  overlayWindow.on('hide', () => {
+    // If monitoring is still active but the window got hidden (e.g. by Windows), re-show it
+    if (isMonitoring) {
+      overlayWindow.show();
+    }
+  });
+
+  overlayWindow.on('minimize', () => {
+    // Prevent minimizing — restore immediately
+    overlayWindow.restore();
   });
 
   overlayWindow.on('closed', () => {
@@ -268,9 +282,12 @@ function stopMonitoring() {
   isMonitoring = false;
   hideOverlay();
   updateTrayMenu();
-  
+
   if (overlayWindow) {
     overlayWindow.webContents.send('monitoring-stopped');
+  }
+  if (mainWindow) {
+    mainWindow.webContents.send('monitoring-stopped');
   }
 }
 
@@ -319,6 +336,13 @@ ipcMain.handle('stop-monitoring', () => {
 
 ipcMain.handle('is-monitoring', () => {
   return isMonitoring;
+});
+
+ipcMain.handle('show-overlay', () => {
+  if (overlayWindow) {
+    overlayWindow.show();
+    overlayWindow.focus();
+  }
 });
 
 ipcMain.handle('get-overlay-bounds', () => {

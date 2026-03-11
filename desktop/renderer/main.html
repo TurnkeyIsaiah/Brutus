@@ -647,6 +647,7 @@
             </div>
             <div class="status-text" id="status-text">not monitoring</div>
             <button class="btn btn-primary monitor-btn" id="monitor-btn">start monitoring</button>
+            <button class="btn btn-secondary show-overlay-btn hidden" id="show-overlay-btn">show overlay</button>
           </div>
         </div>
 
@@ -1056,17 +1057,20 @@
       const indicator = document.getElementById('status-indicator');
       const statusText = document.getElementById('status-text');
       const btn = document.getElementById('monitor-btn');
-      
+      const showOverlayBtn = document.getElementById('show-overlay-btn');
+
       if (isMonitoring) {
         indicator.classList.add('active');
         statusText.textContent = 'monitoring active';
         btn.textContent = 'stop monitoring';
         btn.classList.add('active');
+        showOverlayBtn.classList.remove('hidden');
       } else {
         indicator.classList.remove('active');
         statusText.textContent = 'not monitoring';
         btn.textContent = 'start monitoring';
         btn.classList.remove('active');
+        showOverlayBtn.classList.add('hidden');
       }
     }
     
@@ -1079,6 +1083,10 @@
       window.brutus.close();
     });
     
+    document.getElementById('show-overlay-btn').addEventListener('click', () => {
+      window.brutus.showOverlay();
+    });
+
     // ==================== MONITORING EVENTS FROM MAIN PROCESS ====================
     window.brutus.onMonitoringStopped(() => {
       isMonitoring = false;
