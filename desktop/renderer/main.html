@@ -736,6 +736,11 @@
                 <input type="number" id="min-feedback-interval" class="form-input" placeholder="20" min="10" max="120">
                 <p class="setting-hint">Minimum time between Brutus feedback messages (default: 20s)</p>
               </div>
+              <div class="setting-item">
+                <label for="tts-voice">brutus voice (TTS)</label>
+                <select id="tts-voice" class="form-input"></select>
+                <p class="setting-hint">voice brutus uses for audio feedback. requires headphones — prevents your prospect from hearing brutus.</p>
+              </div>
               <p class="setting-hint">System audio capture (prospect's voice) requires macOS Ventura 13+ or Windows — no virtual cable needed.</p>
             </div>
 
@@ -993,6 +998,25 @@
 
       // Min feedback interval
       document.getElementById('min-feedback-interval').value = settings.minFeedbackInterval || 20;
+
+      // TTS voice — populate with English voices
+      function populateTtsVoices(savedVoice) {
+        const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+        const select = document.getElementById('tts-voice');
+        select.innerHTML = '';
+        voices.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v.name;
+          opt.textContent = v.name;
+          if (v.name === savedVoice) opt.selected = true;
+          select.appendChild(opt);
+        });
+      }
+      if (window.speechSynthesis.getVoices().length > 0) {
+        populateTtsVoices(settings.ttsVoice);
+      } else {
+        window.speechSynthesis.addEventListener('voiceschanged', () => populateTtsVoices(settings.ttsVoice), { once: true });
+      }
     }
 
     // Update opacity slider value display
@@ -1016,7 +1040,8 @@
         autoStart: document.getElementById('auto-start').checked,
         overlayOpacity: parseInt(document.getElementById('overlay-opacity').value) / 100,
         audioFeedback: document.getElementById('audio-feedback').checked,
-        minFeedbackInterval: parseInt(document.getElementById('min-feedback-interval').value) || 20
+        minFeedbackInterval: parseInt(document.getElementById('min-feedback-interval').value) || 20,
+        ttsVoice: document.getElementById('tts-voice').value || ''
       };
 
       await window.brutus.setSettings(settings);

@@ -203,7 +203,7 @@ Only respond with {"coach": true, "feedback": "..."} if one of the triggers belo
 
     const response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 300,
+      max_tokens: 400,
       system: `${BRUTUS_SYSTEM_PROMPT}
 
 You're triaging a LIVE sales call every 30 seconds. Default is complete silence.
@@ -250,7 +250,7 @@ VISUAL (if visual context provided):
 User's known bad habits to watch for extra closely: ${JSON.stringify(badHabits)}
 
 Response format — choose one:
-{"coach": true, "feedback": "1-2 sentences max. direct. give exact words when possible."}
+{"coach": true, "feedback": "max 10 words. direct. punchy. give exact words when possible.", "short": "4-6 words. even punchier distillation of feedback."}
 {"coach": false}
 
 Do NOT repeat feedback already given this session. If nothing triggered — {"coach": false}.`,
