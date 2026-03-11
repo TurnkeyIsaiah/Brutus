@@ -13,69 +13,67 @@ const getOpenAI = () => {
   return _openai;
 };
 
+// ==================== WHISPER VIA NATIVE FETCH ====================
+// Uses native fetch directly to avoid node-fetch TLS issues in the OpenAI SDK
+
+async function whisperRequest(filePath, responseFormat = 'text') {
+  const fileBuffer = fs.readFileSync(filePath);
+  const fileName = path.basename(filePath);
+
+  const formData = new FormData();
+  formData.append('file', new Blob([fileBuffer]), fileName);
+  formData.append('model', 'whisper-1');
+  formData.append('response_format', responseFormat);
+
+  const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+    },
+    body: formData
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw Object.assign(new Error(`Whisper API error ${res.status}: ${text}`), { status: res.status });
+  }
+
+  if (responseFormat === 'text') {
+    return res.text();
+  }
+  return res.json();
+}
+
 // ==================== TRANSCRIBE AUDIO FILE ====================
 
 async function transcribeAudio(audioBuffer, mimeType = 'audio/webm', userId = null) {
-  try {
-    // Create a temporary file (Whisper API requires a file)
-    const tempDir = path.join(__dirname, '../../temp');
-    
-    // Ensure temp directory exists
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-    
-    // Determine file extension from mime type
-    const extensions = {
-      'audio/webm': 'webm',
-      'audio/wav': 'wav',
-      'audio/mp3': 'mp3',
-      'audio/mpeg': 'mp3',
-      'audio/mp4': 'mp4',
-      'audio/m4a': 'm4a',
-      'audio/ogg': 'ogg'
-    };
-    
-    const ext = extensions[mimeType] || 'webm';
-    const tempFilePath = path.join(tempDir, `${uuidv4()}.${ext}`);
-    
-    // Write buffer to temp file
-    fs.writeFileSync(tempFilePath, audioBuffer);
-    
-    try {
-      // Transcribe using Whisper
-      const transcription = await getOpenAI().audio.transcriptions.create({
-        file: fs.createReadStream(tempFilePath),
-        model: 'whisper-1',
-        response_format: 'verbose_json',
-        timestamp_granularities: ['segment']
-      });
-      
-      const duration = transcription.duration || 0;
-      if (userId && duration > 0) {
-        deductFlat(userId, duration * WHISPER_CENTS_PER_SECOND).catch(console.error);
-      }
+  const tempDir = path.join(__dirname, '../../temp');
+  if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
-      return {
-        text: transcription.text,
-        segments: transcription.segments?.map(seg => ({
-          start: seg.start,
-          end: seg.end,
-          text: seg.text
-        })) || [],
-        duration
-      };
-      
-    } finally {
-      // Clean up temp file
-      if (fs.existsSync(tempFilePath)) {
-        fs.unlinkSync(tempFilePath);
-      }
+  const extensions = {
+    'audio/webm': 'webm', 'audio/wav': 'wav', 'audio/mp3': 'mp3',
+    'audio/mpeg': 'mp3', 'audio/mp4': 'mp4', 'audio/m4a': 'm4a', 'audio/ogg': 'ogg'
+  };
+  const ext = extensions[mimeType] || 'webm';
+  const tempFilePath = path.join(tempDir, `${uuidv4()}.${ext}`);
+  fs.writeFileSync(tempFilePath, audioBuffer);
+
+  try {
+    const transcription = await whisperRequest(tempFilePath, 'verbose_json');
+    const duration = transcription.duration || 0;
+    if (userId && duration > 0) {
+      deductFlat(userId, duration * WHISPER_CENTS_PER_SECOND).catch(console.error);
     }
-    
+    return {
+      text: transcription.text,
+      segments: transcription.segments?.map(seg => ({ start: seg.start, end: seg.end, text: seg.text })) || [],
+      duration
+    };
   } catch (error) {
     console.error('Transcription error:', error);
     throw new Error('Failed to transcribe audio: ' + error.message);
+  } finally {
+    if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
   }
 }
 
@@ -83,9 +81,7 @@ async function transcribeAudio(audioBuffer, mimeType = 'audio/webm', userId = nu
 
 async function transcribeChunk(audioBuffer, mimeType = 'audio/webm', userId = null) {
   const tempDir = path.join(__dirname, '../../temp');
-  if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true });
-  }
+  if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
   const extensions = { 'audio/webm': 'webm', 'audio/wav': 'wav', 'audio/mp3': 'mp3', 'audio/mpeg': 'mp3' };
   const ext = extensions[mimeType] || 'webm';
@@ -98,25 +94,20 @@ async function transcribeChunk(audioBuffer, mimeType = 'audio/webm', userId = nu
   try {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const transcription = await getOpenAI().audio.transcriptions.create({
-          file: fs.createReadStream(tempFilePath),
-          model: 'whisper-1',
-          response_format: 'text'
-        });
-
+        const text = await whisperRequest(tempFilePath, 'text');
         if (userId) {
           deductFlat(userId, 30 * WHISPER_CENTS_PER_SECOND).catch(console.error);
         }
-        return transcription;
-
+        console.log(`[Transcription] Success on attempt ${attempt}`);
+        return text;
       } catch (error) {
         lastError = error;
         const status = error?.status;
-        console.error(`[Transcription] Attempt ${attempt}/${maxAttempts} failed — status: ${status ?? 'network'}, code: ${error?.code ?? error?.cause?.code ?? 'unknown'}, message: ${error?.message}`);
+        console.error(`[Transcription] Attempt ${attempt}/${maxAttempts} failed — status: ${status ?? 'network'}, message: ${error?.message}`);
 
         if (status === 401 || status === 403) {
           console.error('[Transcription] Auth error — check OPENAI_API_KEY in Railway variables');
-          break; // No point retrying auth failures
+          break;
         }
 
         if (attempt < maxAttempts) {
@@ -127,15 +118,9 @@ async function transcribeChunk(audioBuffer, mimeType = 'audio/webm', userId = nu
 
     console.error('[Transcription] All attempts failed:', lastError?.message);
     return null;
-
   } finally {
-    if (fs.existsSync(tempFilePath)) {
-      fs.unlinkSync(tempFilePath);
-    }
+    if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
   }
 }
 
-module.exports = {
-  transcribeAudio,
-  transcribeChunk
-};
+module.exports = { transcribeAudio, transcribeChunk };
