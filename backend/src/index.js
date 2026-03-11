@@ -19,6 +19,8 @@ const { authenticateWS } = require('./middleware/auth');
 const app = express();
 const server = createServer(app);
 
+app.set('trust proxy', 1);
+
 // ==================== MIDDLEWARE ====================
 
 // CORS — allow Electron (null origin), production frontend, and localhost dev
