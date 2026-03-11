@@ -573,7 +573,7 @@
                 <a href="about.html">about</a>
                 <a href="https://app.brutusai.coach/login.html" class="nav-cta">get started</a>
             </div>
-            <button class="mobile-menu-btn" aria-label="toggle menu">☰</button>
+            <button class="mobile-menu-btn" aria-label="toggle menu">menu</button>
         </nav>
         
         <!-- Page Header -->
@@ -834,11 +834,11 @@
         if (menuBtn && navLinks) {
             menuBtn.addEventListener('click', () => {
                 navLinks.classList.toggle('open');
-                menuBtn.textContent = navLinks.classList.contains('open') ? '✕' : '☰';
+                menuBtn.textContent = navLinks.classList.contains('open') ? '×' : 'menu';
             });
             navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
                 navLinks.classList.remove('open');
-                menuBtn.textContent = '☰';
+                menuBtn.textContent = 'menu';
             }));
         }
     </script>

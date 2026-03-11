@@ -122,7 +122,7 @@
                 <a href="about.html">about</a>
                 <a href="https://app.brutusai.coach/login.html" class="nav-cta">get started</a>
             </div>
-            <button class="mobile-menu-btn" aria-label="toggle menu">☰</button>
+            <button class="mobile-menu-btn" aria-label="toggle menu">menu</button>
         </nav>
         <header class="page-header">
             <h1>every feature designed to <span>roast you better</span></h1>
@@ -130,7 +130,7 @@
         </header>
         <div class="features-grid">
             <div class="feature-card">
-                <div class="feature-icon">👁️</div>
+                <div class="feature-icon">01</div>
                 <h3>real-time monitoring</h3>
                 <p>brutus watches your screen and listens to every word during your calls. nothing gets past it.</p>
                 <ul class="feature-bullets">
@@ -141,7 +141,7 @@
                 </ul>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">⚡</div>
+                <div class="feature-icon">02</div>
                 <h3>instant coaching</h3>
                 <p>get feedback delivered to your screen in real-time. adjust your approach while you still have a chance.</p>
                 <ul class="feature-bullets">
@@ -152,7 +152,7 @@
                 </ul>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">📝</div>
+                <div class="feature-icon">03</div>
                 <h3>ai note taking</h3>
                 <p>brutus listens and takes notes so you don't have to. every key moment, objection, and commitment gets captured while you stay focused on the call.</p>
                 <ul class="feature-bullets">
@@ -163,7 +163,7 @@
                 </ul>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">🔍</div>
+                <div class="feature-icon">04</div>
                 <h3>prospect research</h3>
                 <p>the moment a prospect's name or company shows up on screen, brutus looks them up. you know exactly who you're talking to before you say a word.</p>
                 <ul class="feature-bullets">
@@ -174,7 +174,7 @@
                 </ul>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">📈</div>
+                <div class="feature-icon">05</div>
                 <h3>progress analytics</h3>
                 <p>track your improvement over time. brutus remembers every call and shows you exactly where you're getting better.</p>
                 <ul class="feature-bullets">
@@ -185,7 +185,7 @@
                 </ul>
             </div>
             <div class="feature-card">
-                <div class="feature-icon">🔥</div>
+                <div class="feature-icon">06</div>
                 <h3>brutally honest feedback</h3>
                 <p>no participation trophies. brutus tells you the truth, even when it's not what you were hoping to hear.</p>
                 <ul class="feature-bullets">
@@ -246,11 +246,11 @@
         if (menuBtn && navLinks) {
             menuBtn.addEventListener('click', () => {
                 navLinks.classList.toggle('open');
-                menuBtn.textContent = navLinks.classList.contains('open') ? '✕' : '☰';
+                menuBtn.textContent = navLinks.classList.contains('open') ? '×' : 'menu';
             });
             navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
                 navLinks.classList.remove('open');
-                menuBtn.textContent = '☰';
+                menuBtn.textContent = 'menu';
             }));
         }
     </script>

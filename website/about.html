@@ -132,7 +132,7 @@
                 <a href="about.html" class="active">about</a>
                 <a href="https://app.brutusai.coach/login.html" class="nav-cta">get started</a>
             </div>
-            <button class="mobile-menu-btn" aria-label="toggle menu">☰</button>
+            <button class="mobile-menu-btn" aria-label="toggle menu">menu</button>
         </nav>
         
         <section class="about-hero">
@@ -157,19 +157,19 @@
             <h2>our values</h2>
             <div class="values-grid">
                 <div class="value-card">
-                    <h4>🎯 radical honesty</h4>
+                    <h4>radical honesty</h4>
                     <p>we don't sugarcoat feedback. you can't improve if you don't know what's wrong. brutus tells you the truth, even when it stings.</p>
                 </div>
                 <div class="value-card">
-                    <h4>⚡ real-time action</h4>
+                    <h4>real-time action</h4>
                     <p>feedback is worthless if it comes too late. we deliver coaching while you can still do something about it.</p>
                 </div>
                 <div class="value-card">
-                    <h4>📈 continuous improvement</h4>
+                    <h4>continuous improvement</h4>
                     <p>every call is a chance to get better. brutus tracks your progress and celebrates real growth, not participation trophies.</p>
                 </div>
                 <div class="value-card">
-                    <h4>🔒 privacy first</h4>
+                    <h4>privacy first</h4>
                     <p>your calls are your business. we encrypt everything and never share your data with anyone.</p>
                 </div>
             </div>
@@ -234,11 +234,11 @@
         if (menuBtn && navLinks) {
             menuBtn.addEventListener('click', () => {
                 navLinks.classList.toggle('open');
-                menuBtn.textContent = navLinks.classList.contains('open') ? '✕' : '☰';
+                menuBtn.textContent = navLinks.classList.contains('open') ? '×' : 'menu';
             });
             navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
                 navLinks.classList.remove('open');
-                menuBtn.textContent = '☰';
+                menuBtn.textContent = 'menu';
             }));
         }
     </script>
