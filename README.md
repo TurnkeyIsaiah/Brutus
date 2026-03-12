@@ -1,4 +1,4 @@
-# Brutus.AI - Brutally Honest AI Sales Coaching Platform
+# Brutus AI - Brutally Honest AI Sales Coaching Platform
 
 Brutus is a comprehensive AI-powered sales coaching platform that provides real-time feedback during live sales calls using advanced speech recognition and Claude AI.
 
