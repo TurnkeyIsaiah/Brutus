@@ -999,24 +999,24 @@
       // Min feedback interval
       document.getElementById('min-feedback-interval').value = settings.minFeedbackInterval || 20;
 
-      // TTS voice — populate with English voices
-      function populateTtsVoices(savedVoice) {
-        const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
-        const select = document.getElementById('tts-voice');
-        select.innerHTML = '';
-        voices.forEach(v => {
-          const opt = document.createElement('option');
-          opt.value = v.name;
-          opt.textContent = v.name;
-          if (v.name === savedVoice) opt.selected = true;
-          select.appendChild(opt);
-        });
-      }
-      if (window.speechSynthesis.getVoices().length > 0) {
-        populateTtsVoices(settings.ttsVoice);
-      } else {
-        window.speechSynthesis.addEventListener('voiceschanged', () => populateTtsVoices(settings.ttsVoice), { once: true });
-      }
+      // TTS voice — curated ElevenLabs voices
+      const BRUTUS_VOICES = [
+        { name: 'Mark',        id: 'UgBBYS2sOqTuMpoF3BR0' },
+        { name: 'Jarnathan',   id: 'c6SfcYrb2t09NHXiT80T' },
+        { name: 'Spuds Oxley', id: 'NOpBlnGInO9m6vDvFkFC' },
+        { name: 'Jon',         id: 'Cz0K1kOv9tD8l0b5Qu53' },
+        { name: 'Donovan',     id: 'DMyrgzQFny3JI1Y1paM5' },
+        { name: 'Boyd',        id: 'gfRt6Z3Z8aTbpLfexQ7N' },
+      ];
+      const ttsSelect = document.getElementById('tts-voice');
+      ttsSelect.innerHTML = '';
+      BRUTUS_VOICES.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.id;
+        opt.textContent = v.name;
+        if (v.id === settings.ttsVoice) opt.selected = true;
+        ttsSelect.appendChild(opt);
+      });
     }
 
     // Update opacity slider value display

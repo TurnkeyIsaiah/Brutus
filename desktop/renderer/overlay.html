@@ -927,15 +927,26 @@
     }
 
     // ==================== SPEAK FEEDBACK ====================
-    function speakFeedback(text) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      const voices = window.speechSynthesis.getVoices();
-      const savedVoice = voices.find(v => v.name === savedTtsVoice);
-      if (savedVoice) utterance.voice = savedVoice;
-      utterance.rate = 1.15;
-      utterance.volume = 0.9;
-      window.speechSynthesis.speak(utterance);
+    async function speakFeedback(text) {
+      if (!savedTtsVoice) return;
+      try {
+        const response = await fetch(`${API_URL}/tts`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ text, voiceId: savedTtsVoice })
+        });
+        if (!response.ok) return;
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.play();
+        audio.onended = () => URL.revokeObjectURL(url);
+      } catch (e) {
+        console.warn('[TTS] Failed:', e.message);
+      }
     }
 
     // ==================== SCREEN CAPTURE TOGGLE ====================

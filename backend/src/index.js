@@ -14,6 +14,7 @@ const liveRoutes = require('./routes/live');
 const notesRoutes = require('./routes/notes');
 const researchRoutes = require('./routes/research');
 const billingRoutes = require('./routes/billing');
+const ttsRoutes = require('./routes/tts');
 const { authenticateWS } = require('./middleware/auth');
 
 const app = express();
@@ -62,6 +63,7 @@ app.use('/live', liveRoutes);
 app.use('/notes', notesRoutes);
 app.use('/research', researchRoutes);
 app.use('/billing', billingRoutes);
+app.use('/tts', ttsRoutes);
 
 // Serve frontend static files
 app.use('/frontend', express.static(path.join(__dirname, '..', '..', 'frontend')));
