@@ -70,9 +70,8 @@ function createMainWindow() {
     mainWindow = null;
   });
 
-  mainWindow.on('minimize', (event) => {
-    event.preventDefault();
-    mainWindow.hide();
+  mainWindow.on('minimize', () => {
+    // minimize to taskbar normally
   });
 }
 
