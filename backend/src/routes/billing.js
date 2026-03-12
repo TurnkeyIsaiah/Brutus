@@ -133,7 +133,7 @@ router.post('/custom-topup', authenticate, async (req, res, next) => {
 
     const amountCents = Math.round(amount * 100);
     const tokensToAdd = amountCents * TOKENS_PER_CENT;
-    const label = `Brutus.ai Credits — $${amount.toFixed(2)}`;
+    const label = `Brutus AI Credits — $${amount.toFixed(2)}`;
 
     const customerId = await ensureCustomer(req.user);
     const session = await createCheckoutSession(

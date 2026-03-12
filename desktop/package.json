@@ -1,7 +1,7 @@
 {
   "name": "brutus-desktop",
   "version": "1.0.0",
-  "description": "Brutus.ai - Real-time AI Sales Coach",
+  "description": "Brutus AI - Real-time AI Sales Coach",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",

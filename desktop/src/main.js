@@ -218,7 +218,7 @@ function createTray() {
     }
   ]);
   
-  tray.setToolTip('Brutus.ai - Sales Coach');
+  tray.setToolTip('Brutus AI - Sales Coach');
   tray.setContextMenu(contextMenu);
   
   tray.on('click', () => {

@@ -1,7 +1,7 @@
 {
   "name": "brutus-backend",
   "version": "1.0.0",
-  "description": "Backend for Brutus.ai sales coaching platform",
+  "description": "Backend for Brutus AI sales coaching platform",
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
