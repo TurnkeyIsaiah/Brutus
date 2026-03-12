@@ -48,6 +48,7 @@ function createMainWindow() {
     resizable: false,
     frame: false,
     backgroundColor: '#0a0a12',
+    icon: path.join(__dirname, '../assets/icon.png'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

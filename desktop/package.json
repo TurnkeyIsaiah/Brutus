@@ -11,8 +11,8 @@
     "build:linux": "electron-builder --linux"
   },
   "build": {
-    "appId": "com.brutus.ai",
-    "productName": "Brutus.ai",
+    "appId": "coach.brutusai",
+    "productName": "Brutus AI",
     "icon": "assets/icon.png",
     "directories": {
       "output": "dist"
