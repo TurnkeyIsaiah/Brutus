@@ -76,6 +76,7 @@ app.get('/health', (req, res) => {
 const wss = new WebSocketServer({ server, path: '/ws' });
 
 wss.on('connection', async (ws, req) => {
+  console.log('[WebSocket] Connection attempt from:', req.headers.origin || 'unknown', '— url:', req.url?.slice(0, 80));
   try {
     // Authenticate the WebSocket connection
     const user = await authenticateWS(req);

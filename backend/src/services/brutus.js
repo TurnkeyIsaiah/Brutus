@@ -398,9 +398,12 @@ Generate an updated profile in JSON:
 
     const content = response.content?.[0]?.text;
     if (!content) return;
-    let jsonStr = content;
-    const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) jsonStr = jsonMatch[1] || jsonMatch[0];
+    let jsonStr = content.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim();
+    if (!jsonStr.startsWith('{')) {
+      const match = content.match(/\{[\s\S]*\}/);
+      if (!match) return;
+      jsonStr = match[0];
+    }
 
     const updates = JSON.parse(jsonStr);
 
