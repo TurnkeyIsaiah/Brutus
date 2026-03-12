@@ -230,8 +230,7 @@ server.listen(PORT, () => {
   ║                                          ║
   ╚══════════════════════════════════════════╝
   `);
-  const elKey = process.env.ELEVENLABS_API_KEY;
-  console.log(`[Startup] ELEVENLABS_API_KEY: ${elKey ? `set (${elKey.length} chars, starts with "${elKey.slice(0,6)}...")` : 'NOT SET'}`);
+
 });
 
 module.exports = { app, server, wss };
