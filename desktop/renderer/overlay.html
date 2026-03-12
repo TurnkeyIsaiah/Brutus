@@ -1217,6 +1217,9 @@
       // Start immediately if monitoring is active
       const isMonitoring = await window.brutus.isMonitoring();
       if (isMonitoring) {
+        if (isScreenCaptureEnabled) {
+          await showSourcePicker();
+        }
         startSession();
       }
     }

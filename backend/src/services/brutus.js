@@ -371,7 +371,7 @@ ${badReads.length ? `- Rep flagged as bad reads: ${JSON.stringify(badReads)}` : 
 
     const response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1200,
+      max_tokens: 2000,
       system: BRUTUS_SYSTEM_PROMPT,
       messages: [
         {
