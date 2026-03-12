@@ -201,10 +201,13 @@ TIME INTO CALL: ${sessionContext.timeIntoCall || 0} seconds${ragContext}
 Triage this silently. If nothing coachable happened, respond with {"coach": false}.
 Only respond with {"coach": true, "feedback": "..."} if one of the triggers below fired.`;
 
-    const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 400,
-      system: `${BRUTUS_SYSTEM_PROMPT}
+    let response;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        response = await getAnthropic().messages.create({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 400,
+          system: `${BRUTUS_SYSTEM_PROMPT}
 
 You're triaging a LIVE sales call every 30 seconds. Default is complete silence.
 
@@ -254,8 +257,18 @@ Response format — choose one:
 {"coach": false}
 
 Do NOT repeat feedback already given this session. If nothing triggered — {"coach": false}.`,
-      messages: [{ role: 'user', content: userMessage }]
-    });
+          messages: [{ role: 'user', content: userMessage }]
+        });
+        break; // success — exit retry loop
+      } catch (err) {
+        if (err.status === 529 && attempt < 3) {
+          console.warn(`[Brutus] Anthropic overloaded, retrying (${attempt}/3)...`);
+          await new Promise(r => setTimeout(r, 1500 * attempt));
+        } else {
+          throw err;
+        }
+      }
+    }
 
     deductTokens(userId, response.usage).catch(console.error);
 
@@ -276,7 +289,7 @@ Do NOT repeat feedback already given this session. If nothing triggered — {"co
     }
 
     return feedback;
-    
+
   } catch (error) {
     console.error('Real-time feedback error:', error);
     return null;
