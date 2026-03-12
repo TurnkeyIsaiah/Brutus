@@ -747,7 +747,7 @@
         <label class="header-toggle" title="toggle screen capture">
           <input type="checkbox" id="screen-capture-toggle" checked>
           <span class="header-toggle-slider"></span>
-          <span class="header-toggle-text">📷</span>
+          <span class="header-toggle-text">screen</span>
         </label>
         <button class="tts-btn locked" id="tts-btn">audio off</button>
         <button class="close-btn" id="close-btn">×</button>
@@ -767,19 +767,14 @@
     <!-- Feedback List -->
     <div class="feedback-container" id="feedback-container">
       <div class="empty-state" id="empty-state">
-        <div class="empty-state-icon">🎯</div>
         <div class="empty-state-text">listening for your sales call...</div>
       </div>
     </div>
     
     <!-- Quick Actions -->
     <div class="quick-actions">
-      <button class="action-btn note-btn" id="note-btn" title="Take a quick note">
-        <span>📝</span> note
-      </button>
-      <button class="action-btn research-btn" id="research-btn" title="Request research">
-        <span>🔍</span> research
-      </button>
+      <button class="action-btn note-btn" id="note-btn" title="Take a quick note">note</button>
+      <button class="action-btn research-btn" id="research-btn" title="Request research">research</button>
     </div>
 
     <!-- AI Notes Toggle -->
@@ -787,7 +782,7 @@
       <label class="toggle-label">
         <input type="checkbox" id="ai-notes-toggle">
         <span class="toggle-slider"></span>
-        <span class="toggle-text">🤖 ai notes</span>
+        <span class="toggle-text">ai notes</span>
       </label>
     </div>
 
@@ -806,7 +801,7 @@
     <!-- Chat with Brutus -->
     <div class="chat-container">
       <input type="text" class="chat-input" id="chat-input" placeholder="ask brutus anything...">
-      <button class="chat-send-btn" id="chat-send-btn">💬</button>
+      <button class="chat-send-btn" id="chat-send-btn">→</button>
     </div>
 
     <!-- Metrics Bar -->
@@ -1064,7 +1059,7 @@
         noteBtn.classList.remove('active');
 
         // Show confirmation feedback
-        addFeedback('good', 'note saved ✓');
+        addFeedback('good', 'note saved');
       } catch (error) {
         console.error('Failed to save note:', error);
         addFeedback('warning', 'failed to save note');
@@ -1257,7 +1252,7 @@
       document.getElementById('interrupt-count').textContent = '0';
       document.getElementById('interrupt-count').className = 'metric-value good';
       const container = document.getElementById('feedback-container');
-      container.innerHTML = '<div class="empty-state" id="empty-state"><div class="empty-state-icon">🎯</div><div class="empty-state-text">listening for your sales call...</div></div>';
+      container.innerHTML = '<div class="empty-state" id="empty-state"><div class="empty-state-text">listening for your sales call...</div></div>';
 
       try {
         // Start session on backend
