@@ -36,7 +36,7 @@ model User {
   passwordHash       String             @map("password_hash")
   name               String
   createdAt          DateTime           @default(now()) @map("created_at")
-  tokenBalance            BigInt    @default(1000000) @map("token_balance")
+  tokenBalance            BigInt    @default(500000) @map("token_balance")
   tokensUsed              BigInt    @default(0) @map("tokens_used")
   stripeCustomerId        String?   @unique @map("stripe_customer_id")
   stripePaymentMethodId   String?   @map("stripe_payment_method_id")

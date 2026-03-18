@@ -1893,11 +1893,11 @@
                         <div class="credits-dollar-wrap">
                             <span>$</span>
                             <input type="number" class="credits-input" id="custom-amount-input"
-                                   placeholder="10.00" min="5" step="1">
+                                   placeholder="10.00" min="10" step="1">
                         </div>
                         <button class="credits-btn" id="custom-topup-btn" onclick="customTopup()">top up</button>
                     </div>
-                    <p class="credits-hint">minimum $5 · ~50,000 tokens per dollar · no expiry</p>
+                    <p class="credits-hint">minimum $10 · ~50,000 tokens per dollar · no expiry</p>
                 </div>
 
                 <!-- Auto Top-Up -->
@@ -1916,19 +1916,19 @@
                         </div>
                         <div class="auto-topup-fields">
                             <div class="auto-topup-field">
-                                <label>top up amount (min $5)</label>
+                                <label>top up amount (min $10)</label>
                                 <div class="credits-dollar-wrap">
                                     <span>$</span>
                                     <input type="number" class="credits-input" id="auto-amount-input"
-                                           placeholder="10" min="5" step="1">
+                                           placeholder="10" min="10" step="1">
                                 </div>
                             </div>
                             <div class="auto-topup-field">
-                                <label>trigger when balance drops below (min $5 worth)</label>
+                                <label>trigger when balance drops below (min $10 worth)</label>
                                 <div class="credits-dollar-wrap">
                                     <span>$</span>
                                     <input type="number" class="credits-input" id="auto-threshold-input"
-                                           placeholder="5" min="5" step="1">
+                                           placeholder="10" min="10" step="1">
                                 </div>
                             </div>
                         </div>
@@ -2301,8 +2301,8 @@
 
         async function customTopup() {
             const amount = parseFloat(document.getElementById('custom-amount-input').value);
-            if (!amount || amount < 5) {
-                alert('Minimum top-up is $5');
+            if (!amount || amount < 10) {
+                alert('Minimum top-up is $10');
                 return;
             }
             const btn = document.getElementById('custom-topup-btn');
@@ -2327,8 +2327,8 @@
             const thresholdDollars = parseFloat(document.getElementById('auto-threshold-input').value);
 
             if (enabled) {
-                if (!amountDollars || amountDollars < 5) { alert('Auto top-up amount must be at least $5'); return; }
-                if (!thresholdDollars || thresholdDollars < 5) { alert('Threshold must be at least $5'); return; }
+                if (!amountDollars || amountDollars < 10) { alert('Auto top-up amount must be at least $10'); return; }
+                if (!thresholdDollars || thresholdDollars < 10) { alert('Threshold must be at least $10'); return; }
             }
 
             const btn = document.getElementById('save-auto-topup-btn');

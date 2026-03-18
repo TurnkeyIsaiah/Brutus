@@ -7,7 +7,7 @@ const { addTokens, TOKENS_PER_CENT } = require('../lib/tokens');
 const router = express.Router();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-const MIN_AMOUNT_CENTS = 500; // $5 minimum
+const MIN_AMOUNT_CENTS = 1000; // $10 minimum
 
 // Preset token packs
 const TOKEN_PACKS = {
@@ -125,9 +125,9 @@ router.post('/custom-topup', authenticate, async (req, res, next) => {
     const { amountDollars } = req.body;
     const amount = parseFloat(amountDollars);
 
-    if (!amount || isNaN(amount) || amount < 5) {
+    if (!amount || isNaN(amount) || amount < 10) {
       return res.status(400).json({
-        error: { message: 'Minimum top-up amount is $5' }
+        error: { message: 'Minimum top-up amount is $10' }
       });
     }
 
@@ -184,14 +184,14 @@ router.put('/auto-topup', authenticate, async (req, res, next) => {
     const { enabled, amountDollars, thresholdDollars } = req.body;
 
     if (enabled) {
-      if (!amountDollars || parseFloat(amountDollars) < 5) {
+      if (!amountDollars || parseFloat(amountDollars) < 10) {
         return res.status(400).json({
-          error: { message: 'Auto top-up amount must be at least $5' }
+          error: { message: 'Auto top-up amount must be at least $10' }
         });
       }
-      if (!thresholdDollars || parseFloat(thresholdDollars) < 5) {
+      if (!thresholdDollars || parseFloat(thresholdDollars) < 10) {
         return res.status(400).json({
-          error: { message: 'Auto top-up threshold must be at least $5' }
+          error: { message: 'Auto top-up threshold must be at least $10' }
         });
       }
 
