@@ -43,8 +43,25 @@ jobs:
         working-directory: desktop
         run: npm install
 
+      - name: Import signing certificate
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
+          security create-keychain -p actions brutus-build.keychain
+          security default-keychain -s brutus-build.keychain
+          security unlock-keychain -p actions brutus-build.keychain
+          security import certificate.p12 -k brutus-build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k actions brutus-build.keychain
+          rm certificate.p12
+
       - name: Build Mac dmg
         working-directory: desktop
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: npm run build:mac
 
       - name: Upload Mac artifact
