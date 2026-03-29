@@ -56,6 +56,14 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k actions brutus-build.keychain
           rm certificate.p12
 
+      - name: Test notarize credentials
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          xcrun notarytool history --apple-id "$APPLE_ID" --password "$APPLE_ID_PASSWORD" --team-id "$APPLE_TEAM_ID" 2>&1 || true
+
       - name: Store notarize credentials
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
