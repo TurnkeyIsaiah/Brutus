@@ -2911,21 +2911,17 @@
             try {
                 const data = await apiUpload('/calls/analyze', file);
                 
-                // Show success and roast
-                uploadText.innerHTML = `
-                    <strong style="color: #50ff80;">analysis complete!</strong><br>
-                    <span style="font-size: 14px;">score: ${data.call.overallScore}/100</span><br>
-                    <span style="font-size: 13px; color: rgba(255,255,255,0.6);">${data.analysis.overallRoast}</span>
-                `;
-                
                 // Refresh dashboard
                 loadDashboard();
-                
-                // Reset after 5 seconds
-                setTimeout(() => {
-                    uploadZone.classList.remove('uploading');
-                    uploadText.innerHTML = 'drop your call recording here or <span>browse</span>';
-                }, 5000);
+
+                // Reset upload zone
+                uploadZone.classList.remove('uploading');
+                uploadText.innerHTML = 'drop your call recording here or <span>browse</span>';
+
+                // Switch to call history and open the new call
+                switchToView('calls');
+                await loadCallHistory();
+                openCallModal(data.call.id);
                 
             } catch (error) {
                 const isTokenError = error.message.includes('tokens') || error.message.includes('OUT_OF_TOKENS');

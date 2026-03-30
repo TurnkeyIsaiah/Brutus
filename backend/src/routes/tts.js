@@ -7,7 +7,7 @@ const router = express.Router();
 const ttsRateLimit = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
-  keyGenerator: (req) => req.user?.id || req.ip,
+  keyGenerator: (req) => req.user?.id || req.ip.replace(/^.*:/, ''),
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many TTS requests, slow down.' }
