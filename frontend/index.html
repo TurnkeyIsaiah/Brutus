@@ -773,6 +773,20 @@
             margin-top: 4px;
         }
 
+        .ob-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .ob-option:hover { border-color: rgba(255,80,80,0.4); }
+        .ob-option input[type="radio"] { accent-color: #ff5050; margin-top: 2px; flex-shrink: 0; }
+
         .call-modal-close {
             background: none;
             border: none;
@@ -1682,6 +1696,7 @@
             <div class="nav-item" data-view="notes">notes</div>
             <div class="nav-item" data-view="research">research</div>
             <div class="nav-item" data-view="credits">credits</div>
+            <div class="nav-item" data-view="profile">profile</div>
         </nav>
     </div>
     
@@ -2014,6 +2029,218 @@
                 </div>
             </div>
         </div>
+
+        <!-- Profile View -->
+        <div id="profile-view" class="view">
+            <div class="progress-view-content">
+                <h2 class="view-title">profile</h2>
+
+                <!-- Account Info -->
+                <div class="call-history-section" style="margin-bottom: 24px;">
+                    <h3>account info</h3>
+                    <div style="display: grid; gap: 16px; max-width: 480px; margin-top: 16px;">
+                        <div>
+                            <label style="font-size: 12px; color: rgba(255,255,255,0.4); display: block; margin-bottom: 6px;">name</label>
+                            <input type="text" id="profile-name" class="auth-input" placeholder="your name">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: rgba(255,255,255,0.4); display: block; margin-bottom: 6px;">email</label>
+                            <input type="email" id="profile-email" class="auth-input" placeholder="your email">
+                        </div>
+                        <div id="profile-account-msg" style="font-size: 13px; color: #50ff80; display: none;"></div>
+                        <button class="auth-btn" id="save-account-btn" style="width: 160px; padding: 10px 20px;">save changes</button>
+                    </div>
+                </div>
+
+                <!-- Sales Profile -->
+                <div class="call-history-section" style="margin-bottom: 24px;">
+                    <h3>sales profile</h3>
+                    <div style="display: grid; gap: 16px; max-width: 480px; margin-top: 16px;">
+                        <div>
+                            <label style="font-size: 12px; color: rgba(255,255,255,0.4); display: block; margin-bottom: 6px;">what are you selling?</label>
+                            <input type="text" id="profile-product" class="auth-input" placeholder="e.g. SaaS CRM to SMBs, solar panels, insurance">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: rgba(255,255,255,0.4); display: block; margin-bottom: 6px;">company / employer</label>
+                            <input type="text" id="profile-company" class="auth-input" placeholder="company name">
+                            <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px; cursor: pointer; font-size: 13px; color: rgba(255,255,255,0.6);">
+                                <input type="checkbox" id="profile-selfemployed" style="accent-color: #ff5050;"> self-employed
+                            </label>
+                        </div>
+                        <div id="profile-businessname-wrap" style="display: none;">
+                            <label style="font-size: 12px; color: rgba(255,255,255,0.4); display: block; margin-bottom: 6px;">business name</label>
+                            <input type="text" id="profile-businessname" class="auth-input" placeholder="your business name">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: rgba(255,255,255,0.4); display: block; margin-bottom: 6px;">experience level</label>
+                            <select id="profile-experience" class="auth-input">
+                                <option value="">select...</option>
+                                <option value="Less than 1 year">less than 1 year</option>
+                                <option value="1-3 years">1–3 years</option>
+                                <option value="3-7 years">3–7 years</option>
+                                <option value="7+ years">7+ years</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: rgba(255,255,255,0.4); display: block; margin-bottom: 6px;">biggest challenge right now</label>
+                            <select id="profile-challenge" class="auth-input">
+                                <option value="">select...</option>
+                                <option value="Closing">closing</option>
+                                <option value="Handling objections">handling objections</option>
+                                <option value="Building rapport">building rapport</option>
+                                <option value="Discovery">discovery / asking questions</option>
+                                <option value="Following up">following up</option>
+                                <option value="Talking too much">talking too much</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: rgba(255,255,255,0.4); display: block; margin-bottom: 6px;">estimated close rate</label>
+                            <select id="profile-closerate" class="auth-input">
+                                <option value="">select...</option>
+                                <option value="Under 10%">under 10%</option>
+                                <option value="10-25%">10–25%</option>
+                                <option value="25-50%">25–50%</option>
+                                <option value="Over 50%">over 50%</option>
+                                <option value="Not sure">not sure</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: rgba(255,255,255,0.4); display: block; margin-bottom: 6px;">coaching style</label>
+                            <select id="profile-coachingstyle" class="auth-input">
+                                <option value="Brutal">brutal — no sugarcoating</option>
+                                <option value="Balanced">balanced</option>
+                                <option value="Encouraging">encouraging — I'm sensitive</option>
+                            </select>
+                        </div>
+                        <div id="profile-sales-msg" style="font-size: 13px; color: #50ff80; display: none;"></div>
+                        <button class="auth-btn" id="save-sales-btn" style="width: 160px; padding: 10px 20px;">save changes</button>
+                    </div>
+                </div>
+
+                <!-- Coaching Settings -->
+                <div class="call-history-section">
+                    <h3>coaching settings</h3>
+                    <div style="display: grid; gap: 16px; max-width: 480px; margin-top: 16px;">
+                        <label style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                            <div>
+                                <div style="font-size: 14px;">brutal honesty mode</div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.4);">Brutus tells it like it is, no filter</div>
+                            </div>
+                            <input type="checkbox" id="toggle-brutal" class="coaching-toggle" data-setting="brutalHonestyMode" style="accent-color: #ff5050; width: 18px; height: 18px;">
+                        </label>
+                        <label style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                            <div>
+                                <div style="font-size: 14px;">real-time interrupts</div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.4);">flag you mid-sentence when you're losing the prospect</div>
+                            </div>
+                            <input type="checkbox" id="toggle-interrupts" class="coaching-toggle" data-setting="realTimeInterrupts" style="accent-color: #ff5050; width: 18px; height: 18px;">
+                        </label>
+                        <label style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                            <div>
+                                <div style="font-size: 14px;">daily roast summary</div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.4);">end-of-day recap of what you did wrong</div>
+                            </div>
+                            <input type="checkbox" id="toggle-roast" class="coaching-toggle" data-setting="dailyRoastSummary" style="accent-color: #ff5050; width: 18px; height: 18px;">
+                        </label>
+                        <label style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                            <div>
+                                <div style="font-size: 14px;">improvement alerts</div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.4);">notify when a bad habit is getting worse</div>
+                            </div>
+                            <input type="checkbox" id="toggle-alerts" class="coaching-toggle" data-setting="improvementAlerts" style="accent-color: #ff5050; width: 18px; height: 18px;">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onboarding Modal -->
+        <div id="onboarding-overlay" class="call-modal-overlay hidden" style="z-index: 2000;">
+            <div class="call-modal" style="max-width: 520px; padding: 40px;">
+                <div style="margin-bottom: 28px;">
+                    <div style="font-size: 11px; color: rgba(255,255,255,0.3); margin-bottom: 12px; letter-spacing: 1px;">STEP <span id="ob-step-num">1</span> OF 6</div>
+                    <div style="height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px;">
+                        <div id="ob-progress-bar" style="height: 100%; background: #ff5050; border-radius: 2px; transition: width 0.3s; width: 16.6%;"></div>
+                    </div>
+                </div>
+
+                <!-- Step 1: Product -->
+                <div class="ob-step" id="ob-step-1">
+                    <h2 style="font-size: 22px; margin-bottom: 8px;">what are you selling?</h2>
+                    <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 24px;">Brutus uses this to give you context-specific feedback.</p>
+                    <input type="text" id="ob-product" class="auth-input" placeholder="e.g. SaaS CRM to SMBs, solar panels, health insurance">
+                </div>
+
+                <!-- Step 2: Company -->
+                <div class="ob-step" id="ob-step-2" style="display:none;">
+                    <h2 style="font-size: 22px; margin-bottom: 8px;">who do you work for?</h2>
+                    <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 24px;">Helps Brutus understand your environment.</p>
+                    <input type="text" id="ob-company" class="auth-input" placeholder="company name" style="margin-bottom: 12px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 12px;">
+                        <input type="checkbox" id="ob-selfemployed" style="accent-color: #ff5050;"> self-employed
+                    </label>
+                    <div id="ob-businessname-wrap" style="display: none;">
+                        <input type="text" id="ob-businessname" class="auth-input" placeholder="your business name">
+                    </div>
+                </div>
+
+                <!-- Step 3: Experience -->
+                <div class="ob-step" id="ob-step-3" style="display:none;">
+                    <h2 style="font-size: 22px; margin-bottom: 8px;">how long have you been in sales?</h2>
+                    <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 24px;">Brutus adjusts its coaching to your experience level.</p>
+                    <div style="display: grid; gap: 10px;" id="ob-experience-options">
+                        <label class="ob-option"><input type="radio" name="ob-experience" value="Less than 1 year"> less than 1 year</label>
+                        <label class="ob-option"><input type="radio" name="ob-experience" value="1-3 years"> 1–3 years</label>
+                        <label class="ob-option"><input type="radio" name="ob-experience" value="3-7 years"> 3–7 years</label>
+                        <label class="ob-option"><input type="radio" name="ob-experience" value="7+ years"> 7+ years</label>
+                    </div>
+                </div>
+
+                <!-- Step 4: Challenge -->
+                <div class="ob-step" id="ob-step-4" style="display:none;">
+                    <h2 style="font-size: 22px; margin-bottom: 8px;">what's your biggest challenge right now?</h2>
+                    <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 24px;">Brutus will focus extra attention here.</p>
+                    <div style="display: grid; gap: 10px;">
+                        <label class="ob-option"><input type="radio" name="ob-challenge" value="Closing"> closing</label>
+                        <label class="ob-option"><input type="radio" name="ob-challenge" value="Handling objections"> handling objections</label>
+                        <label class="ob-option"><input type="radio" name="ob-challenge" value="Building rapport"> building rapport</label>
+                        <label class="ob-option"><input type="radio" name="ob-challenge" value="Discovery"> discovery / asking questions</label>
+                        <label class="ob-option"><input type="radio" name="ob-challenge" value="Following up"> following up</label>
+                        <label class="ob-option"><input type="radio" name="ob-challenge" value="Talking too much"> talking too much</label>
+                    </div>
+                </div>
+
+                <!-- Step 5: Close Rate -->
+                <div class="ob-step" id="ob-step-5" style="display:none;">
+                    <h2 style="font-size: 22px; margin-bottom: 8px;">rough close rate estimate?</h2>
+                    <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 24px;">Sets a baseline so Brutus can track your progress.</p>
+                    <div style="display: grid; gap: 10px;">
+                        <label class="ob-option"><input type="radio" name="ob-closerate" value="Under 10%"> under 10%</label>
+                        <label class="ob-option"><input type="radio" name="ob-closerate" value="10-25%"> 10–25%</label>
+                        <label class="ob-option"><input type="radio" name="ob-closerate" value="25-50%"> 25–50%</label>
+                        <label class="ob-option"><input type="radio" name="ob-closerate" value="Over 50%"> over 50%</label>
+                        <label class="ob-option"><input type="radio" name="ob-closerate" value="Not sure"> not sure</label>
+                    </div>
+                </div>
+
+                <!-- Step 6: Coaching Style -->
+                <div class="ob-step" id="ob-step-6" style="display:none;">
+                    <h2 style="font-size: 22px; margin-bottom: 8px;">how tough do you want Brutus?</h2>
+                    <p style="color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 24px;">You can always change this later in your profile.</p>
+                    <div style="display: grid; gap: 10px;">
+                        <label class="ob-option"><input type="radio" name="ob-coaching" value="Brutal"> <div><strong>brutal</strong><div style="font-size: 12px; color: rgba(255,255,255,0.4);">no sugarcoating, straight facts</div></div></label>
+                        <label class="ob-option"><input type="radio" name="ob-coaching" value="Balanced" checked> <div><strong>balanced</strong><div style="font-size: 12px; color: rgba(255,255,255,0.4);">honest but constructive</div></div></label>
+                        <label class="ob-option"><input type="radio" name="ob-coaching" value="Encouraging"> <div><strong>encouraging</strong><div style="font-size: 12px; color: rgba(255,255,255,0.4);">I'm sensitive, be nice</div></div></label>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 32px;">
+                    <button onclick="skipOnboarding()" style="background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 13px; font-family: inherit; padding: 0;">skip for now</button>
+                    <button class="auth-btn" id="ob-next-btn" onclick="onboardingNext()" style="padding: 12px 28px;">next</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -2386,7 +2613,156 @@
             mainContent.classList.remove('hidden');
             loadDashboard();
             loadBalance();
+            if (!currentUser?.settings?.onboardingComplete) {
+                showOnboardingModal();
+            }
         }
+
+        // ==================== ONBOARDING ====================
+
+        let obCurrentStep = 1;
+        const OB_TOTAL = 6;
+
+        function showOnboardingModal() {
+            obCurrentStep = 1;
+            updateObStep();
+            document.getElementById('onboarding-overlay').classList.remove('hidden');
+        }
+
+        function updateObStep() {
+            document.querySelectorAll('.ob-step').forEach(s => s.style.display = 'none');
+            document.getElementById('ob-step-' + obCurrentStep).style.display = 'block';
+            document.getElementById('ob-step-num').textContent = obCurrentStep;
+            document.getElementById('ob-progress-bar').style.width = ((obCurrentStep / OB_TOTAL) * 100) + '%';
+            const isLast = obCurrentStep === OB_TOTAL;
+            document.getElementById('ob-next-btn').textContent = isLast ? 'finish' : 'next';
+        }
+
+        function onboardingNext() {
+            if (obCurrentStep < OB_TOTAL) {
+                obCurrentStep++;
+                updateObStep();
+            } else {
+                submitOnboarding();
+            }
+        }
+
+        async function submitOnboarding() {
+            const product = document.getElementById('ob-product').value.trim();
+            const selfEmployed = document.getElementById('ob-selfemployed').checked;
+            const company = selfEmployed ? 'Self-employed' : document.getElementById('ob-company').value.trim();
+            const businessName = document.getElementById('ob-businessname').value.trim();
+            const experience = document.querySelector('input[name="ob-experience"]:checked')?.value || '';
+            const challenge = document.querySelector('input[name="ob-challenge"]:checked')?.value || '';
+            const closeRate = document.querySelector('input[name="ob-closerate"]:checked')?.value || '';
+            const coachingStyle = document.querySelector('input[name="ob-coaching"]:checked')?.value || 'Balanced';
+
+            document.getElementById('ob-next-btn').textContent = 'saving...';
+            document.getElementById('ob-next-btn').disabled = true;
+
+            try {
+                const data = await apiCall('/user/onboard', 'POST', { product, company, businessName, experience, challenge, closeRate, coachingStyle });
+                if (currentUser) currentUser.settings = data.settings;
+                document.getElementById('onboarding-overlay').classList.add('hidden');
+                loadDashboard();
+            } catch (e) {
+                document.getElementById('ob-next-btn').textContent = 'finish';
+                document.getElementById('ob-next-btn').disabled = false;
+            }
+        }
+
+        async function skipOnboarding() {
+            try {
+                await apiCall('/user/settings', 'PUT', { settings: { onboardingComplete: true } });
+                if (currentUser?.settings) currentUser.settings.onboardingComplete = true;
+            } catch (_) {}
+            document.getElementById('onboarding-overlay').classList.add('hidden');
+        }
+
+        document.getElementById('ob-selfemployed').addEventListener('change', function() {
+            document.getElementById('ob-businessname-wrap').style.display = this.checked ? 'block' : 'none';
+            if (this.checked) document.getElementById('ob-company').value = 'Self-employed';
+        });
+
+        // ==================== PROFILE PAGE ====================
+
+        async function loadProfilePage() {
+            if (!currentUser) return;
+            const s = currentUser.settings || {};
+            document.getElementById('profile-name').value = currentUser.name || '';
+            document.getElementById('profile-email').value = currentUser.email || '';
+            document.getElementById('profile-product').value = s.product || '';
+            document.getElementById('profile-company').value = s.company === 'Self-employed' ? '' : (s.company || '');
+            document.getElementById('profile-selfemployed').checked = s.company === 'Self-employed';
+            document.getElementById('profile-businessname-wrap').style.display = s.company === 'Self-employed' ? 'block' : 'none';
+            document.getElementById('profile-businessname').value = s.businessName || '';
+            document.getElementById('profile-experience').value = s.experience || '';
+            document.getElementById('profile-challenge').value = s.challenge || '';
+            document.getElementById('profile-closerate').value = s.closeRate || '';
+            document.getElementById('profile-coachingstyle').value = s.coachingStyle || 'Balanced';
+            document.getElementById('toggle-brutal').checked = !!s.brutalHonestyMode;
+            document.getElementById('toggle-interrupts').checked = !!s.realTimeInterrupts;
+            document.getElementById('toggle-roast').checked = !!s.dailyRoastSummary;
+            document.getElementById('toggle-alerts').checked = !!s.improvementAlerts;
+        }
+
+        document.getElementById('profile-selfemployed').addEventListener('change', function() {
+            document.getElementById('profile-businessname-wrap').style.display = this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('save-account-btn').addEventListener('click', async () => {
+            const name = document.getElementById('profile-name').value.trim();
+            const email = document.getElementById('profile-email').value.trim();
+            const msg = document.getElementById('profile-account-msg');
+            try {
+                const data = await apiCall('/user/account', 'PATCH', { name, email });
+                if (currentUser) { currentUser.name = data.user.name; currentUser.email = data.user.email; }
+                msg.textContent = 'saved';
+                msg.style.color = '#50ff80';
+                msg.style.display = 'block';
+                setTimeout(() => msg.style.display = 'none', 3000);
+            } catch (e) {
+                msg.textContent = e.message;
+                msg.style.color = '#ff5050';
+                msg.style.display = 'block';
+            }
+        });
+
+        document.getElementById('save-sales-btn').addEventListener('click', async () => {
+            const selfEmployed = document.getElementById('profile-selfemployed').checked;
+            const settings = {
+                product: document.getElementById('profile-product').value.trim(),
+                company: selfEmployed ? 'Self-employed' : document.getElementById('profile-company').value.trim(),
+                businessName: document.getElementById('profile-businessname').value.trim(),
+                experience: document.getElementById('profile-experience').value,
+                challenge: document.getElementById('profile-challenge').value,
+                closeRate: document.getElementById('profile-closerate').value,
+                coachingStyle: document.getElementById('profile-coachingstyle').value
+            };
+            const msg = document.getElementById('profile-sales-msg');
+            try {
+                const data = await apiCall('/user/settings', 'PUT', { settings });
+                if (currentUser) currentUser.settings = { ...currentUser.settings, ...data.settings };
+                msg.textContent = 'saved';
+                msg.style.color = '#50ff80';
+                msg.style.display = 'block';
+                setTimeout(() => msg.style.display = 'none', 3000);
+            } catch (e) {
+                msg.textContent = e.message;
+                msg.style.color = '#ff5050';
+                msg.style.display = 'block';
+            }
+        });
+
+        document.querySelectorAll('.coaching-toggle').forEach(toggle => {
+            toggle.addEventListener('change', async function() {
+                const setting = this.dataset.setting;
+                try {
+                    const data = await apiCall('/user/settings', 'PUT', { settings: { [setting]: this.checked } });
+                    if (currentUser) currentUser.settings = { ...currentUser.settings, ...data.settings };
+                } catch (_) {}
+            });
+        });
         
         // ==================== DASHBOARD ====================
         async function loadDashboard() {
@@ -2774,6 +3150,7 @@
                 if (viewName === 'research') loadResearch();
                 if (viewName === 'credits') loadBalance();
                 if (viewName === 'progress') loadCallHistory();
+                if (viewName === 'profile') loadProfilePage();
             });
         });
         
