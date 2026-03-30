@@ -23,6 +23,7 @@ const upload = multer({
       'audio/mpeg',
       'audio/mp4',
       'audio/m4a',
+      'audio/x-m4a',
       'audio/ogg',
       'video/webm',
       'video/mp4'
