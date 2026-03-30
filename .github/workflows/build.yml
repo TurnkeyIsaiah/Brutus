@@ -84,6 +84,7 @@ jobs:
         run: npm run build:mac
 
       - name: Notarize Mac dmg
+        timeout-minutes: 30
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
@@ -91,12 +92,20 @@ jobs:
         run: |
           DMG=$(ls desktop/dist/*.dmg)
           echo "Notarizing: $DMG"
-          xcrun notarytool submit "$DMG" \
+          SUBMIT_OUTPUT=$(xcrun notarytool submit "$DMG" \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --wait 2>&1
-          xcrun stapler staple "$DMG"
+            --wait \
+            --timeout 25m 2>&1)
+          echo "$SUBMIT_OUTPUT"
+          if echo "$SUBMIT_OUTPUT" | grep -q "status: Accepted"; then
+            xcrun stapler staple "$DMG"
+            echo "Notarization successful"
+          else
+            echo "Notarization did not complete with Accepted status"
+            exit 1
+          fi
 
       - name: Upload Mac artifact
         uses: actions/upload-artifact@v4
