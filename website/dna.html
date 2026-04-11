@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        html { background: #0a0a12; }
         :root {
             --bg-dark: #0a0a12;
             --bg-card: rgba(20, 20, 35, 0.8);
@@ -38,8 +40,11 @@
         @keyframes float2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-40px,40px) scale(0.95)} 66%{transform:translate(30px,-20px) scale(1.05)} }
         @keyframes float3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(40px,-40px) scale(1.1)} }
 
+        /* Touch quality */
+        button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
         /* Nav */
-        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; background: rgba(10,10,18,0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-subtle); }
+        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: max(20px, env(safe-area-inset-top)) 40px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(10,10,18,0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-subtle); }
         .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
         .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--red-primary), var(--red-secondary)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 20px; color: white; box-shadow: 0 4px 20px rgba(255,80,80,0.3); }
         .logo-text { font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; color: white; }
@@ -64,18 +69,18 @@
         }
 
         /* ── HERO ── */
-        #phase-hero { min-height: calc(100vh - 82px); display: flex; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
+        #phase-hero { min-height: calc(100vh - 82px); display: flex; align-items: center; justify-content: center; padding: 24px 20px; text-align: center; }
         .hero-inner { max-width: 600px; }
-        .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.3); border-radius: 30px; font-size: 13px; color: var(--red-primary); margin-bottom: 28px; font-family: 'Space Mono', monospace; text-transform: lowercase; letter-spacing: 0.06em; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.3); border-radius: 30px; font-size: 13px; color: var(--red-primary); margin-bottom: 14px; font-family: 'Space Mono', monospace; text-transform: lowercase; letter-spacing: 0.06em; }
         .hero-badge::before { content: ''; width: 7px; height: 7px; background: var(--red-primary); border-radius: 50%; animation: blink 2s ease-in-out infinite; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        .hero-inner h1 { font-family: 'Space Mono', monospace; font-size: clamp(32px, 6vw, 56px); font-weight: 700; line-height: 1.15; margin-bottom: 20px; color: #fff; }
+        .hero-inner h1 { font-family: 'Space Mono', monospace; font-size: clamp(28px, 6vw, 56px); font-weight: 700; line-height: 1.15; margin-bottom: 14px; color: #fff; }
         .hero-inner h1 span { color: var(--red-primary); }
-        .hero-inner p { font-size: 17px; color: rgba(255,255,255,0.55); line-height: 1.65; margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto; }
-        .hero-meta { display: flex; justify-content: center; gap: 28px; margin-bottom: 36px; flex-wrap: wrap; }
+        .hero-inner p { font-size: 16px; color: rgba(255,255,255,0.55); line-height: 1.6; margin-bottom: 20px; max-width: 480px; margin-left: auto; margin-right: auto; }
+        .hero-meta { display: flex; justify-content: center; gap: 28px; margin-bottom: 20px; flex-wrap: wrap; }
         .hero-meta span { font-size: 13px; color: rgba(255,255,255,0.3); font-family: 'Space Mono', monospace; display: flex; align-items: center; gap: 6px; }
         .hero-meta span::before { content: '→'; color: var(--red-primary); }
-        .btn-start { padding: 16px 40px; background: linear-gradient(135deg, var(--red-primary), var(--red-secondary)); border: none; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 700; font-family: 'Space Mono', monospace; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 24px rgba(255,80,80,0.35); text-transform: lowercase; }
+        .btn-start { padding: 16px 40px; background: linear-gradient(135deg, var(--red-primary), var(--red-secondary)); border: none; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 700; font-family: 'Space Mono', monospace; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 24px rgba(255,80,80,0.35); text-transform: lowercase; min-height: 52px; }
         .btn-start:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(255,80,80,0.5); }
 
         /* ── QUESTIONS ── */
@@ -90,6 +95,7 @@
             background: rgba(20,20,35,0.7); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 14px; color: rgba(255,255,255,0.8); font-size: 14px; line-height: 1.5;
             cursor: pointer; transition: all 0.2s; margin-bottom: 10px; font-family: inherit;
+            min-height: 56px;
         }
         .answer-btn:hover { background: rgba(255,80,80,0.07); border-color: rgba(255,80,80,0.3); color: #fff; transform: translateX(4px); }
         .answer-btn.selected { background: rgba(255,80,80,0.1); border-color: rgba(255,80,80,0.5); color: #fff; }
@@ -228,7 +234,8 @@
 
         /* Mobile */
         @media (max-width: 600px) {
-            nav { padding: 16px 20px; }
+            nav { padding: max(16px, env(safe-area-inset-top)) 20px 16px; }
+            .content { padding-top: 73px; }
             .nav-links { display: none; }
             .nav-links.open { display: flex; flex-direction: column; position: fixed; top: 73px; left: 0; right: 0; background: rgba(10,10,18,0.97); backdrop-filter: blur(20px); padding: 16px 20px 20px; gap: 0; border-bottom: 1px solid var(--border-subtle); z-index: 999; }
             .nav-links.open a { padding: 14px 0; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
@@ -236,6 +243,21 @@
             .mobile-menu-btn { display: block; }
             .matchup-grid { grid-template-columns: 1fr; }
             .hero-meta { flex-direction: column; align-items: center; gap: 8px; }
+        }
+        @media (max-width: 500px) {
+            /* Email form — stacked */
+            .email-form { flex-direction: column; }
+            .email-input, .btn-unlock { width: 100%; }
+            /* Share buttons — 2×2 grid */
+            .share-btns { display: grid; grid-template-columns: 1fr 1fr; }
+            /* Panel padding — tighter */
+            .archetype-card .card-body { padding: 20px 16px; }
+            .dna-report { padding: 20px 16px; }
+            .share-panel { padding: 20px 16px; }
+            .team-panel { padding: 20px 16px; }
+            .score-chart { padding: 20px 16px; }
+            .secondary-type .inner { padding: 16px; }
+            .result-teaser-card .inner { padding: 20px 16px; }
         }
     </style>
 </head>
@@ -568,6 +590,7 @@
     }
 
     function renderQuestion() {
+        window.scrollTo(0, 0);
         const q = QUESTIONS[state.currentQ];
         const pct = ((state.currentQ) / QUESTIONS.length) * 100;
         document.getElementById('progress-bar').style.width = pct + '%';
