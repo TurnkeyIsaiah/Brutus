@@ -31,6 +31,7 @@
             min-height: 100vh;
         }
         #neural-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        .mouse-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), rgba(255,80,80,0.05), transparent 40%); }
         .blob-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
         .morphing-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15; }
         .blob-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(255,80,80,0.6) 0%, transparent 70%); top: 5%; left: 10%; animation: float1 25s ease-in-out infinite; }
@@ -270,6 +271,7 @@
         <div class="morphing-blob blob-3"></div>
     </div>
     <canvas id="neural-canvas"></canvas>
+    <div class="mouse-glow"></div>
 
     <div class="content">
         <nav>
@@ -1026,6 +1028,12 @@
     }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas(); draw();
+
+    // Mouse glow
+    document.addEventListener('mousemove', function(e) {
+        document.documentElement.style.setProperty('--mx', e.clientX + 'px');
+        document.documentElement.style.setProperty('--my', e.clientY + 'px');
+    });
 
     // ── MOBILE NAV ────────────────────────────────────────────────────────────
 
