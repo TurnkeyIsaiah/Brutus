@@ -54,7 +54,9 @@
         .nav-links a:hover, .nav-links a.active { color: var(--text-primary); }
         .nav-cta { padding: 10px 24px; background: linear-gradient(135deg, var(--red-primary), var(--red-secondary)); border-radius: 30px; color: white !important; font-weight: 600; transition: transform 0.3s, box-shadow 0.3s; }
         .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,80,80,0.4); }
-        .mobile-menu-btn { display: none; background: none; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; }
+        .mobile-menu-btn { display: none; background: none; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 10px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; line-height: 1; }
+        .mobile-menu-btn .bar { display: block; width: 20px; height: 2px; background: currentColor; border-radius: 2px; transition: all 0.2s; }
+        .mobile-menu-btn .bar + .bar { margin-top: 4px; }
 
         /* Content wrapper */
         .content { position: relative; z-index: 10; padding-top: 82px; }
@@ -281,7 +283,11 @@
                 <a href="about.html">about</a>
                 <a href="https://app.brutusai.coach/login.html" class="nav-cta">get started</a>
             </div>
-            <button class="mobile-menu-btn" aria-label="toggle menu">menu</button>
+            <button class="mobile-menu-btn" aria-label="toggle menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
         </nav>
 
         <!-- HERO -->
@@ -1028,11 +1034,13 @@
     if (menuBtn && navLinks) {
         menuBtn.addEventListener('click', () => {
             navLinks.classList.toggle('open');
-            menuBtn.textContent = navLinks.classList.contains('open') ? '×' : 'menu';
+            menuBtn.innerHTML = navLinks.classList.contains('open')
+                ? '<span style="font-size:22px;line-height:1;display:block">×</span>'
+                : '<span class="bar"></span><span class="bar"></span><span class="bar"></span>';
         });
         navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
             navLinks.classList.remove('open');
-            menuBtn.textContent = 'menu';
+            menuBtn.innerHTML = '<span class="bar"></span><span class="bar"></span><span class="bar"></span>';
         }));
     }
 
