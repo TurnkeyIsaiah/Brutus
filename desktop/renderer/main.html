@@ -972,10 +972,25 @@
     });
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
+      let revoked = false;
+      try {
+        await apiCall('/auth/logout', { method: 'POST' });
+        revoked = true;
+      } catch (_) {
+        console.warn('[Brutus] Server-side token revocation failed — session may still be active on other devices.');
+      }
       await window.brutus.clearAuth();
       authToken = null;
       currentUser = null;
       showLogin();
+
+      if (!revoked) {
+        const warn = document.createElement('p');
+        warn.style.cssText = 'color:#ff9800;font-size:12px;text-align:center;margin-top:8px;';
+        warn.textContent = 'Signed out locally. Could not reach server — your session may still be active on other devices.';
+        const loginForm = document.querySelector('.login-view form') || document.querySelector('.login-view');
+        if (loginForm) { loginForm.prepend(warn); setTimeout(() => warn.remove(), 8000); }
+      }
     });
 
     document.getElementById('settings-btn').addEventListener('click', () => {
@@ -1121,6 +1136,13 @@
     window.brutus.onMonitoringStopped(() => {
       isMonitoring = false;
       updateMonitoringUI();
+    });
+
+    // Clear in-memory token when main process invalidates auth (e.g. backend URL changed)
+    window.brutus.onAuthCleared(() => {
+      authToken = null;
+      currentUser = null;
+      showLogin();
     });
 
     // ==================== START ====================

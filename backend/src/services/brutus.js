@@ -152,6 +152,16 @@ Format your response as JSON:
     }
 
     const analysis = JSON.parse(jsonStr);
+
+    // Normalize feedback types to a strict whitelist — rejects any prompt-injected class names
+    const VALID_TYPES = new Set(['critical', 'warning', 'insight', 'good']);
+    if (Array.isArray(analysis.feedback)) {
+      analysis.feedback = analysis.feedback.map(f => ({
+        ...f,
+        type: VALID_TYPES.has(f.type) ? f.type : 'insight'
+      }));
+    }
+
     return analysis;
 
   } catch (error) {

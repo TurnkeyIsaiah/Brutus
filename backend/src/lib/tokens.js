@@ -54,11 +54,19 @@ function shouldAutoTopUp(user) {
 }
 
 async function triggerAutoTopUp(userId, user) {
-  // Stamp the trigger time first to prevent concurrent double-charges
-  await prisma.user.update({
-    where: { id: userId },
+  // Atomically claim the trigger slot — only one concurrent caller can win.
+  // Uses a conditional updateMany so the DB serializes the race; 0 rows = another caller won.
+  const claimed = await prisma.user.updateMany({
+    where: {
+      id: userId,
+      OR: [
+        { autoTopUpLastTriggeredAt: null },
+        { autoTopUpLastTriggeredAt: { lt: new Date(Date.now() - MIN_AUTO_TOPUP_INTERVAL_MS) } }
+      ]
+    },
     data: { autoTopUpLastTriggeredAt: new Date() }
   });
+  if (claimed.count === 0) return; // concurrent deduction already triggered this
 
   // Lazy-require stripe to avoid circular deps at module load time
   const Stripe = require('stripe');
@@ -66,27 +74,52 @@ async function triggerAutoTopUp(userId, user) {
 
   const tokensToAdd = user.autoTopUpAmountCents * TOKENS_PER_CENT;
 
-  const pi = await stripe.paymentIntents.create({
-    amount: user.autoTopUpAmountCents,
-    currency: 'usd',
-    customer: user.stripeCustomerId,
-    payment_method: user.stripePaymentMethodId,
-    off_session: true,
-    confirm: true,
-    metadata: {
-      type: 'auto_topup',
-      userId,
-      tokensToAdd: tokensToAdd.toString()
+  let pi;
+  try {
+    pi = await stripe.paymentIntents.create({
+      amount: user.autoTopUpAmountCents,
+      currency: 'usd',
+      customer: user.stripeCustomerId,
+      payment_method: user.stripePaymentMethodId,
+      off_session: true,
+      confirm: true,
+      metadata: {
+        type: 'auto_topup',
+        userId,
+        tokensToAdd: tokensToAdd.toString()
+      }
+    });
+  } catch (err) {
+    // Only roll back the cooldown on errors where we are certain no charge was created:
+    // card_error = card declined before charge attempt; invalid_request_error = bad params.
+    // Network errors, timeouts, or unknown errors leave the cooldown in place — Stripe may
+    // have already accepted the charge and a retry without an idempotency key would double-bill.
+    const safeToRetry = err.type === 'StripeCardError' || err.type === 'StripeInvalidRequestError';
+    if (safeToRetry) {
+      await prisma.user.update({ where: { id: userId }, data: { autoTopUpLastTriggeredAt: null } })
+        .catch(e => console.error('[AutoTopUp] Failed to clear cooldown after PI error:', e.message));
     }
-  });
+    console.error(`[AutoTopUp] Stripe PI creation failed (cooldown ${safeToRetry ? 'cleared' : 'preserved'}):`, err.message);
+    return;
+  }
 
-  // If the PaymentIntent succeeded synchronously, credit tokens immediately.
-  // Otherwise the payment_intent.succeeded webhook will handle it.
+  // Credit immediately on synchronous success using pi.id as the idempotency key.
+  // The payment_intent.succeeded webhook uses the same key, so exactly one path wins.
   if (pi.status === 'succeeded') {
-    await addTokens(userId, tokensToAdd);
-    console.log(`[AutoTopUp] Charged and credited ${tokensToAdd} tokens to user ${userId}`);
+    try {
+      await prisma.$transaction(async (tx) => {
+        await tx.stripeEvent.create({ data: { stripeEventId: pi.id } });
+        await tx.user.update({
+          where: { id: userId },
+          data: { tokenBalance: { increment: BigInt(tokensToAdd) } }
+        });
+      });
+      console.log(`[AutoTopUp] Credited ${tokensToAdd} tokens synchronously for ${userId} (${pi.id})`);
+    } catch (err) {
+      if (err.code !== 'P2002') throw err; // P2002 = webhook already credited first, skip
+    }
   } else {
-    console.log(`[AutoTopUp] PaymentIntent ${pi.id} status: ${pi.status} — waiting for webhook`);
+    console.log(`[AutoTopUp] PaymentIntent ${pi.id} status: ${pi.status} — webhook will credit tokens`);
   }
 }
 

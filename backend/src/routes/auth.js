@@ -5,6 +5,8 @@ const rateLimit = require('express-rate-limit');
 const prisma = require('../lib/prisma');
 const { generateToken, authenticate } = require('../middleware/auth');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../services/email');
+const { closeUserSessions } = require('../lib/wsSessions');
+const { logAudit } = require('../lib/audit');
 
 const router = express.Router();
 
@@ -54,19 +56,20 @@ router.post('/signup', signupLimiter, async (req, res, next) => {
       });
     }
     
+    // Hash password first — constant-time regardless of whether email exists,
+    // preventing timing-based account enumeration on the signup endpoint.
+    const passwordHash = await bcrypt.hash(password, 12);
+
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase() }
     });
-    
+
     if (existingUser) {
       return res.status(400).json({
         error: { message: 'Email already registered' }
       });
     }
-    
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, 12);
     
     // Create user with profile
     const user = await prisma.user.create({
@@ -86,7 +89,7 @@ router.post('/signup', signupLimiter, async (req, res, next) => {
     });
     
     // Generate token
-    const token = generateToken(user.id);
+    const token = generateToken(user.id, user.tokenVersion);
 
     // Send welcome email (non-blocking)
     sendWelcomeEmail(user).catch(err => console.error('[Email] Welcome email failed:', err.message));
@@ -128,23 +131,26 @@ router.post('/login', loginLimiter, async (req, res, next) => {
     });
     
     if (!user) {
+      logAudit('login.failed', null, req, { reason: 'user_not_found', email: email.toLowerCase() });
       return res.status(401).json({
         error: { message: 'Invalid email or password' }
       });
     }
-    
+
     // Check password
     const validPassword = await bcrypt.compare(password, user.passwordHash);
-    
+
     if (!validPassword) {
+      logAudit('login.failed', user.id, req, { reason: 'wrong_password' });
       return res.status(401).json({
         error: { message: 'Invalid email or password' }
       });
     }
-    
+
     // Generate token
-    const token = generateToken(user.id);
-    
+    const token = generateToken(user.id, user.tokenVersion);
+    logAudit('login.success', user.id, req);
+
     res.json({
       message: 'Welcome back. ready to get roasted?',
       user: {
@@ -166,8 +172,18 @@ router.post('/login', loginLimiter, async (req, res, next) => {
 // ==================== LOGOUT ====================
 
 router.post('/logout', authenticate, async (req, res) => {
-  // With JWT, logout is handled client-side by deleting the token
-  // This endpoint exists for consistency and potential future token blacklisting
+  // Conditional increment — only bumps if the authenticated version is still current.
+  // Prevents a stale concurrent logout from revoking a freshly issued token.
+  const revoked = await prisma.user.updateMany({
+    where: { id: req.user.id, tokenVersion: req.user.tokenVersion },
+    data: { tokenVersion: { increment: 1 } }
+  });
+  // Only tear down WS sessions when this logout actually revoked the token.
+  // A no-op (stale race loser) must not disconnect sessions belonging to the freshly-issued token.
+  if (revoked.count > 0) {
+    closeUserSessions(req.user.id);
+    logAudit('logout', req.user.id, req);
+  }
   res.json({ message: 'Logged out. brutus will miss judging you.' });
 });
 
@@ -199,13 +215,15 @@ router.post('/forgot-password', resetLimiter, async (req, res, next) => {
 
     // Always respond 200 to prevent user enumeration
     if (user) {
-      const token = crypto.randomBytes(32).toString('hex');
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-      await prisma.passwordResetToken.create({ data: { userId: user.id, token, expiresAt } });
-      sendPasswordResetEmail(user.email, token).catch(err =>
+      await prisma.passwordResetToken.create({ data: { userId: user.id, token: tokenHash, expiresAt } });
+      sendPasswordResetEmail(user.email, rawToken).catch(err =>
         console.error('[Email] Password reset email failed:', err.message)
       );
+      logAudit('password_reset.requested', user.id, req);
     }
 
     res.json({ message: 'If that email exists, a reset link has been sent.' });
@@ -224,7 +242,8 @@ router.post('/reset-password', async (req, res, next) => {
       return res.status(400).json({ error: { message: 'Valid token and password (8+ chars) are required' } });
     }
 
-    const resetToken = await prisma.passwordResetToken.findUnique({ where: { token } });
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const resetToken = await prisma.passwordResetToken.findUnique({ where: { token: tokenHash } });
 
     if (!resetToken || resetToken.expiresAt < new Date()) {
       return res.status(400).json({ error: { message: 'Reset link is invalid or has expired' } });
@@ -232,8 +251,30 @@ router.post('/reset-password', async (req, res, next) => {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    await prisma.user.update({ where: { id: resetToken.userId }, data: { passwordHash } });
-    await prisma.passwordResetToken.delete({ where: { token } });
+    try {
+      await prisma.$transaction(async (tx) => {
+        // Atomically consume this specific token — concurrent requests will get count=0 and abort
+        const consumed = await tx.passwordResetToken.deleteMany({
+          where: { token: tokenHash, expiresAt: { gt: new Date() } }
+        });
+        if (consumed.count === 0) throw new Error('TOKEN_CONSUMED');
+
+        await tx.user.update({
+          where: { id: resetToken.userId },
+          data: { passwordHash, tokenVersion: { increment: 1 } }
+        });
+        // Wipe all remaining reset tokens for this user (e.g. multiple links requested)
+        await tx.passwordResetToken.deleteMany({ where: { userId: resetToken.userId } });
+      });
+    } catch (err) {
+      if (err.message === 'TOKEN_CONSUMED') {
+        return res.status(400).json({ error: { message: 'Reset link is invalid or has expired' } });
+      }
+      throw err;
+    }
+
+    closeUserSessions(resetToken.userId);
+    logAudit('password_reset.completed', resetToken.userId, req);
 
     res.json({ message: 'Password updated. go get roasted.' });
   } catch (error) {

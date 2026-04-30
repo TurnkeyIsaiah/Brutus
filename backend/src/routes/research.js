@@ -142,8 +142,8 @@ async function processResearch(researchId, userId, query, sessionId) {
     // Pull call transcript from DB if there's an active session
     let transcriptContext = '';
     if (sessionId) {
-      const session = await prisma.session.findUnique({
-        where: { id: sessionId },
+      const session = await prisma.session.findFirst({
+        where: { id: sessionId, userId },
         select: { transcriptSoFar: true }
       });
       if (session?.transcriptSoFar?.trim().length > 50) {

@@ -44,6 +44,7 @@ model User {
   autoTopUpAmountCents    Int       @default(0) @map("auto_top_up_amount_cents")
   autoTopUpThresholdCents Int       @default(0) @map("auto_top_up_threshold_cents")
   autoTopUpLastTriggeredAt DateTime? @map("auto_top_up_last_triggered_at")
+  tokenVersion            Int       @default(0) @map("token_version")
   settings                Json      @default("{\"brutalHonestyMode\": true, \"realTimeInterrupts\": false, \"dailyRoastSummary\": true, \"improvementAlerts\": true}")
 
   // Relations
@@ -188,4 +189,26 @@ model Research {
   session     Session?  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@map("research")
+}
+
+model StripeEvent {
+  id            String   @id @default(uuid())
+  stripeEventId String   @unique @map("stripe_event_id")
+  processedAt   DateTime @default(now()) @map("processed_at")
+
+  @@map("stripe_events")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

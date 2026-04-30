@@ -1,7 +1,11 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 const Anthropic = require('@anthropic-ai/sdk');
 const prisma = require('../lib/prisma');
 const { authenticate } = require('../middleware/auth');
+const { closeUserSessions } = require('../lib/wsSessions');
+const { logAudit } = require('../lib/audit');
 
 let _anthropic = null;
 const getAnthropic = () => {
@@ -275,6 +279,102 @@ Respond with valid JSON only:
     });
 
     res.json({ message: 'Onboarding complete', settings: user.settings });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ==================== DELETE ACCOUNT (GDPR right to erasure) ====================
+
+router.delete('/account', async (req, res, next) => {
+  try {
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ error: { message: 'Password is required to delete your account' } });
+    }
+
+    // Re-fetch the full user to get passwordHash (authenticate only returns partial fields)
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) return res.status(404).json({ error: { message: 'User not found' } });
+
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) {
+      return res.status(401).json({ error: { message: 'Incorrect password' } });
+    }
+
+    // Close all active WS sessions before deletion
+    closeUserSessions(req.user.id);
+
+    // Research rows linked only by userId (sessionId = null) have no User cascade in the schema.
+    // PasswordResetToken has no cascade either — delete both before user deletion.
+    await Promise.all([
+      prisma.research.deleteMany({ where: { userId: req.user.id } }),
+      prisma.passwordResetToken.deleteMany({ where: { userId: req.user.id } })
+    ]);
+
+    // Delete user — cascade handles calls, sessions, profile, moments, notes
+    // Log before deletion so userId is still valid in the DB
+    await logAudit('account.deleted', req.user.id, req);
+    await prisma.user.delete({ where: { id: req.user.id } });
+
+    res.json({ message: 'Account permanently deleted. All your data has been erased.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ==================== EXPORT DATA (GDPR right to data portability) ====================
+
+// Rate-limited to 2 exports per hour — the response can be large
+const exportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 2,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: 'Export limit reached. Try again in an hour.' } }
+});
+
+router.get('/export', exportLimiter, async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    const [user, profile, calls, notes, research] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, name: true, createdAt: true, settings: true, tokenBalance: true, tokensUsed: true }
+      }),
+      prisma.userProfile.findUnique({ where: { userId } }),
+      prisma.call.findMany({
+        where: { userId },
+        select: { id: true, recordedAt: true, durationSeconds: true, transcript: true, talkRatio: true, interruptionCount: true, overallScore: true, outcome: true, tags: true, brutusFeedback: true, createdAt: true },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.note.findMany({
+        where: { session: { userId } },
+        select: { id: true, content: true, type: true, timestamp: true, createdAt: true }
+      }),
+      prisma.research.findMany({
+        where: { userId },
+        select: { id: true, query: true, results: true, status: true, requestedAt: true, completedAt: true }
+      })
+    ]);
+
+    logAudit('data.exported', userId, req);
+
+    res.setHeader('Content-Disposition', 'attachment; filename="brutus-data-export.json"');
+    res.setHeader('Content-Type', 'application/json');
+    res.json({
+      exportedAt: new Date().toISOString(),
+      account: {
+        ...user,
+        tokenBalance: user.tokenBalance.toString(),
+        tokensUsed: user.tokensUsed.toString()
+      },
+      profile,
+      calls: calls.map(c => ({ ...c, talkRatio: parseFloat(c.talkRatio) })),
+      notes,
+      research
+    });
   } catch (error) {
     next(error);
   }

@@ -61,6 +61,7 @@ contextBridge.exposeInMainWorld('brutus', {
   // Events from main process
   onMonitoringStarted: (callback) => ipcRenderer.on('monitoring-started', callback),
   onMonitoringStopped: (callback) => ipcRenderer.on('monitoring-stopped', callback),
+  onAuthCleared: (callback) => ipcRenderer.on('auth-cleared', callback),
 
   // Remove listeners
   removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel)

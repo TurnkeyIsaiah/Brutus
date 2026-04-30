@@ -1208,6 +1208,12 @@
       window.brutus.onMonitoringStopped(() => {
         stopSession();
       });
+
+      // Clear in-memory auth when backend URL changes (auth invalidated in main process)
+      window.brutus.onAuthCleared(() => {
+        authToken = null;
+        if (sessionId) stopSession();
+      });
       
       // Start immediately if monitoring is active
       const isMonitoring = await window.brutus.isMonitoring();
@@ -1352,17 +1358,24 @@
     
     // ==================== WEBSOCKET ====================
     function connectWebSocket() {
-      ws = new WebSocket(`${WS_URL}?token=${authToken}`);
-      
+      ws = new WebSocket(WS_URL);
+
       ws.onopen = () => {
-        isConnected = true;
-        wsReconnectAttempts = 0; // Reset reconnect counter on successful connection
-        console.log('WebSocket connected');
+        // Authenticate via first app-level message — token never travels in HTTP headers
+        ws.send(JSON.stringify({ type: 'auth', token: authToken }));
       };
-      
+
       ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
+
+          if (message.type === 'connected') {
+            // Only reset reconnect counter after the server confirms auth — not on TCP open
+            wsReconnectAttempts = 0;
+            isConnected = true;
+            console.log('WebSocket authenticated and connected');
+            return;
+          }
 
           if (message.type === 'brutus_feedback' && message.payload.code === 'OUT_OF_TOKENS') {
             addFeedback('critical', "you're out of tokens. add credits at app.brutusai.coach to continue.");
@@ -1871,10 +1884,14 @@
         sources.forEach(source => {
           const item = document.createElement('div');
           item.className = 'source-item';
-          item.innerHTML = `
-            <img src="${source.thumbnail}" alt="${source.name}">
-            <div class="source-item-name">${source.name}</div>
-          `;
+          const img = document.createElement('img');
+          img.src = source.thumbnail;
+          img.alt = source.name;
+          const label = document.createElement('div');
+          label.className = 'source-item-name';
+          label.textContent = source.name;
+          item.appendChild(img);
+          item.appendChild(label);
           item.addEventListener('click', async () => {
             modal.classList.remove('active');
             await window.brutus.setSelectedSource(source.id);

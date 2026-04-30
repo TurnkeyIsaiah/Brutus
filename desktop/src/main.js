@@ -1,6 +1,6 @@
 console.log('Starting Brutus Desktop...');
 console.log('App is ready, creating window...');
-const { app, BrowserWindow, Tray, Menu, ipcMain, screen, nativeImage, shell, desktopCapturer } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, screen, nativeImage, shell, desktopCapturer, safeStorage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const Store = require('electron-store');
@@ -52,8 +52,8 @@ function createMainWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
-      webSecurity: false  // Disable CORS for localhost API calls
+      preload: path.join(__dirname, 'preload.js')
+      // webSecurity enabled (default) — backend CORS allows null origin from Electron
     }
   });
 
@@ -96,8 +96,8 @@ function createOverlayWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
-      webSecurity: false  // Disable CORS for localhost API calls
+      preload: path.join(__dirname, 'preload.js')
+      // webSecurity enabled (default) — backend CORS allows null origin from Electron
     }
   });
 
@@ -291,22 +291,54 @@ function stopMonitoring() {
   }
 }
 
+// ==================== AUTH TOKEN ENCRYPTION ====================
+
+// In-memory fallback for environments where OS-backed storage is unavailable.
+// Survives for the process lifetime only — cleared on app quit or explicit logout.
+let memoryToken = null;
+
+function encryptToken(token) {
+  if (!safeStorage.isEncryptionAvailable()) return null; // refuse to store plaintext on disk
+  return safeStorage.encryptString(token).toString('base64');
+}
+
+function decryptToken(stored) {
+  if (!safeStorage.isEncryptionAvailable()) return null;
+  if (!stored) return null;
+  try {
+    return safeStorage.decryptString(Buffer.from(stored, 'base64'));
+  } catch {
+    // Corrupted or encrypted by a different key — force re-login
+    store.delete('authToken');
+    return null;
+  }
+}
+
 // ==================== IPC HANDLERS ====================
 
 ipcMain.handle('get-auth', () => {
   return {
-    token: store.get('authToken'),
+    token: decryptToken(store.get('authToken')) ?? memoryToken,
     user: store.get('user')
   };
 });
 
 ipcMain.handle('set-auth', (event, { token, user }) => {
-  store.set('authToken', token);
+  const encrypted = encryptToken(token);
+  if (encrypted === null) {
+    // Secure storage unavailable — hold token in memory for this session only
+    memoryToken = token;
+    store.delete('authToken');
+  } else {
+    memoryToken = null;
+    store.set('authToken', encrypted);
+  }
   store.set('user', user);
   return true;
 });
 
 ipcMain.handle('clear-auth', () => {
+  memoryToken = null;
   store.delete('authToken');
   store.delete('user');
   return true;
@@ -374,6 +406,17 @@ ipcMain.handle('get-settings', () => {
 });
 
 ipcMain.handle('set-settings', (event, settings) => {
+  const existing = store.get('settings', { apiUrl: 'https://api.brutusai.coach' });
+  if (settings.apiUrl && settings.apiUrl !== existing.apiUrl) {
+    // Backend origin changed — clear stored token and invalidate all live renderer sessions
+    memoryToken = null;
+    store.delete('authToken');
+    store.delete('user');
+    if (mainWindow) mainWindow.webContents.send('auth-cleared');
+    // Also stop monitoring and notify overlay so its in-memory session is cleared too
+    if (isMonitoring) stopMonitoring();
+    if (overlayWindow) overlayWindow.webContents.send('auth-cleared');
+  }
   store.set('settings', settings);
   if (overlayWindow && settings.overlayOpacity !== undefined) {
     overlayWindow.setOpacity(settings.overlayOpacity);
@@ -387,6 +430,9 @@ ipcMain.handle('open-dashboard', async () => {
 });
 
 ipcMain.handle('open-external', async (event, url) => {
+  if (typeof url !== 'string' || !url.startsWith('https://')) {
+    throw new Error('Only https:// URLs may be opened externally');
+  }
   await shell.openExternal(url);
   return true;
 });

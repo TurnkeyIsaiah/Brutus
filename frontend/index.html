@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline' 'self'; style-src 'unsafe-inline' 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.brutusai.coach wss://api.brutusai.coach; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
     <title>Brutus AI - Sales Coaching Platform</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2248,7 +2251,7 @@
         const API_URL = 'https://api.brutusai.coach';
         
         // ==================== STATE ====================
-        let authToken = localStorage.getItem('brutus_token');
+        let authToken = sessionStorage.getItem('brutus_token');
         let currentUser = null;
         
         // ==================== NEURAL NETWORK ====================
@@ -2427,7 +2430,7 @@
                 
                 authToken = data.token;
                 currentUser = data.user;
-                localStorage.setItem('brutus_token', authToken);
+                sessionStorage.setItem('brutus_token', authToken);
                 
                 showApp();
             } catch (error) {
@@ -2460,7 +2463,7 @@
                 
                 authToken = data.token;
                 currentUser = data.user;
-                localStorage.setItem('brutus_token', authToken);
+                sessionStorage.setItem('brutus_token', authToken);
                 
                 showApp();
             } catch (error) {
@@ -2473,13 +2476,28 @@
         });
         
         // Logout
-        document.getElementById('logout-btn').addEventListener('click', () => {
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            let revoked = false;
+            try {
+                await apiCall('/auth/logout', { method: 'POST' });
+                revoked = true;
+            } catch (_) {
+                console.warn('[Brutus] Server-side token revocation failed — session may still be active on other devices.');
+            }
             authToken = null;
             currentUser = null;
-            localStorage.removeItem('brutus_token');
-            
+            sessionStorage.removeItem('brutus_token');
+
             authModal.classList.remove('hidden');
             mainContent.classList.add('hidden');
+
+            if (!revoked) {
+                const warn = document.createElement('p');
+                warn.style.cssText = 'color:#ff9800;font-size:12px;text-align:center;margin-top:8px;';
+                warn.textContent = 'Signed out locally. Could not reach server — your session may still be active on other devices.';
+                authModal.querySelector('form') && authModal.querySelector('form').prepend(warn);
+                setTimeout(() => warn.remove(), 8000);
+            }
         });
         
         // ==================== TOKEN BALANCE ====================
@@ -2603,7 +2621,7 @@
                 showApp();
             } catch (error) {
                 authToken = null;
-                localStorage.removeItem('brutus_token');
+                sessionStorage.removeItem('brutus_token');
                 authModal.classList.remove('hidden');
             }
         }
@@ -2822,7 +2840,7 @@
                             <div class="activity-item">
                                 <div class="activity-content">
                                     <h4>call analyzed — <span style="color:${scoreColor}">${call.overallScore}/100</span></h4>
-                                    <p>${feedback}</p>
+                                    <p>${escapeHtml(feedback)}</p>
                                     <span class="activity-time">${dateTime}</span>
                                 </div>
                             </div>
@@ -2837,6 +2855,11 @@
             }
         }
         
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
         function getTimeAgo(date) {
             const seconds = Math.floor((new Date() - date) / 1000);
 
@@ -2950,7 +2973,7 @@
                 const scoreClass = score >= 70 ? 'good' : score >= 50 ? 'warning' : 'bad';
                 const mins = Math.floor((call.durationSeconds || 0) / 60);
                 const duration = mins > 0 ? `${mins}m` : '<1m';
-                const tags = (call.tags || []).map(t => `<span class="history-tag">${t}</span>`).join('');
+                const tags = (call.tags || []).map(t => `<span class="history-tag">${escapeHtml(t)}</span>`).join('');
                 const outcomeLabels = { closed: '✓ closed', lost: '✗ lost', follow_up: '↩ follow up', no_show: '○ no show' };
                 const outcomeBadge = call.outcome
                     ? `<span class="outcome-badge ${call.outcome}">${outcomeLabels[call.outcome] || call.outcome}</span>`
@@ -2997,12 +3020,14 @@
                 meta.textContent = `${formatDateTime(call.createdAt)} · ${mins > 0 ? mins + 'm' : '<1m'} · talk ratio ${Math.round(call.talkRatio || 0)}%`;
 
                 // Helper: render a feedback item with thumbs up/down
+                const VALID_FEEDBACK_TYPES = new Set(['critical', 'warning', 'insight', 'good']);
                 function feedbackItemHtml(f, origIdx) {
                     const r = ratings[origIdx];
+                    const safeType = VALID_FEEDBACK_TYPES.has(f.type) ? f.type : 'insight';
                     return `
-                        <div class="call-feedback-item ${f.type || 'insight'}">
+                        <div class="call-feedback-item ${safeType}">
                             <div class="feedback-item-row">
-                                <span class="feedback-item-text">${f.text}</span>
+                                <span class="feedback-item-text">${escapeHtml(f.text)}</span>
                                 <div class="rating-btns">
                                     <button class="rating-btn ${r === 'up' ? 'active' : ''}"
                                         title="good read"
@@ -3038,7 +3063,7 @@
 
                     <div class="call-modal-score">
                         <div class="call-modal-score-num" style="color:${scoreColors[scoreClass]}">${call.overallScore}</div>
-                        <div class="call-modal-roast">${overallRoast || 'no summary available'}</div>
+                        <div class="call-modal-roast">${escapeHtml(overallRoast) || 'no summary available'}</div>
                     </div>
 
                     ${criticals.length ? `
@@ -3068,7 +3093,7 @@
                     ${actionItems.length ? `
                     <div class="call-modal-section">
                         <div class="call-modal-section-title">action items</div>
-                        ${actionItems.map(a => `<div class="call-action-item">${a}</div>`).join('')}
+                        ${actionItems.map(a => `<div class="call-action-item">${escapeHtml(a)}</div>`).join('')}
                     </div>` : ''}
                 `;
             } catch (err) {
@@ -3304,7 +3329,7 @@
                 const isTokenError = error.message.includes('tokens') || error.message.includes('OUT_OF_TOKENS');
                 uploadText.innerHTML = isTokenError
                     ? `<span style="color:#ff5050;">out of tokens.</span> <span style="color:rgba(255,255,255,0.6);font-size:13px;cursor:pointer;text-decoration:underline;" onclick="switchToCredits()">add credits →</span>`
-                    : `<span style="color: #ff5050;">error: ${error.message}</span>`;
+                    : `<span style="color: #ff5050;">error: ${escapeHtml(error.message)}</span>`;
 
                 setTimeout(() => {
                     uploadZone.classList.remove('uploading');
@@ -3328,7 +3353,7 @@
             messageDiv.innerHTML = `
                 <div class="message-avatar ${isUser ? 'user-avatar' : 'brutus-avatar'}">${isUser ? 'U' : 'B'}</div>
                 <div class="message-content">
-                    <div class="message-text">${text}</div>
+                    <div class="message-text">${escapeHtml(text)}</div>
                     <div class="message-time">${timeStr}</div>
                 </div>
             `;
@@ -3433,7 +3458,7 @@
                                 <span style="font-size: 11px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.06em;">${typeLabel}</span>
                                 <span style="font-size: 11px; color: rgba(255,255,255,0.35);">${noteTime}</span>
                             </div>
-                            <p style="font-size: 14px; line-height: 1.65; color: rgba(255,255,255,0.85); margin: 0;">${note.content}</p>
+                            <p style="font-size: 14px; line-height: 1.65; color: rgba(255,255,255,0.85); margin: 0;">${escapeHtml(note.content)}</p>
                         </div>
                     `;
                 }).join('');
@@ -3507,8 +3532,14 @@
                 const csvRows = data.notes.map(note => {
                     const date = new Date(note.timestamp).toLocaleDateString();
                     const time = new Date(note.timestamp).toLocaleTimeString();
-                    const content = note.content.replace(/"/g, '""'); // Escape quotes
-                    return `"${date}","${time}","${note.type}","${content}"`;
+                    // Escape double quotes, then neutralize leading formula characters (=, +, -, @)
+                    // to prevent spreadsheet formula injection when opened in Excel/Sheets
+                    const sanitizeCsvCell = (val) => {
+                        let s = String(val ?? '').replace(/"/g, '""');
+                        if (/^[=+\-@]/.test(s)) s = "'" + s;
+                        return s;
+                    };
+                    return `"${sanitizeCsvCell(date)}","${sanitizeCsvCell(time)}","${sanitizeCsvCell(note.type)}","${sanitizeCsvCell(note.content)}"`;
                 }).join('\n');
 
                 const csv = csvHeader + csvRows;
@@ -3545,13 +3576,13 @@
                 const statusLabel = item.status === 'pending' ? '⏳ researching...' : item.status === 'completed' ? '✓ done' : '✗ failed';
                 const shortQuery = item.query.length > 60 ? item.query.slice(0, 60) + '…' : item.query;
                 const resultsHtml = item.results
-                    ? `<div style="padding-top: 14px; white-space: pre-wrap; font-size: 14px; line-height: 1.75; color: rgba(255,255,255,0.82);">${item.results}</div>`
+                    ? `<div style="padding-top: 14px; white-space: pre-wrap; font-size: 14px; line-height: 1.75; color: rgba(255,255,255,0.82);">${escapeHtml(item.results)}</div>`
                     : `<p style="padding-top: 14px; color: rgba(255,255,255,0.4); font-style: italic;">research in progress...</p>`;
 
                 return `
                     <div class="history-card" id="research-card-${i}">
                         <div class="history-card-header" onclick="toggleCard('research-card-${i}')">
-                            <div class="history-card-title">${shortQuery}</div>
+                            <div class="history-card-title">${escapeHtml(shortQuery)}</div>
                             <div class="history-card-meta">
                                 <span style="color: ${statusColor}; margin-right: 12px;">${statusLabel}</span>${dt}
                             </div>

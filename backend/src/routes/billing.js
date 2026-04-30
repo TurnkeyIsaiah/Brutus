@@ -239,12 +239,10 @@ router.put('/auto-topup', authenticate, async (req, res, next) => {
 });
 
 // ==================== STRIPE WEBHOOK ====================
-// Registered before express.json() in index.js
+// Exported and registered directly on app before express.json() in index.js
+// so Stripe signature verification receives the raw request body.
 
-router.post(
-  '/webhook',
-  express.raw({ type: 'application/json' }),
-  async (req, res) => {
+const stripeWebhookHandler = async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
 
@@ -272,11 +270,23 @@ router.post(
             break;
           }
 
-          // Credit tokens
-          await addTokens(userId, parseInt(tokensToAdd, 10));
-          console.log(`[Stripe] Credited ${tokensToAdd} tokens to user ${userId}`);
+          // Idempotent credit: unique constraint on stripeEventId prevents double-credit on replays
+          try {
+            await prisma.$transaction(async (tx) => {
+              await tx.stripeEvent.create({ data: { stripeEventId: event.id } });
+              await tx.user.update({
+                where: { id: userId },
+                data: { tokenBalance: { increment: BigInt(parseInt(tokensToAdd, 10)) } }
+              });
+            });
+            console.log(`[Stripe] Credited ${tokensToAdd} tokens to user ${userId}`);
+          } catch (err) {
+            if (err.code !== 'P2002') throw err;
+            console.log(`[Stripe] Duplicate event ${event.id} — tokens already credited`);
+            // Fall through: payment method save is idempotent and must complete even on replay
+          }
 
-          // Save payment method from the payment intent for future auto top-ups
+          // Save payment method — runs on first delivery AND on replay so it is never lost
           if (session.payment_intent) {
             const pi = await stripe.paymentIntents.retrieve(session.payment_intent);
             if (pi.payment_method) {
@@ -290,7 +300,9 @@ router.post(
           break;
         }
 
-        // Auto top-up charges that succeeded asynchronously (e.g. 3D Secure)
+        // Auto top-up charges that succeeded asynchronously (e.g. 3D Secure).
+        // Uses pi.id (not event.id) as the idempotency key so it converges with the
+        // synchronous credit in triggerAutoTopUp — exactly one path wins.
         case 'payment_intent.succeeded': {
           const pi = event.data.object;
           if (pi.metadata?.type !== 'auto_topup') break;
@@ -298,8 +310,22 @@ router.post(
           const { userId, tokensToAdd } = pi.metadata;
           if (!userId || !tokensToAdd) break;
 
-          await addTokens(userId, parseInt(tokensToAdd, 10));
-          console.log(`[Stripe] Auto top-up: credited ${tokensToAdd} tokens to user ${userId}`);
+          try {
+            await prisma.$transaction(async (tx) => {
+              await tx.stripeEvent.create({ data: { stripeEventId: pi.id } });
+              await tx.user.update({
+                where: { id: userId },
+                data: { tokenBalance: { increment: BigInt(parseInt(tokensToAdd, 10)) } }
+              });
+            });
+            console.log(`[Stripe] Auto top-up: credited ${tokensToAdd} tokens to user ${userId}`);
+          } catch (err) {
+            if (err.code === 'P2002') {
+              console.log(`[Stripe] Duplicate payment_intent ${pi.id} — already credited, skipping`);
+              break;
+            }
+            throw err;
+          }
           break;
         }
 
@@ -328,7 +354,6 @@ router.post(
     }
 
     res.json({ received: true });
-  }
-);
+};
 
-module.exports = router;
+module.exports = { router, stripeWebhookHandler };
