@@ -31,10 +31,13 @@ const loginLimiter = rateLimit({
   message: { error: { message: 'Too many login attempts. Try again in 15 minutes.' } }
 });
 
-// 10 signups per hour per IP
+// 30 signups per hour per IP — bumped from 10 to absorb shared NAT traffic
+// (college campuses, mobile carriers, corporate offices share one public IP).
+// Bot abuse is also bounded by email verification (see /verify-email),
+// so the bonus token grant is no longer a free-money vector even at higher volumes.
 const signupLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 10,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: { message: 'Too many accounts created from this IP.' } }
