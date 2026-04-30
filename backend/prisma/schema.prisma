@@ -53,6 +53,7 @@ model User {
   calls              Call[]
   callMoments        CallMoment[]
   sessions           Session[]
+  emailLogs          EmailLog[]
 
   @@map("users")
 }
@@ -88,6 +89,7 @@ model Call {
   tags              Json         @default("[]")
   outcome           String?      // "closed", "lost", "follow_up", "no_show"
   feedbackRatings   Json         @default("{}") @map("feedback_ratings") // {index: "up"|"down"}
+  popupFeedback     Json?        @map("popup_feedback") // first-call popup answers
   createdAt         DateTime     @default(now()) @map("created_at")
   
   // Relations
@@ -165,6 +167,21 @@ model EmailVerificationToken {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("email_verification_tokens")
+}
+
+model EmailLog {
+  id      String   @id @default(uuid())
+  userId  String   @map("user_id")
+  type    String   // "day1" | "day3" | "day7"
+  status  String   @default("sent") // "sent" | "failed"
+  error   String?
+  sentAt  DateTime @default(now()) @map("sent_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@index([userId])
+  @@map("email_logs")
 }
 
 model TrainingMoment {

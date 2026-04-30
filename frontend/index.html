@@ -825,6 +825,66 @@
             font-style: italic;
         }
 
+        /* First Call Feedback Popup */
+        .popup-helpful-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .popup-helpful-btn {
+            flex: 1;
+            padding: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: rgba(255,255,255,0.8);
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .popup-helpful-btn:hover { border-color: rgba(255,80,80,0.4); }
+        .popup-helpful-btn.selected {
+            background: rgba(255,80,80,0.15);
+            border-color: rgba(255,80,80,0.5);
+            color: white;
+        }
+        .popup-textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 60px;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .popup-textarea:focus { border-color: rgba(255,80,80,0.4); background: rgba(255,255,255,0.07); }
+        .popup-label {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 8px;
+        }
+        .popup-submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff5050, #ff7850);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .popup-submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255,80,80,0.3); }
+        .popup-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
         .call-modal-section {
             margin-bottom: 20px;
         }
@@ -1844,6 +1904,36 @@
                     <button class="call-modal-close" id="call-modal-close">✕</button>
                 </div>
                 <div id="call-modal-body"></div>
+            </div>
+        </div>
+
+        <!-- First Call Feedback Popup (one-shot, after first analyzed call) -->
+        <div class="call-modal-overlay hidden" id="first-call-feedback-overlay" style="z-index: 3500;">
+            <div class="call-modal" style="max-width: 480px;">
+                <div class="call-modal-header">
+                    <div>
+                        <div class="call-modal-title">how was that?</div>
+                        <div class="call-modal-meta">quick take, then we'll show you the full breakdown</div>
+                    </div>
+                    <button class="call-modal-close" id="first-call-feedback-skip">✕</button>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div class="popup-label">did brutus help on this call?</div>
+                    <div class="popup-helpful-row">
+                        <button type="button" class="popup-helpful-btn" data-value="yes">yes</button>
+                        <button type="button" class="popup-helpful-btn" data-value="kind_of">kind of</button>
+                        <button type="button" class="popup-helpful-btn" data-value="no">no</button>
+                    </div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <div class="popup-label">what worked best?</div>
+                    <textarea id="popup-what-worked" class="popup-textarea" placeholder="anything brutus nailed"></textarea>
+                </div>
+                <div style="margin-bottom: 24px;">
+                    <div class="popup-label">what was missing or annoying?</div>
+                    <textarea id="popup-what-didnt" class="popup-textarea" placeholder="what should we fix"></textarea>
+                </div>
+                <button type="button" id="popup-submit-btn" class="popup-submit-btn">send to brutus</button>
             </div>
         </div>
 
@@ -3323,8 +3413,11 @@
                 // Switch to call history and open the new call
                 switchToView('calls');
                 await loadCallHistory();
-                openCallModal(data.call.id);
-                
+
+                // Show the first-call feedback popup once per user — gates the call modal until dismissed.
+                const showed = maybeShowFirstCallFeedback(data.call.id, data.isFirstCall);
+                if (!showed) openCallModal(data.call.id);
+
             } catch (error) {
                 const isTokenError = error.message.includes('tokens') || error.message.includes('OUT_OF_TOKENS');
                 uploadText.innerHTML = isTokenError
@@ -3337,7 +3430,81 @@
                 }, isTokenError ? 8000 : 3000);
             }
         }
-        
+
+        // ==================== FIRST-CALL FEEDBACK POPUP ====================
+        // Returns true if the popup was shown (caller should defer opening the call modal).
+        // Returns false if it was suppressed — caller should proceed normally.
+        function maybeShowFirstCallFeedback(callId, isFirstCall) {
+            if (!isFirstCall) return false;
+            if (currentUser?.settings?.firstCallFeedbackShown) return false;
+
+            const overlay = document.getElementById('first-call-feedback-overlay');
+            const skipBtn = document.getElementById('first-call-feedback-skip');
+            const submitBtn = document.getElementById('popup-submit-btn');
+            const whatWorkedEl = document.getElementById('popup-what-worked');
+            const whatDidntEl = document.getElementById('popup-what-didnt');
+            const helpfulBtns = document.querySelectorAll('.popup-helpful-btn');
+
+            // Reset state every time the popup opens
+            let selectedHelpful = null;
+            whatWorkedEl.value = '';
+            whatDidntEl.value = '';
+            helpfulBtns.forEach(b => b.classList.remove('selected'));
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'send to brutus';
+
+            helpfulBtns.forEach(btn => {
+                btn.onclick = () => {
+                    helpfulBtns.forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedHelpful = btn.dataset.value;
+                };
+            });
+
+            const markShownLocally = () => {
+                if (currentUser) {
+                    currentUser.settings = { ...(currentUser.settings || {}), firstCallFeedbackShown: true };
+                }
+            };
+
+            const closeAndOpenCall = () => {
+                overlay.classList.add('hidden');
+                openCallModal(callId);
+            };
+
+            submitBtn.onclick = async () => {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'sending...';
+                try {
+                    await apiCall(`/calls/${callId}/popup-feedback`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({
+                            helpful: selectedHelpful,
+                            whatWorked: whatWorkedEl.value.trim(),
+                            whatDidnt: whatDidntEl.value.trim()
+                        })
+                    });
+                    markShownLocally();
+                } catch (err) {
+                    console.warn('popup feedback save failed:', err.message);
+                }
+                closeAndOpenCall();
+            };
+
+            skipBtn.onclick = async () => {
+                try {
+                    await apiCall('/calls/popup-feedback/skip', { method: 'POST' });
+                    markShownLocally();
+                } catch (err) {
+                    console.warn('popup skip failed:', err.message);
+                }
+                closeAndOpenCall();
+            };
+
+            overlay.classList.remove('hidden');
+            return true;
+        }
+
         // ==================== CHAT ====================
         const chatMessages = document.getElementById('chat-messages');
         const chatInput = document.getElementById('chat-input');

@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const prisma = require('../lib/prisma');
 const { generateToken, authenticate } = require('../middleware/auth');
-const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/email');
+const { sendVerificationEmail, sendPasswordResetEmail, sendDay1Email } = require('../services/email');
 
 const SIGNUP_BONUS_TOKENS = 500000n;
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -281,7 +281,30 @@ router.post('/verify-email', async (req, res, next) => {
       throw err;
     }
 
-    if (creditedUserId) logAudit('email.verified', creditedUserId, req);
+    if (creditedUserId) {
+      logAudit('email.verified', creditedUserId, req);
+
+      // Fire Day 1 onboarding email immediately (non-blocking).
+      // Idempotent: emailLog has a unique constraint on (userId, type), so if the
+      // hourly scheduler races and writes first, this insert returns P2002 and we
+      // skip the send. Only send when we get the row.
+      (async () => {
+        try {
+          const fullUser = await prisma.user.findUnique({
+            where: { id: creditedUserId },
+            select: { id: true, email: true, name: true }
+          });
+          if (!fullUser) return;
+          await prisma.emailLog.create({
+            data: { userId: fullUser.id, type: 'day1', status: 'sent' }
+          });
+          await sendDay1Email(fullUser);
+        } catch (err) {
+          if (err.code === 'P2002') return; // already sent by scheduler — fine
+          console.error('[Email] Day 1 send failed:', err.message);
+        }
+      })();
+    }
 
     res.json({ message: 'Email verified. brutus is ready to judge you.' });
   } catch (error) {

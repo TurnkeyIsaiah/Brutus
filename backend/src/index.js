@@ -18,6 +18,7 @@ const ttsRoutes = require('./routes/tts');
 const { authenticateWS, verifyToken } = require('./middleware/auth');
 const { registerSession, unregisterSession } = require('./lib/wsSessions');
 const { runRetentionCleanup } = require('./lib/retention');
+const { runEmailSequenceScheduler } = require('./lib/emailSequence');
 
 const app = express();
 const server = createServer(app);
@@ -346,6 +347,10 @@ server.listen(PORT, () => {
   // Run data retention cleanup at startup and then every 24 hours
   runRetentionCleanup();
   setInterval(runRetentionCleanup, 24 * 60 * 60 * 1000);
+
+  // Onboarding email sequence: hourly check for due Day 1/3/7 sends
+  runEmailSequenceScheduler();
+  setInterval(runEmailSequenceScheduler, 60 * 60 * 1000);
 });
 }).catch((err) => {
   console.error('[startup] Schema validation failed:', err);

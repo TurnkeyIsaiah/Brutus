@@ -64,13 +64,18 @@ router.post('/analyze', checkTokenBalance, upload.single('audio'), async (req, r
     }
     transcription.text = scrubPii(transcription.text);
 
+    // Track whether this is the user's first analyzed call so the frontend can
+    // show the one-time feedback popup. Computed before the new row is inserted.
+    const priorCallCount = await prisma.call.count({ where: { userId: req.user.id } });
+    const isFirstCall = priorCallCount === 0;
+
     // Analyze with Brutus
     const analysis = await analyzeCall(
       req.user.id,
       transcription.text,
       transcription.duration
     );
-    
+
     // Save the call
     const call = await prisma.call.create({
       data: {
@@ -98,6 +103,7 @@ router.post('/analyze', checkTokenBalance, upload.single('audio'), async (req, r
     
     res.json({
       message: 'Call analyzed. brace yourself.',
+      isFirstCall,
       call: {
         id: call.id,
         durationSeconds: call.durationSeconds,
@@ -115,7 +121,7 @@ router.post('/analyze', checkTokenBalance, upload.single('audio'), async (req, r
       },
       transcript: transcription.text
     });
-    
+
   } catch (error) {
     next(error);
   }
@@ -126,13 +132,16 @@ router.post('/analyze', checkTokenBalance, upload.single('audio'), async (req, r
 router.post('/analyze-transcript', checkTokenBalance, async (req, res, next) => {
   try {
     const { transcript, durationSeconds } = req.body;
-    
+
     if (!transcript || transcript.trim().length < 50) {
       return res.status(400).json({
         error: { message: 'Transcript too short to analyze (minimum 50 characters)' }
       });
     }
     const cleanTranscript = scrubPii(transcript);
+
+    const priorCallCount = await prisma.call.count({ where: { userId: req.user.id } });
+    const isFirstCall = priorCallCount === 0;
 
     // Analyze with Brutus
     const analysis = await analyzeCall(
@@ -168,6 +177,7 @@ router.post('/analyze-transcript', checkTokenBalance, async (req, res, next) => 
     
     res.json({
       message: 'Transcript analyzed.',
+      isFirstCall,
       call: {
         id: call.id,
         overallScore: call.overallScore,
@@ -382,6 +392,71 @@ router.patch('/:id/feedback-rating', async (req, res, next) => {
     });
 
     res.json({ feedbackRatings: ratings });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ==================== FIRST-CALL POPUP FEEDBACK ====================
+//
+// Stores the user's answers to the one-time popup that appears after their
+// first analyzed call. Also flips a flag on the user's settings so the popup
+// is suppressed on subsequent calls even if this call gets deleted.
+
+router.patch('/:id/popup-feedback', async (req, res, next) => {
+  try {
+    const { helpful, whatWorked, whatDidnt } = req.body;
+
+    // helpful must be one of the three button choices, or null/undefined if user only typed
+    if (helpful !== undefined && helpful !== null && !['yes', 'kind_of', 'no'].includes(helpful)) {
+      return res.status(400).json({ error: { message: 'helpful must be "yes", "kind_of", or "no"' } });
+    }
+
+    // Cap text fields so a malicious client can't dump arbitrary blobs into our DB
+    const trim = (v) => (typeof v === 'string' ? v.trim().slice(0, 2000) : null);
+    const cleanWhatWorked = trim(whatWorked);
+    const cleanWhatDidnt = trim(whatDidnt);
+
+    const call = await prisma.call.findFirst({
+      where: { id: req.params.id, userId: req.user.id },
+      select: { id: true }
+    });
+    if (!call) return res.status(404).json({ error: { message: 'Call not found' } });
+
+    const popupFeedback = {
+      helpful: helpful || null,
+      whatWorked: cleanWhatWorked,
+      whatDidnt: cleanWhatDidnt,
+      submittedAt: new Date().toISOString()
+    };
+
+    // Update call + user settings in one round trip per record
+    await prisma.call.update({
+      where: { id: call.id },
+      data: { popupFeedback }
+    });
+
+    const currentSettings = (req.user.settings && typeof req.user.settings === 'object') ? req.user.settings : {};
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { settings: { ...currentSettings, firstCallFeedbackShown: true } }
+    });
+
+    res.json({ message: 'Thanks. brutus heard you.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Mark the popup as dismissed without storing feedback (the "skip" path).
+router.post('/popup-feedback/skip', async (req, res, next) => {
+  try {
+    const currentSettings = (req.user.settings && typeof req.user.settings === 'object') ? req.user.settings : {};
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { settings: { ...currentSettings, firstCallFeedbackShown: true } }
+    });
+    res.json({ message: 'Skipped.' });
   } catch (error) {
     next(error);
   }
