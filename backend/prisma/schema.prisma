@@ -36,7 +36,8 @@ model User {
   passwordHash       String             @map("password_hash")
   name               String
   createdAt          DateTime           @default(now()) @map("created_at")
-  tokenBalance            BigInt    @default(500000) @map("token_balance")
+  emailVerified           Boolean   @default(false) @map("email_verified")
+  tokenBalance            BigInt    @default(0) @map("token_balance")
   tokensUsed              BigInt    @default(0) @map("tokens_used")
   stripeCustomerId        String?   @unique @map("stripe_customer_id")
   stripePaymentMethodId   String?   @map("stripe_payment_method_id")
@@ -154,6 +155,16 @@ model PasswordResetToken {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("email_verification_tokens")
 }
 
 model TrainingMoment {

@@ -284,10 +284,19 @@ wss.on('close', () => {
 
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-  res.status(err.status || 500).json({
+  const status = err.status || 500;
+  // Only surface err.message to clients on intentional 4xx errors thrown by route handlers.
+  // 5xx errors may carry framework/Prisma internals (schema names, constraint details, raw SQL)
+  // that must never reach an attacker — replace with a generic message in production.
+  const isClientError = status >= 400 && status < 500;
+  const isDev = process.env.NODE_ENV === 'development';
+  const safeMessage = isClientError && err.message
+    ? err.message
+    : isDev ? (err.message || 'Internal server error') : 'Internal server error';
+  res.status(status).json({
     error: {
-      message: err.message || 'Internal server error',
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+      message: safeMessage,
+      ...(isDev && { stack: err.stack })
     }
   });
 });

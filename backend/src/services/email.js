@@ -16,22 +16,25 @@ const resendSend = async (payload) => {
   return data;
 };
 
-const sendWelcomeEmail = async (user) => {
+const sendVerificationEmail = async (user, token) => {
+  const verifyUrl = `${getAppUrl()}/verify-email.html?token=${token}`;
   await resendSend({
     from: getFrom(),
     to: user.email,
-    subject: 'brutus is watching. welcome.',
+    subject: 'verify your email — claim your 500K free tokens',
     html: `
       <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; background: #0a0a12; color: #fff; padding: 40px; border-radius: 16px;">
         <h1 style="font-size: 28px; margin-bottom: 8px;">welcome, ${user.name}.</h1>
-        <p style="color: rgba(255,255,255,0.6); margin-bottom: 24px;">your trial is active. 20 calls. make them count.</p>
-        <a href="${APP_URL}/index.html"
+        <p style="color: rgba(255,255,255,0.6); margin-bottom: 24px;">
+          verify your email to unlock your 500,000 free tokens. brutus is waiting.
+        </p>
+        <a href="${verifyUrl}"
            style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #ff5050, #ff7850);
                   color: white; text-decoration: none; border-radius: 12px; font-weight: 600;">
-          open brutus
+          verify email
         </a>
         <p style="margin-top: 32px; font-size: 13px; color: rgba(255,255,255,0.3);">
-          you signed up with ${user.email}. if this wasn't you, ignore this email.
+          this link expires in 24 hours. if you didn't sign up, ignore this email.
         </p>
       </div>
     `
@@ -64,4 +67,4 @@ const sendPasswordResetEmail = async (email, token) => {
 };
 
 
-module.exports = { sendWelcomeEmail, sendPasswordResetEmail };
+module.exports = { sendVerificationEmail, sendPasswordResetEmail };

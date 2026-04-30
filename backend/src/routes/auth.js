@@ -4,7 +4,19 @@ const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const prisma = require('../lib/prisma');
 const { generateToken, authenticate } = require('../middleware/auth');
-const { sendWelcomeEmail, sendPasswordResetEmail } = require('../services/email');
+const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/email');
+
+const SIGNUP_BONUS_TOKENS = 500000n;
+const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+async function issueVerificationToken(userId) {
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  const expiresAt = new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS);
+  await prisma.emailVerificationToken.deleteMany({ where: { userId } });
+  await prisma.emailVerificationToken.create({ data: { userId, token: tokenHash, expiresAt } });
+  return rawToken;
+}
 const { closeUserSessions } = require('../lib/wsSessions');
 const { logAudit } = require('../lib/audit');
 
@@ -35,6 +47,15 @@ const resetLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: { message: 'Too many password reset attempts. Try again in an hour.' } }
+});
+
+// 5 resend-verification requests per hour per IP
+const resendVerifyLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: 'Too many verification requests. Try again in an hour.' } }
 });
 
 // ==================== SIGNUP ====================
@@ -88,18 +109,22 @@ router.post('/signup', signupLimiter, async (req, res, next) => {
       }
     });
     
-    // Generate token
+    // Generate auth token (user is logged in immediately, but tokenBalance is 0
+    // until they verify their email — see /verify-email below)
     const token = generateToken(user.id, user.tokenVersion);
 
-    // Send welcome email (non-blocking)
-    sendWelcomeEmail(user).catch(err => console.error('[Email] Welcome email failed:', err.message));
+    // Issue verification token + send email (non-blocking)
+    issueVerificationToken(user.id)
+      .then((rawToken) => sendVerificationEmail(user, rawToken))
+      .catch(err => console.error('[Email] Verification email failed:', err.message));
 
     res.status(201).json({
-      message: 'Account created. brutus is ready to judge you.',
+      message: 'Account created. check your email to claim your 500K free tokens.',
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
+        emailVerified: user.emailVerified,
         tokenBalance: user.tokenBalance.toString(),
         settings: user.settings,
         profile: user.profile
@@ -157,6 +182,7 @@ router.post('/login', loginLimiter, async (req, res, next) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        emailVerified: user.emailVerified,
         tokenBalance: user.tokenBalance.toString(),
         settings: user.settings,
         profile: user.profile
@@ -195,11 +221,87 @@ router.get('/me', authenticate, async (req, res) => {
       id: req.user.id,
       email: req.user.email,
       name: req.user.name,
+      emailVerified: req.user.emailVerified,
       tokenBalance: req.user.tokenBalance.toString(),
       settings: req.user.settings,
       profile: req.user.profile
     }
   });
+});
+
+// ==================== VERIFY EMAIL ====================
+
+router.post('/verify-email', async (req, res, next) => {
+  try {
+    const { token } = req.body;
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ error: { message: 'Verification token is required' } });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Atomic: consume token, mark verified, grant signup bonus.
+    // If the token row no longer exists (already consumed) deleteMany returns count=0 and we abort.
+    let creditedUserId = null;
+    try {
+      await prisma.$transaction(async (tx) => {
+        const existing = await tx.emailVerificationToken.findUnique({ where: { token: tokenHash } });
+        if (!existing || existing.expiresAt < new Date()) throw new Error('TOKEN_INVALID');
+
+        const consumed = await tx.emailVerificationToken.deleteMany({
+          where: { token: tokenHash, expiresAt: { gt: new Date() } }
+        });
+        if (consumed.count === 0) throw new Error('TOKEN_INVALID');
+
+        // Only grant the bonus the first time the user verifies — re-verifying must not re-grant.
+        const user = await tx.user.findUnique({
+          where: { id: existing.userId },
+          select: { emailVerified: true }
+        });
+        if (!user) throw new Error('TOKEN_INVALID');
+
+        if (!user.emailVerified) {
+          await tx.user.update({
+            where: { id: existing.userId },
+            data: {
+              emailVerified: true,
+              tokenBalance: { increment: SIGNUP_BONUS_TOKENS }
+            }
+          });
+          creditedUserId = existing.userId;
+        }
+      });
+    } catch (err) {
+      if (err.message === 'TOKEN_INVALID') {
+        return res.status(400).json({ error: { message: 'Verification link is invalid or has expired' } });
+      }
+      throw err;
+    }
+
+    if (creditedUserId) logAudit('email.verified', creditedUserId, req);
+
+    res.json({ message: 'Email verified. brutus is ready to judge you.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ==================== RESEND VERIFICATION ====================
+
+router.post('/resend-verification', resendVerifyLimiter, authenticate, async (req, res, next) => {
+  try {
+    if (req.user.emailVerified) {
+      return res.json({ message: 'Email already verified.' });
+    }
+
+    const rawToken = await issueVerificationToken(req.user.id);
+    sendVerificationEmail(req.user, rawToken)
+      .catch(err => console.error('[Email] Verification resend failed:', err.message));
+
+    res.json({ message: 'Verification email sent. check your inbox.' });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // ==================== FORGOT PASSWORD ====================
