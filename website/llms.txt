@@ -1,0 +1,32 @@
+# Brutus AI
+
+> Real-time AI sales coaching desktop app. Listens to your live sales calls and gives blunt, in-the-moment coaching to sales reps through an overlay panel.
+
+Brutus AI is distinct from post-call analytics tools. It coaches during the call, not after. Built for anyone who conducts sales calls on their computer: SDRs, AEs, insurance agents, real estate professionals, recruiters, and independent sales reps. The app catches when you talk too much, miss objections, fumble discovery questions, or stall on the close, and surfaces coaching cues in a small overlay panel during the call. After the call, it generates an analysis with score, talk ratio, and improvement areas. Call recordings are not stored. Transcripts are scrubbed of personally identifiable information.
+
+## Pages
+
+- [Home](https://brutusai.coach/): what Brutus AI is and how it works
+- [Features](https://brutusai.coach/features.html): real-time monitoring, transcription, coaching cues, post-call analysis
+- [Pricing](https://brutusai.coach/pricing.html): free 500K tokens on signup, pay-as-you-go from there
+- [About](https://brutusai.coach/about.html): origin story and values behind the product
+- [Sales Rep DNA Test](https://brutusai.coach/dna.html): free lead-magnet quiz that classifies sales reps into 8 archetypes based on their selling style. Shows your archetype name immediately; email unlocks the full breakdown of strengths, blind spots, prospect matchups, and a manager guide.
+
+## Pricing
+
+- Free tier: 500,000 tokens on signup after email verification, no card required
+- Pay-as-you-go rate: $0.02 per 1,000 tokens
+- Token packs: $10/500K, $29/2M, $59/5M, $199/20M
+- Minimum top-up: $10
+- No subscription, no recurring charges
+
+## Platforms
+
+- Windows (currently shipping)
+- Mac (coming, pending Apple notarization)
+- Web app dashboard at https://app.brutusai.coach
+
+## Resources
+
+- Sitemap: https://brutusai.coach/sitemap.xml
+- Web app: https://app.brutusai.coach
