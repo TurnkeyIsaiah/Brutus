@@ -1058,6 +1058,157 @@
         .verify-banner-resend:hover { background: rgba(255,255,255,0.13); border-color: rgba(255,255,255,0.25); }
         .verify-banner-resend:disabled { opacity: 0.55; cursor: not-allowed; }
 
+        /* Profile — Danger Zone */
+        .danger-zone {
+            margin-top: 32px;
+            border: 1px solid rgba(255,80,80,0.25);
+            border-radius: 14px;
+            padding: 24px;
+            background: rgba(255,80,80,0.04);
+        }
+        .danger-zone h3 {
+            color: #ff5050;
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .danger-zone-desc {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.5;
+            margin-bottom: 16px;
+            max-width: 480px;
+        }
+        .danger-btn {
+            background: transparent;
+            border: 1px solid rgba(255,80,80,0.5);
+            border-radius: 10px;
+            color: #ff7878;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .danger-btn:hover {
+            background: rgba(255,80,80,0.12);
+            color: #ff5050;
+            border-color: rgba(255,80,80,0.8);
+        }
+        .danger-btn-confirm {
+            background: linear-gradient(135deg, #ff5050, #ff3030);
+            border: none;
+            color: white;
+            padding: 12px 22px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .danger-btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255,80,80,0.4); }
+        .danger-btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .danger-cancel-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.8);
+            padding: 12px 22px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .danger-cancel-btn:hover { background: rgba(255,255,255,0.09); }
+        .delete-warning-list {
+            font-size: 13px;
+            color: rgba(255,255,255,0.65);
+            line-height: 1.7;
+            padding-left: 20px;
+            margin: 0 0 18px 0;
+        }
+        .delete-warning-list li::marker { color: #ff5050; }
+        .delete-error {
+            font-size: 13px;
+            color: #ff5050;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .delete-error.visible { display: block; }
+
+        /* Pre-Delete Retention Modals */
+        .delete-reason-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+        .delete-reason-row:hover { border-color: rgba(255,80,80,0.35); background: rgba(255,255,255,0.05); }
+        .delete-reason-row input[type="radio"] {
+            accent-color: #ff5050;
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+        .delete-reason-row label {
+            font-size: 14px;
+            color: rgba(255,255,255,0.85);
+            cursor: pointer;
+            flex: 1;
+        }
+        .delete-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 18px 0 18px 0;
+        }
+        .delete-stat-cell {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 14px 16px;
+        }
+        .delete-stat-num {
+            font-family: 'Space Mono', monospace;
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            line-height: 1.2;
+        }
+        .delete-stat-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 4px;
+        }
+        .delete-loss-copy {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
+            margin-bottom: 4px;
+        }
+        .delete-export-success {
+            background: rgba(80,255,128,0.06);
+            border: 1px solid rgba(80,255,128,0.2);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin: 16px 0;
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+            display: none;
+        }
+        .delete-export-success.visible { display: block; }
+
         .call-modal-section {
             margin-bottom: 20px;
         }
@@ -2469,6 +2620,154 @@
                         </label>
                     </div>
                 </div>
+
+                <!-- Danger Zone -->
+                <div class="danger-zone">
+                    <h3>danger zone</h3>
+                    <div class="danger-zone-desc">
+                        deleting your account is permanent. all your call data, transcripts, sessions, notes, and remaining tokens are erased and cannot be recovered.
+                    </div>
+                    <button type="button" class="danger-btn" id="delete-account-btn">delete account</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Survey Modal (entry point) -->
+        <div class="call-modal-overlay hidden" id="delete-survey-overlay" style="z-index: 3550;">
+            <div class="call-modal" style="max-width: 460px;">
+                <div class="call-modal-header">
+                    <div>
+                        <div class="call-modal-title">before you go — why?</div>
+                        <div class="walkthrough-subhead">we're not gonna stop you. we just want to learn.</div>
+                    </div>
+                    <button class="call-modal-close" id="delete-survey-close">✕</button>
+                </div>
+
+                <div style="margin-bottom: 18px;">
+                    <label class="delete-reason-row">
+                        <input type="radio" name="delete-reason" value="didnt_help">
+                        <span>didn't help me close more deals</span>
+                    </label>
+                    <label class="delete-reason-row">
+                        <input type="radio" name="delete-reason" value="not_using">
+                        <span>i'm not using it / forgot about it</span>
+                    </label>
+                    <label class="delete-reason-row">
+                        <input type="radio" name="delete-reason" value="switched_jobs">
+                        <span>switched jobs / leaving sales</span>
+                    </label>
+                    <label class="delete-reason-row">
+                        <input type="radio" name="delete-reason" value="other">
+                        <span>other</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" id="delete-survey-cancel" class="danger-cancel-btn" style="flex: 1;">cancel</button>
+                    <button type="button" id="delete-survey-continue" class="danger-btn-confirm" style="flex: 1;">continue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Progress Recap Modal (loss aversion) -->
+        <div class="call-modal-overlay hidden" id="delete-progress-overlay" style="z-index: 3550;">
+            <div class="call-modal" style="max-width: 480px;">
+                <div class="call-modal-header">
+                    <div>
+                        <div class="call-modal-title">you've put work into this.</div>
+                        <div class="walkthrough-subhead">before you delete it all —</div>
+                    </div>
+                    <button class="call-modal-close" id="delete-progress-close">✕</button>
+                </div>
+
+                <div id="delete-progress-stats" class="delete-stats-grid">
+                    <div class="delete-stat-cell">
+                        <div class="delete-stat-num" id="delete-stat-calls">--</div>
+                        <div class="delete-stat-label">calls analyzed</div>
+                    </div>
+                    <div class="delete-stat-cell">
+                        <div class="delete-stat-num" id="delete-stat-score">--</div>
+                        <div class="delete-stat-label">avg score</div>
+                    </div>
+                    <div class="delete-stat-cell">
+                        <div class="delete-stat-num" id="delete-stat-talk">--%</div>
+                        <div class="delete-stat-label">talk ratio</div>
+                    </div>
+                    <div class="delete-stat-cell">
+                        <div class="delete-stat-num" id="delete-stat-tokens">--</div>
+                        <div class="delete-stat-label">tokens left</div>
+                    </div>
+                </div>
+
+                <div id="delete-progress-copy" class="delete-loss-copy">
+                    brutus learned your style across these calls. that context goes away the second this account is gone. give it one more real call before you decide.
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 22px;">
+                    <button type="button" id="delete-progress-stay" class="danger-btn-confirm" style="flex: 1;">give it another shot</button>
+                    <button type="button" id="delete-progress-continue" class="danger-cancel-btn" style="flex: 1;">delete anyway</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Export Modal (data portability) -->
+        <div class="call-modal-overlay hidden" id="delete-export-overlay" style="z-index: 3550;">
+            <div class="call-modal" style="max-width: 460px;">
+                <div class="call-modal-header">
+                    <div>
+                        <div class="call-modal-title">take your data with you.</div>
+                        <div class="walkthrough-subhead">free, takes a second.</div>
+                    </div>
+                    <button class="call-modal-close" id="delete-export-close">✕</button>
+                </div>
+
+                <p style="font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 8px;">
+                    grab a copy of your call analysis, transcripts, and notes before you delete. you'll get a single JSON file you can keep forever.
+                </p>
+
+                <div id="delete-export-error" class="delete-error" style="margin-top: 12px;"></div>
+                <div id="delete-export-success" class="delete-export-success">downloaded. ready to delete?</div>
+
+                <div id="delete-export-buttons-initial" style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" id="delete-export-cancel" class="danger-cancel-btn" style="flex: 1;">cancel</button>
+                    <button type="button" id="delete-export-skip" class="danger-cancel-btn" style="flex: 1;">delete without exporting</button>
+                    <button type="button" id="delete-export-download" class="danger-btn-confirm" style="flex: 1;">download my data</button>
+                </div>
+
+                <div id="delete-export-buttons-after" style="display: none; gap: 10px; margin-top: 16px;">
+                    <button type="button" id="delete-export-after-cancel" class="danger-cancel-btn" style="flex: 1;">cancel</button>
+                    <button type="button" id="delete-export-after-continue" class="danger-btn-confirm" style="flex: 1;">delete anyway</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Account Confirmation Modal -->
+        <div class="call-modal-overlay hidden" id="delete-account-overlay" style="z-index: 3600;">
+            <div class="call-modal" style="max-width: 460px;">
+                <div class="call-modal-header">
+                    <div>
+                        <div class="call-modal-title" style="color: #ff5050;">delete account</div>
+                        <div class="walkthrough-subhead">this cannot be undone.</div>
+                    </div>
+                    <button class="call-modal-close" id="delete-account-close">✕</button>
+                </div>
+
+                <ul class="delete-warning-list">
+                    <li>all call recordings and transcripts erased</li>
+                    <li>all sessions, notes, and research erased</li>
+                    <li>any remaining tokens are forfeited</li>
+                    <li>your saved card is detached</li>
+                </ul>
+
+                <div class="popup-label" style="margin-bottom: 8px;">enter your password to confirm</div>
+                <input type="password" id="delete-account-password" class="popup-textarea" style="min-height: 44px; resize: none;" placeholder="password" autocomplete="current-password">
+
+                <div id="delete-account-error" class="delete-error"></div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" id="delete-account-cancel" class="danger-cancel-btn" style="flex: 1;">cancel</button>
+                    <button type="button" id="delete-account-confirm" class="danger-btn-confirm" style="flex: 1;">delete forever</button>
+                </div>
             </div>
         </div>
 
@@ -3126,6 +3425,259 @@
         (() => {
             const btn = document.getElementById('verify-resend-btn');
             if (btn) btn.addEventListener('click', resendVerification);
+        })();
+
+        // ==================== DELETE ACCOUNT ====================
+        function openDeleteAccountModal() {
+            const overlay = document.getElementById('delete-account-overlay');
+            const passwordInput = document.getElementById('delete-account-password');
+            const errorEl = document.getElementById('delete-account-error');
+            const confirmBtn = document.getElementById('delete-account-confirm');
+
+            // Reset state every time
+            passwordInput.value = '';
+            errorEl.textContent = '';
+            errorEl.classList.remove('visible');
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'delete forever';
+
+            overlay.classList.remove('hidden');
+            setTimeout(() => passwordInput.focus(), 50);
+        }
+
+        function closeDeleteAccountModal() {
+            document.getElementById('delete-account-overlay').classList.add('hidden');
+        }
+
+        async function confirmDeleteAccount() {
+            const passwordInput = document.getElementById('delete-account-password');
+            const errorEl = document.getElementById('delete-account-error');
+            const confirmBtn = document.getElementById('delete-account-confirm');
+            const password = passwordInput.value;
+
+            errorEl.classList.remove('visible');
+
+            if (!password) {
+                errorEl.textContent = 'password is required';
+                errorEl.classList.add('visible');
+                return;
+            }
+
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'deleting...';
+
+            try {
+                await apiCall('/user/account', {
+                    method: 'DELETE',
+                    body: JSON.stringify({ password })
+                });
+
+                // Account is gone server-side. Clear local auth and bounce to login.
+                authToken = null;
+                currentUser = null;
+                sessionStorage.removeItem('brutus_token');
+                stopVerifyBannerPoll();
+                window.location.href = 'login.html?deleted=1';
+            } catch (err) {
+                errorEl.textContent = err.message || 'something went wrong. try again.';
+                errorEl.classList.add('visible');
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'delete forever';
+            }
+        }
+
+        // ==================== PRE-DELETE RETENTION FLOW ====================
+        // The "delete account" button now opens a survey modal first. Based on the
+        // selected reason, the user is routed through one of two retention modals
+        // (progress recap OR data export) before reaching the password confirm.
+        // The "other" reason routes straight to password confirm — respect users
+        // who just want out.
+        let selectedDeleteReason = null;
+
+        function closeAllDeleteModals() {
+            ['delete-survey-overlay', 'delete-progress-overlay', 'delete-export-overlay', 'delete-account-overlay']
+                .forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.add('hidden');
+                });
+        }
+
+        function openDeleteSurveyModal() {
+            selectedDeleteReason = null;
+            // Reset radio selection
+            document.querySelectorAll('input[name="delete-reason"]').forEach(r => { r.checked = false; });
+            document.getElementById('delete-survey-overlay').classList.remove('hidden');
+        }
+
+        function continueDeleteSurvey() {
+            const checked = document.querySelector('input[name="delete-reason"]:checked');
+            selectedDeleteReason = checked ? checked.value : 'other';
+            console.log('[delete] reason:', selectedDeleteReason);
+
+            document.getElementById('delete-survey-overlay').classList.add('hidden');
+
+            if (selectedDeleteReason === 'didnt_help') {
+                openDeleteProgressModal();
+            } else if (selectedDeleteReason === 'not_using' || selectedDeleteReason === 'switched_jobs') {
+                openDeleteExportModal();
+            } else {
+                // "other" — straight to password confirm
+                proceedToPasswordConfirm();
+            }
+        }
+
+        async function openDeleteProgressModal() {
+            const overlay = document.getElementById('delete-progress-overlay');
+            const grid = document.getElementById('delete-progress-stats');
+            const copy = document.getElementById('delete-progress-copy');
+
+            // Default: hide stats grid, show fallback copy until data loads
+            grid.style.display = 'none';
+            copy.textContent = "brutus is still calibrating to your style. one real call is usually when it clicks.";
+            overlay.classList.remove('hidden');
+
+            // Pull fresh stats from the dashboard endpoint. If anything fails, the
+            // fallback copy stays — modal still works.
+            try {
+                const data = await apiCall('/user/dashboard');
+                const totalCalls = data?.profile?.totalCallsAnalyzed || 0;
+                if (totalCalls > 0) {
+                    document.getElementById('delete-stat-calls').textContent = totalCalls;
+
+                    // Average score: prefer weekly scores (most engagement-relevant),
+                    // fall back to recent calls if the user hasn't had calls this week.
+                    const weeklyScores = data?.weeklyStats?.scores || [];
+                    const recentCalls = data?.recentCalls || [];
+                    let scoreSource = weeklyScores.map(s => s.score);
+                    if (scoreSource.length === 0) scoreSource = recentCalls.map(c => c.overallScore);
+                    const avgScore = scoreSource.length
+                        ? Math.round(scoreSource.reduce((a, b) => a + b, 0) / scoreSource.length)
+                        : '--';
+                    document.getElementById('delete-stat-score').textContent = avgScore;
+
+                    const talkRatio = data?.profile?.talkRatioAvg;
+                    document.getElementById('delete-stat-talk').textContent = (talkRatio !== undefined && talkRatio !== null) ? `${parseFloat(talkRatio).toFixed(0)}%` : '--%';
+
+                    const tokens = currentUser?.tokenBalance ? Number(currentUser.tokenBalance).toLocaleString() : '--';
+                    document.getElementById('delete-stat-tokens').textContent = tokens;
+
+                    grid.style.display = 'grid';
+                    copy.textContent = "brutus learned your style across these calls. that context goes away the second this account is gone. give it one more real call before you decide.";
+                }
+            } catch (_) {
+                // Keep the fallback copy
+            }
+        }
+
+        function openDeleteExportModal() {
+            // Reset to initial button state every time
+            const initialBtns = document.getElementById('delete-export-buttons-initial');
+            const afterBtns = document.getElementById('delete-export-buttons-after');
+            const successEl = document.getElementById('delete-export-success');
+            const errorEl = document.getElementById('delete-export-error');
+            const downloadBtn = document.getElementById('delete-export-download');
+
+            initialBtns.style.display = 'flex';
+            afterBtns.style.display = 'none';
+            successEl.classList.remove('visible');
+            errorEl.classList.remove('visible');
+            errorEl.textContent = '';
+            downloadBtn.disabled = false;
+            downloadBtn.textContent = 'download my data';
+
+            document.getElementById('delete-export-overlay').classList.remove('hidden');
+        }
+
+        async function downloadUserExport() {
+            const downloadBtn = document.getElementById('delete-export-download');
+            const errorEl = document.getElementById('delete-export-error');
+            const successEl = document.getElementById('delete-export-success');
+            const initialBtns = document.getElementById('delete-export-buttons-initial');
+            const afterBtns = document.getElementById('delete-export-buttons-after');
+
+            errorEl.classList.remove('visible');
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = 'preparing...';
+
+            try {
+                const res = await fetch(`${API_URL}/user/export`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.error?.message || 'export failed — try again in a minute');
+                }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'brutus-data-export.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                // Swap UI to confirmation state
+                initialBtns.style.display = 'none';
+                afterBtns.style.display = 'flex';
+                successEl.classList.add('visible');
+            } catch (err) {
+                errorEl.textContent = err.message || 'something went wrong.';
+                errorEl.classList.add('visible');
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = 'download my data';
+            }
+        }
+
+        function proceedToPasswordConfirm() {
+            closeAllDeleteModals();
+            openDeleteAccountModal();
+        }
+
+        // Wire up the retention-flow event listeners
+        (() => {
+            // Entry: profile page "delete account" button → survey (NOT password confirm directly)
+            const trigger = document.getElementById('delete-account-btn');
+            if (trigger) trigger.addEventListener('click', openDeleteSurveyModal);
+
+            // Modal A — survey
+            document.getElementById('delete-survey-close')?.addEventListener('click', closeAllDeleteModals);
+            document.getElementById('delete-survey-cancel')?.addEventListener('click', closeAllDeleteModals);
+            document.getElementById('delete-survey-continue')?.addEventListener('click', continueDeleteSurvey);
+
+            // Modal B — progress recap
+            document.getElementById('delete-progress-close')?.addEventListener('click', closeAllDeleteModals);
+            document.getElementById('delete-progress-stay')?.addEventListener('click', closeAllDeleteModals);
+            document.getElementById('delete-progress-continue')?.addEventListener('click', proceedToPasswordConfirm);
+
+            // Modal C — export
+            document.getElementById('delete-export-close')?.addEventListener('click', closeAllDeleteModals);
+            document.getElementById('delete-export-cancel')?.addEventListener('click', closeAllDeleteModals);
+            document.getElementById('delete-export-skip')?.addEventListener('click', proceedToPasswordConfirm);
+            document.getElementById('delete-export-download')?.addEventListener('click', downloadUserExport);
+            document.getElementById('delete-export-after-cancel')?.addEventListener('click', closeAllDeleteModals);
+            document.getElementById('delete-export-after-continue')?.addEventListener('click', proceedToPasswordConfirm);
+
+            // Existing password-confirm modal listeners (unchanged behavior)
+            const closeBtn = document.getElementById('delete-account-close');
+            if (closeBtn) closeBtn.addEventListener('click', closeDeleteAccountModal);
+
+            const cancelBtn = document.getElementById('delete-account-cancel');
+            if (cancelBtn) cancelBtn.addEventListener('click', closeDeleteAccountModal);
+
+            const confirmBtn = document.getElementById('delete-account-confirm');
+            if (confirmBtn) confirmBtn.addEventListener('click', confirmDeleteAccount);
+
+            // Enter inside the password field submits
+            const passwordInput = document.getElementById('delete-account-password');
+            if (passwordInput) {
+                passwordInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        confirmDeleteAccount();
+                    }
+                });
+            }
         })();
 
         document.getElementById('ob-selfemployed').addEventListener('change', function() {
