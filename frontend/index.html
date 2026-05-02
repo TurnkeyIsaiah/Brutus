@@ -885,6 +885,179 @@
         .popup-submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255,80,80,0.3); }
         .popup-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
+        /* Walkthrough Modal + Empty Call Card */
+        .walkthrough-subhead {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+            margin-bottom: 24px;
+        }
+        .walkthrough-step {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            padding: 14px 0;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .walkthrough-step:first-of-type { border-top: none; padding-top: 4px; }
+        .walkthrough-step-num {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff5050, #ff7850);
+            color: white;
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(255,80,80,0.25);
+        }
+        .walkthrough-step-text { flex: 1; }
+        .walkthrough-step-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 4px;
+        }
+        .walkthrough-step-body {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.5;
+        }
+        .walkthrough-cta {
+            display: block;
+            width: 100%;
+            margin-top: 24px;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff5050, #ff7850);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .walkthrough-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255,80,80,0.3); }
+        .walkthrough-skip {
+            display: block;
+            text-align: center;
+            margin-top: 12px;
+            color: rgba(255,255,255,0.4);
+            font-size: 13px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: inherit;
+            width: 100%;
+        }
+        .walkthrough-skip:hover { color: rgba(255,255,255,0.8); }
+
+        .empty-call-card {
+            text-align: center;
+            padding: 40px 28px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,80,80,0.15);
+            border-radius: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .empty-call-card:hover { border-color: rgba(255,80,80,0.3); box-shadow: 0 0 32px rgba(255,80,80,0.08); }
+        .empty-call-card-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .empty-call-card-sub {
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 24px;
+        }
+        .empty-call-card-steps {
+            display: inline-block;
+            text-align: left;
+            margin: 0 auto 24px;
+            padding: 0;
+            list-style: none;
+        }
+        .empty-call-card-steps li {
+            padding: 6px 0;
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.5;
+        }
+        .empty-call-card-steps li::before {
+            content: counter(step) '. ';
+            counter-increment: step;
+            color: #ff7850;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+        .empty-call-card-steps { counter-reset: step; }
+        .empty-call-card-cta {
+            display: inline-block;
+            padding: 12px 26px;
+            background: linear-gradient(135deg, #ff5050, #ff7850);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .empty-call-card-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255,80,80,0.3); }
+
+        /* Verify Email Banner (dashboard) */
+        .verify-banner {
+            background: linear-gradient(90deg, rgba(255,80,80,0.12), rgba(255,120,80,0.06));
+            border: 1px solid rgba(255,80,80,0.3);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin: 0 0 24px 0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .verify-banner.hidden { display: none; }
+        .verify-banner-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .verify-banner-content { flex: 1; min-width: 240px; }
+        .verify-banner-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .verify-banner-body {
+            font-size: 13px;
+            color: rgba(255,255,255,0.65);
+            line-height: 1.5;
+        }
+        .verify-banner-body strong { color: rgba(255,255,255,0.85); font-weight: 600; }
+        .verify-banner-resend {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px;
+            color: white;
+            padding: 9px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .verify-banner-resend:hover { background: rgba(255,255,255,0.13); border-color: rgba(255,255,255,0.25); }
+        .verify-banner-resend:disabled { opacity: 0.55; cursor: not-allowed; }
+
         .call-modal-section {
             margin-bottom: 20px;
         }
@@ -1768,6 +1941,18 @@
         
         <!-- Dashboard View -->
         <div id="dashboard-view" class="view active">
+            <!-- Verify Email Banner (auto-hides once user.emailVerified is true) -->
+            <div id="verify-email-banner" class="verify-banner hidden">
+                <div class="verify-banner-icon">✉</div>
+                <div class="verify-banner-content">
+                    <div class="verify-banner-title">verify your email to claim your 500K free tokens</div>
+                    <div class="verify-banner-body">
+                        we sent a link to <strong id="verify-banner-email">your inbox</strong>. check spam if you can't find it.
+                    </div>
+                </div>
+                <button type="button" id="verify-resend-btn" class="verify-banner-resend">resend verification email</button>
+            </div>
+
             <!-- Center Score -->
             <div class="score-display">
                 <div class="score-number" id="overall-score">--</div>
@@ -1934,6 +2119,46 @@
                     <textarea id="popup-what-didnt" class="popup-textarea" placeholder="what should we fix"></textarea>
                 </div>
                 <button type="button" id="popup-submit-btn" class="popup-submit-btn">send to brutus</button>
+            </div>
+        </div>
+
+        <!-- Walkthrough Modal (one-shot, fires after onboarding completes) -->
+        <div class="call-modal-overlay hidden" id="walkthrough-overlay" style="z-index: 3400;">
+            <div class="call-modal" style="max-width: 480px;">
+                <div class="call-modal-header">
+                    <div>
+                        <div class="call-modal-title">brutus is ready. let's get you on a call.</div>
+                        <div class="walkthrough-subhead">three quick things before your next sales call.</div>
+                    </div>
+                    <button class="call-modal-close" id="walkthrough-close">✕</button>
+                </div>
+
+                <div class="walkthrough-step">
+                    <div class="walkthrough-step-num">1</div>
+                    <div class="walkthrough-step-text">
+                        <div class="walkthrough-step-title">download the desktop app</div>
+                        <div class="walkthrough-step-body">brutus listens through your computer. web alone won't cut it.</div>
+                    </div>
+                </div>
+
+                <div class="walkthrough-step">
+                    <div class="walkthrough-step-num">2</div>
+                    <div class="walkthrough-step-text">
+                        <div class="walkthrough-step-title">start a session before your next call</div>
+                        <div class="walkthrough-step-body">open the app, click start. that's it.</div>
+                    </div>
+                </div>
+
+                <div class="walkthrough-step">
+                    <div class="walkthrough-step-num">3</div>
+                    <div class="walkthrough-step-text">
+                        <div class="walkthrough-step-title">watch brutus judge you in real time</div>
+                        <div class="walkthrough-step-body">a panel pops up on top of your call. roasts incoming.</div>
+                    </div>
+                </div>
+
+                <button type="button" id="walkthrough-cta" class="walkthrough-cta">get the desktop app  →</button>
+                <button type="button" id="walkthrough-later" class="walkthrough-skip">i'll do this later</button>
             </div>
         </div>
 
@@ -2577,6 +2802,7 @@
             authToken = null;
             currentUser = null;
             sessionStorage.removeItem('brutus_token');
+            stopVerifyBannerPoll();
 
             authModal.classList.remove('hidden');
             mainContent.classList.add('hidden');
@@ -2721,8 +2947,11 @@
             mainContent.classList.remove('hidden');
             loadDashboard();
             loadBalance();
+            updateVerifyBanner();
             if (!currentUser?.settings?.onboardingComplete) {
                 showOnboardingModal();
+            } else {
+                showWalkthrough();
             }
         }
 
@@ -2773,6 +3002,7 @@
                 if (currentUser) currentUser.settings = data.settings;
                 document.getElementById('onboarding-overlay').classList.add('hidden');
                 loadDashboard();
+                showWalkthrough();
             } catch (e) {
                 document.getElementById('ob-next-btn').textContent = 'finish';
                 document.getElementById('ob-next-btn').disabled = false;
@@ -2785,7 +3015,118 @@
                 if (currentUser?.settings) currentUser.settings.onboardingComplete = true;
             } catch (_) {}
             document.getElementById('onboarding-overlay').classList.add('hidden');
+            showWalkthrough();
         }
+
+        // ==================== WALKTHROUGH (one-shot, post-onboarding) ====================
+        // Fires once after the user clears the onboarding gate. Gate combines two flags
+        // so we never disturb a still-onboarding user, and never re-show after dismissal.
+        function showWalkthrough() {
+            if (!currentUser?.settings?.onboardingComplete) return;
+            if (currentUser?.settings?.walkthroughShown) return;
+
+            const overlay = document.getElementById('walkthrough-overlay');
+            const closeBtn = document.getElementById('walkthrough-close');
+            const ctaBtn = document.getElementById('walkthrough-cta');
+            const laterBtn = document.getElementById('walkthrough-later');
+
+            const dismiss = () => {
+                overlay.classList.add('hidden');
+                markWalkthroughShown();
+            };
+
+            closeBtn.onclick = dismiss;
+            laterBtn.onclick = dismiss;
+            ctaBtn.onclick = () => {
+                window.open('https://github.com/TurnkeyIsaiah/Brutus/releases/latest', '_blank');
+                dismiss();
+            };
+
+            overlay.classList.remove('hidden');
+        }
+
+        async function markWalkthroughShown() {
+            try {
+                await apiCall('/user/settings', { method: 'PUT', body: JSON.stringify({ settings: { walkthroughShown: true } }) });
+                if (currentUser?.settings) currentUser.settings.walkthroughShown = true;
+            } catch (_) {}
+        }
+
+        // ==================== VERIFY-EMAIL BANNER ====================
+        // Shows in the dashboard until currentUser.emailVerified flips to true.
+        // Polls /auth/me every 30s while visible so verification from another tab
+        // (the verify-email.html page) is reflected automatically — no manual refresh.
+        let _verifyBannerInterval = null;
+
+        function updateVerifyBanner() {
+            const banner = document.getElementById('verify-email-banner');
+            if (!banner) return;
+
+            const needsVerify = currentUser && currentUser.emailVerified === false;
+            if (needsVerify) {
+                const emailEl = document.getElementById('verify-banner-email');
+                if (emailEl && currentUser.email) emailEl.textContent = currentUser.email;
+                banner.classList.remove('hidden');
+                startVerifyBannerPoll();
+            } else {
+                banner.classList.add('hidden');
+                stopVerifyBannerPoll();
+            }
+        }
+
+        function startVerifyBannerPoll() {
+            if (_verifyBannerInterval) return;
+            _verifyBannerInterval = setInterval(async () => {
+                try {
+                    const data = await apiCall('/auth/me');
+                    if (currentUser && data.user) {
+                        currentUser.emailVerified = data.user.emailVerified;
+                        currentUser.tokenBalance = data.user.tokenBalance;
+                    }
+                    if (data.user?.emailVerified) {
+                        loadBalance();
+                        updateVerifyBanner();
+                    }
+                } catch (_) {}
+            }, 30000);
+        }
+
+        function stopVerifyBannerPoll() {
+            if (_verifyBannerInterval) {
+                clearInterval(_verifyBannerInterval);
+                _verifyBannerInterval = null;
+            }
+        }
+
+        async function resendVerification() {
+            const btn = document.getElementById('verify-resend-btn');
+            if (!btn) return;
+            const originalLabel = 'resend verification email';
+            btn.disabled = true;
+            btn.textContent = 'sending...';
+            try {
+                await apiCall('/auth/resend-verification', { method: 'POST' });
+                btn.textContent = 'sent — check your inbox';
+                // Cool down for 60s to discourage spamming the endpoint
+                setTimeout(() => {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = originalLabel;
+                    }
+                }, 60000);
+            } catch (e) {
+                btn.disabled = false;
+                btn.textContent = originalLabel;
+                console.warn('resend verification failed:', e.message);
+            }
+        }
+
+        // Attach listener inline — matches the existing pattern of script-level
+        // getElementById+addEventListener (e.g. onboarding handlers).
+        (() => {
+            const btn = document.getElementById('verify-resend-btn');
+            if (btn) btn.addEventListener('click', resendVerification);
+        })();
 
         document.getElementById('ob-selfemployed').addEventListener('change', function() {
             document.getElementById('ob-businessname-wrap').style.display = this.checked ? 'block' : 'none';
@@ -3049,12 +3390,29 @@
             }
         }
 
+        function renderEmptyCallsCard() {
+            return `
+                <div class="empty-call-card">
+                    <div class="empty-call-card-title">no calls yet.</div>
+                    <div class="empty-call-card-sub">brutus is bored.</div>
+                    <ol class="empty-call-card-steps">
+                        <li>download the desktop app</li>
+                        <li>start a session before your next call</li>
+                        <li>watch the panel light up</li>
+                    </ol>
+                    <div>
+                        <a href="https://github.com/TurnkeyIsaiah/Brutus/releases/latest" target="_blank" rel="noopener" class="empty-call-card-cta">get the desktop app  →</a>
+                    </div>
+                </div>
+            `;
+        }
+
         function renderCallHistory(calls) {
             const list = document.getElementById('call-history-list');
             if (!list) return;
 
             if (calls.length === 0) {
-                list.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.5); margin-top: 20px;">no calls yet — upload one to get started</p>';
+                list.innerHTML = renderEmptyCallsCard();
                 return;
             }
 
