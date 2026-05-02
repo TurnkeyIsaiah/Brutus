@@ -2705,7 +2705,7 @@
 
                 <div style="display: flex; gap: 10px; margin-top: 22px;">
                     <button type="button" id="delete-progress-stay" class="danger-btn-confirm" style="flex: 1;">give it another shot</button>
-                    <button type="button" id="delete-progress-continue" class="danger-cancel-btn" style="flex: 1;">delete anyway</button>
+                    <button type="button" id="delete-progress-continue" class="danger-cancel-btn" style="flex: 1;">continue</button>
                 </div>
             </div>
         </div>
@@ -3514,16 +3514,15 @@
             selectedDeleteReason = checked ? checked.value : 'other';
             console.log('[delete] reason:', selectedDeleteReason);
 
+            // Reason is captured for analytics, but every user walks through the
+            // full retention sequence regardless: survey → progress → export → password.
             document.getElementById('delete-survey-overlay').classList.add('hidden');
+            openDeleteProgressModal();
+        }
 
-            if (selectedDeleteReason === 'didnt_help') {
-                openDeleteProgressModal();
-            } else if (selectedDeleteReason === 'not_using' || selectedDeleteReason === 'switched_jobs') {
-                openDeleteExportModal();
-            } else {
-                // "other" — straight to password confirm
-                proceedToPasswordConfirm();
-            }
+        function proceedToExportModal() {
+            document.getElementById('delete-progress-overlay').classList.add('hidden');
+            openDeleteExportModal();
         }
 
         async function openDeleteProgressModal() {
@@ -3648,7 +3647,7 @@
             // Modal B — progress recap
             document.getElementById('delete-progress-close')?.addEventListener('click', closeAllDeleteModals);
             document.getElementById('delete-progress-stay')?.addEventListener('click', closeAllDeleteModals);
-            document.getElementById('delete-progress-continue')?.addEventListener('click', proceedToPasswordConfirm);
+            document.getElementById('delete-progress-continue')?.addEventListener('click', proceedToExportModal);
 
             // Modal C — export
             document.getElementById('delete-export-close')?.addEventListener('click', closeAllDeleteModals);
