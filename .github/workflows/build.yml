@@ -83,7 +83,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: npm run build:mac
 
-      - name: Submit for notarization
+      - name: Submit for notarization, wait, and staple
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
@@ -95,8 +95,25 @@ jobs:
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            2>&1
-          echo "Submission complete - check Apple for status"
+            --wait \
+            --output-format json | tee notarize-output.json
+          SUBMISSION_ID=$(jq -r '.id // empty' notarize-output.json)
+          STATUS=$(jq -r '.status // empty' notarize-output.json)
+          echo "Submission ID: $SUBMISSION_ID"
+          echo "Status: $STATUS"
+          if [ "$STATUS" != "Accepted" ]; then
+            echo "Notarization did not succeed. Fetching log..."
+            if [ -n "$SUBMISSION_ID" ]; then
+              xcrun notarytool log "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --password "$APPLE_ID_PASSWORD" \
+                --team-id "$APPLE_TEAM_ID"
+            fi
+            exit 1
+          fi
+          echo "Notarization accepted. Stapling ticket to DMG..."
+          xcrun stapler staple "$DMG"
+          xcrun stapler validate "$DMG"
 
       - name: Upload Mac artifact
         uses: actions/upload-artifact@v4

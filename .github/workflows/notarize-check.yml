@@ -1,0 +1,49 @@
+name: Notarization Status Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: macos-latest
+    steps:
+      - name: List recent notarization submissions
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          echo "=== Recent notarization submissions ==="
+          xcrun notarytool history \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID"
+
+      - name: Detail and log for most recent submission
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          LATEST_ID=$(xcrun notarytool history \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --output-format json | jq -r '.history[0].id // empty')
+          if [ -z "$LATEST_ID" ]; then
+            echo "No prior submissions found for this team."
+            exit 0
+          fi
+          echo "Latest submission ID: $LATEST_ID"
+          echo ""
+          echo "=== Info ==="
+          xcrun notarytool info "$LATEST_ID" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID"
+          echo ""
+          echo "=== Log (will be empty if still pending) ==="
+          xcrun notarytool log "$LATEST_ID" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" || echo "(log unavailable - submission may still be in progress)"
