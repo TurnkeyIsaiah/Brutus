@@ -2308,7 +2308,8 @@
                     </div>
                 </div>
 
-                <button type="button" id="walkthrough-cta" class="walkthrough-cta">get the desktop app  →</button>
+                <button type="button" id="walkthrough-cta-windows" class="walkthrough-cta">download for windows</button>
+                <button type="button" id="walkthrough-cta-mac" class="walkthrough-cta" style="margin-top: 8px;">download for mac</button>
                 <button type="button" id="walkthrough-later" class="walkthrough-skip">i'll do this later</button>
             </div>
         </div>
@@ -2333,7 +2334,8 @@
         <div id="credits-view" class="view">
             <div class="credits-view-content">
                 <div style="text-align:center; margin-bottom: 32px;">
-                    <a href="https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.0.0/Brutus.AI.Setup.1.0.0.exe" style="display:inline-block; padding: 14px 32px; background: #ff7850; border-radius: 12px; color: white; font-size: 15px; font-weight: 600; text-decoration: none; font-family: inherit; text-transform: lowercase; transition: transform 0.3s, box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(255,120,80,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow=''">download desktop app</a>
+                    <a href="https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.1.1/Brutus%20AI%20Setup%201.1.1.exe" style="display:inline-block; padding: 14px 32px; background: #ff7850; border-radius: 12px; color: white; font-size: 15px; font-weight: 600; text-decoration: none; font-family: inherit; text-transform: lowercase; transition: transform 0.3s, box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(255,120,80,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow=''">download for windows</a>
+                    <a href="https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.1.1/Brutus%20AI-1.1.1-arm64.dmg" style="display:inline-block; margin-left: 12px; padding: 14px 32px; background: #ff7850; border-radius: 12px; color: white; font-size: 15px; font-weight: 600; text-decoration: none; font-family: inherit; text-transform: lowercase; transition: transform 0.3s, box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(255,120,80,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow=''">download for mac</a>
                 </div>
                 <div class="balance-hero">
                     <div class="balance-amount" id="credits-balance-display">---</div>
@@ -3326,7 +3328,8 @@
 
             const overlay = document.getElementById('walkthrough-overlay');
             const closeBtn = document.getElementById('walkthrough-close');
-            const ctaBtn = document.getElementById('walkthrough-cta');
+            const ctaWinBtn = document.getElementById('walkthrough-cta-windows');
+            const ctaMacBtn = document.getElementById('walkthrough-cta-mac');
             const laterBtn = document.getElementById('walkthrough-later');
 
             const dismiss = () => {
@@ -3336,8 +3339,12 @@
 
             closeBtn.onclick = dismiss;
             laterBtn.onclick = dismiss;
-            ctaBtn.onclick = () => {
-                window.open('https://github.com/TurnkeyIsaiah/Brutus/releases/latest', '_blank');
+            ctaWinBtn.onclick = () => {
+                window.open('https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.1.1/Brutus%20AI%20Setup%201.1.1.exe', '_blank');
+                dismiss();
+            };
+            ctaMacBtn.onclick = () => {
+                window.open('https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.1.1/Brutus%20AI-1.1.1-arm64.dmg', '_blank');
                 dismiss();
             };
 
@@ -3952,7 +3959,8 @@
                         <li>watch the panel light up</li>
                     </ol>
                     <div>
-                        <a href="https://github.com/TurnkeyIsaiah/Brutus/releases/latest" target="_blank" rel="noopener" class="empty-call-card-cta">get the desktop app  →</a>
+                        <a href="https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.1.1/Brutus%20AI%20Setup%201.1.1.exe" target="_blank" rel="noopener" class="empty-call-card-cta">download for windows</a>
+                        <a href="https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.1.1/Brutus%20AI-1.1.1-arm64.dmg" target="_blank" rel="noopener" class="empty-call-card-cta" style="margin-left: 8px;">download for mac</a>
                     </div>
                 </div>
             `;
