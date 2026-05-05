@@ -19,7 +19,7 @@ router.post('/start', async (req, res, next) => {
     const session = await startSession(req.user.id);
     
     res.json({
-      message: 'Live monitoring started. brutus is watching.',
+      message: 'Live monitoring started. Brutus is watching.',
       session: {
         id: session.id,
         startedAt: session.startedAt,
@@ -133,7 +133,7 @@ router.post('/cancel', async (req, res, next) => {
     });
     
     res.json({
-      message: 'Session cancelled. brutus will pretend he didn\'t see anything.'
+      message: 'Session cancelled. Brutus will pretend he didn\'t see anything.'
     });
     
   } catch (error) {

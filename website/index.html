@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brutus AI - AI Sales Coach That Doesn't Sugarcoat</title>
-    <meta name="description" content="Real-time AI sales coaching during your calls. Brutus watches, listens, and tells you exactly what you're doing wrong. No fluff, just results.">
+    <title>Real-Time AI Sales Coach for Calls — Brutus AI</title>
+    <meta name="description" content="Get real-time AI sales coaching on live calls. Brutus listens, analyzes, and gives blunt feedback to help reps improve faster.">
+    <link rel="canonical" href="https://brutusai.coach/">
+    <link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -13,7 +15,38 @@
           "@type": "Organization",
           "name": "Brutus AI",
           "url": "https://brutusai.coach",
-          "description": "Real-time AI sales coaching that listens to your live calls and gives blunt, no-fluff feedback to sales reps."
+          "description": "Real-time AI sales coaching that listens to your live calls and gives blunt, no-fluff feedback to sales reps.",
+          "logo": "https://brutusai.coach/favicon.png",
+          "email": "hello@brutusai.coach",
+          "founder": {
+            "@type": "Person",
+            "name": "Isaiah Rios"
+          },
+          "parentOrganization": {
+            "@type": "Organization",
+            "name": "La Rios Co LLC"
+          },
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer support",
+            "email": "hello@brutusai.coach",
+            "availableLanguage": "English"
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Brutus AI",
+          "url": "https://brutusai.coach",
+          "description": "Real-time AI sales coaching desktop app that listens to live calls and gives blunt in-the-moment feedback through an overlay panel.",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Windows 10, Windows 11, macOS",
+          "offers": {
+            "@type": "Offer",
+            "price": "10",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "url": "https://brutusai.coach/pricing.html"
+          }
         },
         {
           "@type": "FAQPage",
@@ -56,6 +89,14 @@
               "acceptedAnswer": {
                 "@type": "Answer",
                 "text": "Yes. New accounts get 500,000 free tokens after verifying their email. That covers several real sales calls so you can see if Brutus works for you before paying anything."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What platforms does Brutus AI run on?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Brutus AI runs on Windows 10 and 11, and on macOS (both Apple Silicon and Intel). The web dashboard is available in any modern browser at app.brutusai.coach."
               }
             },
             {
@@ -207,9 +248,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(10, 10, 18, 0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-subtle);
+            background: transparent;
+            border-bottom: 0;
+            box-shadow: none;
         }
         
         .logo {
@@ -757,7 +798,9 @@
         
         .footer-links {
             display: flex;
-            gap: 32px;
+            gap: 18px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         
         .footer-links a {
@@ -908,12 +951,13 @@
         <nav>
             <a href="index.html" class="logo">
                 <div class="logo-icon">B</div>
-                <div class="logo-text">brutus <span>AI</span></div>
+                <div class="logo-text">Brutus <span>AI</span></div>
             </a>
             <div class="nav-links">
                 <a href="features.html">features</a>
                 <a href="pricing.html">pricing</a>
                 <a href="about.html">about</a>
+                <a href="articles/">articles</a>
                 <a href="https://app.brutusai.coach/login.html" class="nav-cta">get started</a>
             </div>
             <button class="mobile-menu-btn">menu</button>
@@ -921,13 +965,14 @@
         
         <!-- Hero Section -->
         <section class="hero">
-            <div class="hero-badge">brutus is watching. and judging.</div>
+            <div class="hero-badge">Brutus is watching. and judging.</div>
             <h1>your AI coach that<br><span>roasts you to results.</span></h1>
-            <p>brutus listens to your sales calls in real-time and calls you out the second you mess up. interrupting? called out. rambling? called out. feature-dumping? brutus will not let it slide.</p>
+            <p>Brutus listens to your sales calls in real-time and calls you out the second you mess up. interrupting? called out. rambling? called out. feature-dumping? Brutus will not let it slide.</p>
             <div class="hero-ctas">
                 <a href="https://app.brutusai.coach/signup.html" class="btn-primary">start free, no card needed</a>
                 <a href="https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.1.1/Brutus.AI.Setup.1.1.1.exe" class="btn-download">download for windows</a>
-                <a href="https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.1.1/Brutus.AI-1.1.1-arm64.dmg" class="btn-download">download for mac</a>
+                <a href="https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.1.1/Brutus.AI-1.1.1-arm64.dmg" class="btn-download">download for mac apple silicon</a>
+                <a href="https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.1.1/Brutus.AI-1.1.1.dmg" class="btn-download">download for mac intel</a>
                 <a href="#demo" class="btn-secondary">see how it works</a>
             </div>
             
@@ -969,13 +1014,13 @@
         <section class="features" id="features">
             <div class="section-header">
                 <div class="section-label">features</div>
-                <h2 class="section-title">what makes brutus AI different from other sales coaching tools?</h2>
+                <h2 class="section-title">what makes Brutus AI different from other sales coaching tools?</h2>
                 <p class="section-subtitle">everything you need to transform your sales performance, without the BS.</p>
             </div>
             <div class="features-grid">
                 <div class="feature-card">
                     <h3>real-time monitoring</h3>
-                    <p>brutus watches your screen and listens to every word during your calls. nothing gets past it.</p>
+                    <p>Brutus watches your screen and listens to every word during your calls. nothing gets past it.</p>
                     <ul class="feature-bullets">
                         <li>screen capture every 5 seconds</li>
                         <li>continuous audio transcription</li>
@@ -995,7 +1040,7 @@
                 </div>
                 <div class="feature-card">
                     <h3>ai note taking</h3>
-                    <p>brutus listens and takes notes so you don't have to. every key moment, objection, and commitment gets captured while you stay focused on the call.</p>
+                    <p>Brutus listens and takes notes so you don't have to. every key moment, objection, and commitment gets captured while you stay focused on the call.</p>
                     <ul class="feature-bullets">
                         <li>captures pain points and objections</li>
                         <li>logs commitments and follow-ups</li>
@@ -1005,7 +1050,7 @@
                 </div>
                 <div class="feature-card">
                     <h3>prospect research</h3>
-                    <p>the moment a prospect's name or company shows up on screen, brutus looks them up. you know exactly who you're talking to before you say a word.</p>
+                    <p>the moment a prospect's name or company shows up on screen, Brutus looks them up. you know exactly who you're talking to before you say a word.</p>
                     <ul class="feature-bullets">
                         <li>auto-detects prospects from screen</li>
                         <li>live web search on company and person</li>
@@ -1015,7 +1060,7 @@
                 </div>
                 <div class="feature-card">
                     <h3>progress analytics</h3>
-                    <p>track your improvement over time. brutus remembers every call and shows you exactly where you're getting better.</p>
+                    <p>track your improvement over time. Brutus remembers every call and shows you exactly where you're getting better.</p>
                     <ul class="feature-bullets">
                         <li>call-by-call scoring</li>
                         <li>weekly/monthly trends</li>
@@ -1025,7 +1070,7 @@
                 </div>
                 <div class="feature-card">
                     <h3>brutally honest feedback</h3>
-                    <p>no participation trophies. brutus tells you the truth, even when it's not what you were hoping to hear.</p>
+                    <p>no participation trophies. Brutus tells you the truth, even when it's not what you were hoping to hear.</p>
                     <ul class="feature-bullets">
                         <li>direct, actionable criticism</li>
                         <li>no sugarcoating</li>
@@ -1040,18 +1085,18 @@
         <section class="how-it-works">
             <div class="section-header">
                 <div class="section-label">how it works</div>
-                <h2 class="section-title">how does brutus AI work?</h2>
+                <h2 class="section-title">how does Brutus AI work?</h2>
             </div>
             <div class="steps">
                 <div class="step">
                     <div class="step-number">1</div>
                     <h3>install the app</h3>
-                    <p>download the brutus desktop app. it runs quietly in your system tray, ready when you need it.</p>
+                    <p>download the Brutus desktop app. it runs quietly in your system tray, ready when you need it.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
                     <h3>start monitoring</h3>
-                    <p>one click before your call. brutus starts capturing audio and watching your screen.</p>
+                    <p>one click before your call. Brutus starts capturing audio and watching your screen.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
@@ -1065,7 +1110,7 @@
         <section class="cta-section">
             <div class="cta-box">
                 <h2>ready to get roasted?</h2>
-                <p>sign up free. no credit card. brutus will start judging you immediately.</p>
+                <p>sign up free. no credit card. Brutus will start judging you immediately.</p>
                 <a href="https://app.brutusai.coach/signup.html" class="btn-primary">start free, no card needed</a>
             </div>
         </section>
@@ -1075,14 +1120,19 @@
             <div class="footer-content">
                 <a href="index.html" class="logo">
                     <div class="logo-icon">B</div>
-                    <div class="logo-text">brutus <span>AI</span></div>
+                    <div class="logo-text">Brutus <span>AI</span></div>
                 </a>
                 <div class="footer-links">
                     <a href="features.html">features</a>
                     <a href="pricing.html">pricing</a>
                     <a href="about.html">about</a>
+                    <a href="articles/">articles</a>
+                    <a href="contact.html">contact</a>
+                    <a href="privacy.html">privacy</a>
+                    <a href="terms.html">terms</a>
+                    <a href="refund.html">refunds</a>
                 </div>
-                <div class="footer-copyright">© 2025 Brutus AI. all rights reserved.</div>
+                <div class="footer-copyright">(c) 2026 Brutus AI. all rights reserved.</div>
             </div>
         </footer>
     </div>
@@ -1181,7 +1231,7 @@
         if (menuBtn && navLinks) {
             menuBtn.addEventListener('click', () => {
                 navLinks.classList.toggle('open');
-                menuBtn.textContent = navLinks.classList.contains('open') ? '×' : 'menu';
+                menuBtn.textContent = navLinks.classList.contains('open') ? 'close' : 'menu';
             });
             navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
                 navLinks.classList.remove('open');

@@ -11,6 +11,8 @@ Brutus AI is distinct from post-call analytics tools. It coaches during the call
 - [Pricing](https://brutusai.coach/pricing.html): free 500K tokens on signup, pay-as-you-go from there
 - [About](https://brutusai.coach/about.html): origin story and values behind the product
 - [Sales Rep DNA Test](https://brutusai.coach/dna.html): free lead-magnet quiz that classifies sales reps into 8 archetypes based on their selling style. Shows your archetype name immediately; email unlocks the full breakdown of strengths, blind spots, prospect matchups, and a manager guide.
+- [Articles](https://brutusai.coach/articles/): sales articles and guides covering objection handling, discovery, follow-up, live-call coaching, Brutus product updates, and sales rep habits
+- [Too Expensive Objection](https://brutusai.coach/objections/too-expensive.html): explains the three flavors behind "too expensive" and how to respond without immediately discounting
 
 ## Pricing
 
@@ -22,9 +24,12 @@ Brutus AI is distinct from post-call analytics tools. It coaches during the call
 
 ## Platforms
 
-- Windows (currently shipping)
-- Mac (coming, pending Apple notarization)
+- Windows 10 and 11
+- macOS on Apple Silicon (M1, M2, M3, M4)
+- macOS on Intel
 - Web app dashboard at https://app.brutusai.coach
+
+Both Mac builds are signed with an Apple Developer ID and notarized by Apple, so users do not see Gatekeeper warnings on first launch.
 
 ## Resources
 

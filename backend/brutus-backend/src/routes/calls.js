@@ -289,7 +289,7 @@ router.delete('/:id', async (req, res, next) => {
     });
     
     res.json({
-      message: 'Call deleted. brutus forgets nothing though.'
+      message: 'Call deleted. Brutus forgets nothing though.'
     });
     
   } catch (error) {

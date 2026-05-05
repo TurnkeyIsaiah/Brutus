@@ -28,7 +28,7 @@ const sendVerificationEmail = async (user, token) => {
       <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; background: #0a0a12; color: #fff; padding: 40px; border-radius: 16px;">
         <h1 style="font-size: 28px; margin-bottom: 8px;">welcome, ${user.name}.</h1>
         <p style="color: rgba(255,255,255,0.6); margin-bottom: 24px;">
-          verify your email to unlock your 500,000 free tokens. brutus is waiting.
+          verify your email to unlock your 500,000 free tokens. Brutus is waiting.
         </p>
         <a href="${verifyUrl}"
            style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #ff5050, #ff7850);
@@ -48,7 +48,7 @@ const sendPasswordResetEmail = async (email, token) => {
   await resendSend({
     from: getFrom(),
     to: email,
-    subject: 'reset your brutus password',
+    subject: 'reset your Brutus password',
     html: `
       <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; background: #0a0a12; color: #fff; padding: 40px; border-radius: 16px;">
         <h1 style="font-size: 24px; margin-bottom: 8px;">password reset</h1>
@@ -78,23 +78,23 @@ const sendDay1Email = async (user) => {
   await resendSend({
     from: getFrom(),
     to: user.email,
-    subject: "you're verified. now run brutus on your next call.",
+    subject: "you're verified. now run Brutus on your next call.",
     html: `
       <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; background: #0a0a12; color: #fff; padding: 40px; border-radius: 16px;">
         <h1 style="font-size: 26px; margin-bottom: 12px;">you're in, ${user.name}.</h1>
         <p style="color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 20px;">
-          your 500,000 free tokens are loaded. brutus is ready to judge you in real time.
+          your 500,000 free tokens are loaded. Brutus is ready to judge you in real time.
         </p>
         <p style="color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 8px; font-weight: 600;">three steps:</p>
         <ol style="color: rgba(255,255,255,0.7); line-height: 1.7; margin: 0 0 24px 20px; padding: 0;">
           <li>open the desktop app (or grab it from the dashboard if you haven't yet)</li>
           <li>start a session before your next sales call</li>
-          <li>let brutus listen. the panel pops up in real time</li>
+          <li>let Brutus listen. the panel pops up in real time</li>
         </ol>
         <a href="${appUrl}/index.html"
            style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #ff5050, #ff7850);
                   color: white; text-decoration: none; border-radius: 12px; font-weight: 600;">
-          open brutus
+          open Brutus
         </a>
         <p style="margin-top: 28px; font-size: 13px; color: rgba(255,255,255,0.4); line-height: 1.5;">
           one tip: don't burn your tokens on test calls. get on a real one. that's the whole point.
@@ -109,15 +109,15 @@ const sendDay3Email = async (user) => {
     from: FROM_PERSONAL,
     reply_to: REPLY_TO,
     to: user.email,
-    subject: "honest question — have you taken brutus on a call yet?",
+    subject: "honest question — have you taken Brutus on a call yet?",
     html: `
       <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; color: #1a1a1a; background: #fff;">
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">hey ${user.name},</p>
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
-          isaiah here, founder of brutus. i'm reaching out personally because i'm trying to figure out if this thing actually helps real reps close more deals.
+          isaiah here, founder of Brutus. i'm reaching out personally because i'm trying to figure out if this thing actually helps real reps close more deals.
         </p>
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
-          i see you signed up a few days ago. did you get a chance to use brutus on a live call yet?
+          i see you signed up a few days ago. did you get a chance to use Brutus on a live call yet?
         </p>
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
           if yes — what happened? what worked, what was annoying, what did you wish was different?
@@ -139,12 +139,12 @@ const sendDay7Email = async (user) => {
     from: FROM_PERSONAL,
     reply_to: REPLY_TO,
     to: user.email,
-    subject: "did brutus help you close anything this week?",
+    subject: "did Brutus help you close anything this week?",
     html: `
       <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; color: #1a1a1a; background: #fff;">
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">hey ${user.name},</p>
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
-          it's been a week since you signed up. i've been wondering — has brutus helped you on any calls? closed any deals? embarrassed you in real time?
+          it's been a week since you signed up. i've been wondering — has Brutus helped you on any calls? closed any deals? embarrassed you in real time?
         </p>
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
           i'm asking because honest feedback right now is more valuable than 100 polite reviews later. i need to know:

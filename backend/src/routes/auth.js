@@ -213,7 +213,7 @@ router.post('/logout', authenticate, async (req, res) => {
     closeUserSessions(req.user.id);
     logAudit('logout', req.user.id, req);
   }
-  res.json({ message: 'Logged out. brutus will miss judging you.' });
+  res.json({ message: 'Logged out. Brutus will miss judging you.' });
 });
 
 // ==================== GET CURRENT USER ====================
@@ -306,7 +306,7 @@ router.post('/verify-email', async (req, res, next) => {
       })();
     }
 
-    res.json({ message: 'Email verified. brutus is ready to judge you.' });
+    res.json({ message: 'Email verified. Brutus is ready to judge you.' });
   } catch (error) {
     next(error);
   }

@@ -289,7 +289,7 @@ Generate an updated profile in JSON format:
   "badHabits": ["...", "..."],
   "strengths": ["...", "..."],
   "areasImproving": ["...", "..."],
-  "summary": "2-3 sentence brutus-style summary of this salesperson's current state and what they need to work on"
+  "summary": "2-3 sentence Brutus-style summary of this salesperson's current state and what they need to work on"
 }`
         }
       ]

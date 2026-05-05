@@ -3,7 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About - Brutus AI</title>
+    <title>About the Brutus AI Sales Team — Brutus AI</title>
+    <meta name="description" content="Learn what Brutus AI is, why it was built, and how the team approaches blunt, practical sales coaching for real conversations.">
+    <link rel="canonical" href="https://brutusai.coach/about.html">
+    <link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://brutusai.coach/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "About",
+          "item": "https://brutusai.coach/about.html"
+        }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Brutus AI",
+      "url": "https://brutusai.coach",
+      "logo": "https://brutusai.coach/favicon.png",
+      "email": "hello@brutusai.coach",
+      "founder": {
+        "@type": "Person",
+        "name": "Isaiah Rios"
+      },
+      "parentOrganization": {
+        "@type": "Organization",
+        "name": "La Rios Co LLC"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "hello@brutusai.coach",
+        "availableLanguage": "English"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Isaiah Rios",
+      "jobTitle": "Founder",
+      "url": "https://brutusai.coach/about.html",
+      "worksFor": {
+        "@type": "Organization",
+        "name": "Brutus AI",
+        "url": "https://brutusai.coach"
+      },
+      "affiliation": {
+        "@type": "Organization",
+        "name": "La Rios Co"
+      }
+    }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -34,7 +99,7 @@
         #neural-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
         .mouse-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), rgba(255,80,80,0.05), transparent 40%); }
         .content { position: relative; z-index: 10; }
-        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; background: rgba(10, 10, 18, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-subtle); }
+        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; background: transparent; border-bottom: 0; box-shadow: none; }
         .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
         .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--red-primary), var(--red-secondary)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 20px; color: white; }
         .logo-text { font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; color: white; }
@@ -56,6 +121,8 @@
         .story-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 24px; padding: 60px; margin: 40px 0; }
         .story-card h3 { font-size: 28px; font-weight: 700; margin-bottom: 20px; color: var(--red-primary); }
         .story-card p { font-size: 18px; color: var(--text-secondary); line-height: 1.8; }
+        .story-card a, .about-section a { color: var(--red-secondary); text-decoration: none; }
+        .story-card a:hover, .about-section a:hover { color: var(--text-primary); }
 
         .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; margin-top: 40px; }
         .value-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 20px; padding: 40px; transition: all 0.3s; }
@@ -72,7 +139,7 @@
         
         footer { padding: 60px 40px; border-top: 1px solid var(--border-subtle); }
         .footer-content { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; gap: 24px; }
-        .footer-links { display: flex; gap: 32px; }
+        .footer-links { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
         .footer-links a { color: var(--text-secondary); text-decoration: none; font-size: 14px; }
         .footer-copyright { color: var(--text-secondary); font-size: 14px; }
         
@@ -126,12 +193,13 @@
         <nav>
             <a href="index.html" class="logo">
                 <div class="logo-icon">B</div>
-                <div class="logo-text">brutus <span>AI</span></div>
+                <div class="logo-text">Brutus <span>AI</span></div>
             </a>
             <div class="nav-links">
                 <a href="features.html">features</a>
                 <a href="pricing.html">pricing</a>
                 <a href="about.html" class="active">about</a>
+                <a href="articles/">articles</a>
                 <a href="https://app.brutusai.coach/login.html" class="nav-cta">get started</a>
             </div>
             <button class="mobile-menu-btn" aria-label="toggle menu">menu</button>
@@ -139,7 +207,7 @@
         
         <section class="about-hero">
             <h1>we built the coach we <span>wished we had</span></h1>
-            <p>brutus was born out of frustration. the kind that builds when you lose deals you should have won, sit through "coaching" that's all criticism and no real answers, and get told what went wrong long after you had any chance to fix it.</p>
+            <p>Brutus was born out of frustration. the kind that builds when you lose deals you should have won, sit through "coaching" that's all criticism and no real answers, and get told what went wrong long after you had any chance to fix it.</p>
         </section>
         
         <section class="about-section">
@@ -149,18 +217,27 @@
                 <p style="margin-top: 16px;">sales managers are stretched too thin to listen to every call. and even when they do review your calls, they're reviewing history. they can't help you in the moment when you actually need it.</p>
             </div>
             
-            <h2>why is the AI coach named brutus?</h2>
-            <p>we named our AI coach after marcus junius brutus, someone known for delivering hard truths even when they were uncomfortable to hear. (also, yes, the stabbing thing. but mostly the hard truths part.)</p>
-            <p>brutus doesn't care about your feelings. it cares about your results. it watches your calls, catches your mistakes in real time, and tells you exactly what to do differently while you still have a chance to fix it.</p>
+            <h2>why is the AI coach named Brutus?</h2>
+            <p>we named our AI coach after marcus junius Brutus, someone known for delivering hard truths even when they were uncomfortable to hear. (also, yes, the stabbing thing. but mostly the hard truths part.)</p>
+            <p>Brutus doesn't care about your feelings. it cares about your results. it watches your calls, catches your mistakes in real time, and tells you exactly what to do differently while you still have a chance to fix it.</p>
             <p>yeah, it stings sometimes. but it works.</p>
+        </section>
+
+        <section class="about-section">
+            <div class="story-card">
+                <h3>who built it</h3>
+                <p>Brutus is built by isaiah rios through la rios co llc. the product started from a simple frustration: reps usually get feedback after the deal is already gone. Brutus exists to move that coaching into the actual conversation, while the outcome can still change.</p>
+                <p style="margin-top: 16px;">the goal is not to replace human managers or turn reps into scripts. the goal is to give salespeople a live edge when they ramble, miss the real objection, or hesitate at the wrong moment.</p>
+                <p style="margin-top: 16px;">for product questions, partnerships, or support, email <a href="mailto:hello@brutusai.coach">hello@brutusai.coach</a>.</p>
+            </div>
         </section>
         
         <section class="about-section">
-            <h2>what does brutus AI stand for?</h2>
+            <h2>what does Brutus AI stand for?</h2>
             <div class="values-grid">
                 <div class="value-card">
                     <h4>radical honesty</h4>
-                    <p>we don't sugarcoat feedback. you can't improve if you don't know what's wrong. brutus tells you the truth, even when it stings.</p>
+                    <p>we don't sugarcoat feedback. you can't improve if you don't know what's wrong. Brutus tells you the truth, even when it stings.</p>
                 </div>
                 <div class="value-card">
                     <h4>real-time action</h4>
@@ -168,7 +245,7 @@
                 </div>
                 <div class="value-card">
                     <h4>continuous improvement</h4>
-                    <p>every call is a chance to get better. brutus tracks your progress and celebrates real growth, not participation trophies.</p>
+                    <p>every call is a chance to get better. Brutus tracks your progress and celebrates real growth, not participation trophies.</p>
                 </div>
                 <div class="value-card">
                     <h4>privacy first</h4>
@@ -180,15 +257,21 @@
         <section class="about-section">
             <div class="story-card">
                 <h3>the future of sales coaching</h3>
-                <p>we believe every salesperson deserves a world-class coach, not just the ones at big companies with expensive training programs. brutus levels the playing field. whether you're a solo real estate agent or part of a 100-person sales team, you get the same no-nonsense coaching that actually moves the needle.</p>
-                <p style="margin-top: 16px;">ai shouldn't replace human connection in sales. but it can make every salesperson sharper, more aware, and more effective. that's what brutus does.</p>
+                <p>we believe every salesperson deserves a world-class coach, not just the ones at big companies with expensive training programs. Brutus levels the playing field. whether you're a solo real estate agent or part of a 100-person sales team, you get the same no-nonsense coaching that actually moves the needle.</p>
+                <p style="margin-top: 16px;">ai shouldn't replace human connection in sales. but it can make every salesperson sharper, more aware, and more effective. that's what Brutus does.</p>
             </div>
+        </section>
+
+        <section class="about-section">
+            <h2>company and contact</h2>
+            <p>Brutus AI is operated through la rios co llc. the marketing site lives at <a href="https://brutusai.coach">brutusai.coach</a>, and the app lives at <a href="https://app.brutusai.coach">app.brutusai.coach</a>.</p>
+            <p>the fastest way to reach us is <a href="mailto:hello@brutusai.coach">hello@brutusai.coach</a>. for billing, refund, and usage terms, use the links in the footer so the public policies stay easy to find.</p>
         </section>
         
         <section class="cta-section">
             <div class="cta-box">
                 <h2>ready to meet your new coach?</h2>
-                <p>brutus is waiting. fair warning: it's not going to go easy on you.</p>
+                <p>Brutus is waiting. fair warning: it's not going to go easy on you.</p>
                 <a href="pricing.html" class="btn-primary">start free trial</a>
             </div>
         </section>
@@ -197,14 +280,19 @@
             <div class="footer-content">
                 <a href="index.html" class="logo">
                     <div class="logo-icon">B</div>
-                    <div class="logo-text">brutus <span>AI</span></div>
+                    <div class="logo-text">Brutus <span>AI</span></div>
                 </a>
                 <div class="footer-links">
                     <a href="features.html">features</a>
                     <a href="pricing.html">pricing</a>
                     <a href="about.html">about</a>
+                    <a href="articles/">articles</a>
+                    <a href="contact.html">contact</a>
+                    <a href="privacy.html">privacy</a>
+                    <a href="terms.html">terms</a>
+                    <a href="refund.html">refunds</a>
                 </div>
-                <div class="footer-copyright">© 2025 Brutus AI. all rights reserved.</div>
+                <div class="footer-copyright">(c) 2026 Brutus AI. all rights reserved.</div>
             </div>
         </footer>
     </div>
@@ -242,7 +330,7 @@
         if (menuBtn && navLinks) {
             menuBtn.addEventListener('click', () => {
                 navLinks.classList.toggle('open');
-                menuBtn.textContent = navLinks.classList.contains('open') ? '×' : 'menu';
+                menuBtn.textContent = navLinks.classList.contains('open') ? 'close' : 'menu';
             });
             navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
                 navLinks.classList.remove('open');

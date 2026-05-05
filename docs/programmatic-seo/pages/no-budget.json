@@ -1,0 +1,78 @@
+{
+  "slug": "no-budget",
+  "target_query": "how to handle no budget objection",
+  "objection_phrase": "we don't have budget",
+  "search_intent": "mixed",
+  "page_title": "How to Handle the \"No Budget\" Objection in B2B Sales - Brutus AI",
+  "meta_description": "\"No budget\" in B2B is often an authority signal, not a price objection. Qualify who controls budget before you discount your way past the wrong person.",
+  "h1": "how to handle the \"no budget\" objection in b2b sales without discounting",
+  "intro": "\"we don't have budget\" usually means \"i cannot move budget.\" that is a different problem. a real no-budget answer comes from someone who controls the spend, has looked at the tradeoff, and has decided no. if your contact has not done all three, you are not hearing a budget objection. you are hearing an authority signal. the contact may like the product, understand the problem, and still have no path to approve spend. most reps miss that and start discounting for someone who could not have bought at full price, half price, or free. now the rep has made the deal smaller without making it more real. the right move is not to make the number smaller. the right move is to find out who owns the number.",
+  "example_dialog": [
+    {
+      "speaker": "prospect",
+      "line": "honestly, this isn't in our budget for the year."
+    },
+    {
+      "speaker": "rep",
+      "line": "we could start with a smaller package if that helps."
+    },
+    {
+      "speaker": "prospect",
+      "line": "maybe, but I still don't think we have room."
+    },
+    {
+      "speaker": "rep",
+      "line": "before we talk package size, help me understand. is budget for this set by you, or by someone above you?"
+    },
+    {
+      "speaker": "prospect",
+      "line": "finance owns it. I can recommend, but I can't approve it."
+    }
+  ],
+  "psychology": "lower-level contacts often use budget as a safe deflection because admitting they cannot approve the spend feels weaker than saying the company has no budget. it protects their status. it also protects them from having to pull in a senior stakeholder too early. reps then waste the rest of the call trying to solve price with someone who does not control price. the objection sounds financial. the real issue is decision access.",
+  "counter_frames": [
+    {
+      "label": "authority test",
+      "copy": "ask whether budget for this category is set by the person on the call or by someone above them."
+    },
+    {
+      "label": "process question",
+      "copy": "ask what the path usually looks like when something like this does get funded."
+    },
+    {
+      "label": "multi-thread permission",
+      "copy": "ask who else would care about the problem if you made the business case work."
+    }
+  ],
+  "common_mistakes": [
+    "offering an immediate discount",
+    "splitting the deal smaller without changing the decision conversation",
+    "accepting \"call us next quarter\" without identifying who controls budget",
+    "multi-threading behind the contact's back and burning trust",
+    "treating a department manager like a final economic buyer"
+  ],
+  "walk_away_when": [
+    "there is a documented company-wide spend freeze tied to layoffs, missed quarter, or a cost-out program",
+    "no internal champion is willing or able to bring the problem to higher signoff",
+    "the person who owns budget confirms the problem is not funded and not important enough to revisit"
+  ],
+  "brutus_angle": "Brutus catches price-objection language from an unconfirmed decision-maker and stops the rep before they discount. the live cue is: \"don't discount. confirm who controls budget for this category.\"",
+  "related_slugs": [
+    "too-expensive",
+    "need-to-think-about-it",
+    "bad-timing"
+  ],
+  "cta_variant": "Stop discounting your way past the wrong contact. Brutus prompts the authority question before you drop a number. First 5 calls free.",
+  "faq_questions": [
+    "Is 'no budget' ever a real price problem in B2B?",
+    "How do I qualify authority without sounding rude?",
+    "When should I multi-thread vs. wait?"
+  ],
+  "author": {
+    "name": "Brutus AI",
+    "company": "Brutus AI"
+  },
+  "status": "reviewed",
+  "demand_verified": true,
+  "notes": "Wave 1 draft payload. Passed JSON, banned-pattern, and rough similarity checks. Do not render to HTML until the gold-standard browser quality pass is accepted."
+}

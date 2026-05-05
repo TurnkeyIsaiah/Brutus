@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Brutus Programmatic SEO Page",
+  "type": "object",
+  "required": [
+    "slug",
+    "target_query",
+    "objection_phrase",
+    "search_intent",
+    "page_title",
+    "meta_description",
+    "h1",
+    "intro",
+    "example_dialog",
+    "psychology",
+    "counter_frames",
+    "common_mistakes",
+    "walk_away_when",
+    "brutus_angle",
+    "related_slugs",
+    "cta_variant",
+    "faq_questions",
+    "author",
+    "status",
+    "demand_verified"
+  ],
+  "properties": {
+    "slug": {
+      "type": "string"
+    },
+    "target_query": {
+      "type": "string"
+    },
+    "objection_phrase": {
+      "type": "string"
+    },
+    "search_intent": {
+      "type": "string",
+      "enum": ["informational", "commercial", "mixed"]
+    },
+    "page_title": {
+      "type": "string"
+    },
+    "meta_description": {
+      "type": "string"
+    },
+    "h1": {
+      "type": "string"
+    },
+    "intro": {
+      "type": "string",
+      "description": "Target 120-180 words. Must be unique per page."
+    },
+    "example_dialog": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["speaker", "line"],
+        "properties": {
+          "speaker": {
+            "type": "string",
+            "enum": ["rep", "prospect"]
+          },
+          "line": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "psychology": {
+      "type": "string"
+    },
+    "counter_frames": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["label", "copy"],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "copy": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "common_mistakes": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "string"
+      }
+    },
+    "walk_away_when": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "string"
+      }
+    },
+    "brutus_angle": {
+      "type": "string",
+      "description": "How Brutus would coach this objection in real time."
+    },
+    "related_slugs": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "string"
+      }
+    },
+    "cta_variant": {
+      "type": "string"
+    },
+    "faq_questions": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "string"
+      }
+    },
+    "author": {
+      "type": "object",
+      "required": ["name", "company"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "company": {
+          "type": "string"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["idea", "briefed", "drafted", "reviewed", "approved", "published"]
+    },
+    "demand_verified": {
+      "type": "boolean"
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

@@ -59,7 +59,7 @@ router.post('/signup', async (req, res, next) => {
     const token = generateToken(user.id);
     
     res.status(201).json({
-      message: 'Account created. brutus is ready to judge you.',
+      message: 'Account created. Brutus is ready to judge you.',
       user: {
         id: user.id,
         email: user.email,
@@ -135,7 +135,7 @@ router.post('/login', async (req, res, next) => {
 router.post('/logout', authenticate, async (req, res) => {
   // With JWT, logout is handled client-side by deleting the token
   // This endpoint exists for consistency and potential future token blacklisting
-  res.json({ message: 'Logged out. brutus will miss judging you.' });
+  res.json({ message: 'Logged out. Brutus will miss judging you.' });
 });
 
 // ==================== GET CURRENT USER ====================

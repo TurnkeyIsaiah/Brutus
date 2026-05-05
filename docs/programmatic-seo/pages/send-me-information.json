@@ -1,0 +1,78 @@
+{
+  "slug": "send-me-information",
+  "target_query": "how to handle send me information objection",
+  "objection_phrase": "send me some information",
+  "search_intent": "mixed",
+  "page_title": "What to Say When a Prospect Says \"Send Me Information\" - Brutus AI",
+  "meta_description": "When a prospect asks you to send information, they are often choosing a polite exit. Redirect the brush-off before you email a deck into a void.",
+  "h1": "what to say when a prospect asks you to \"send me information\"",
+  "intro": "\"send me some information\" is the most-rationalized loss in sales. it feels like progress because the prospect did not say no. they did. they just said it in a way that lets them end the call without feeling rude. the rep gets to log a follow-up. the prospect gets to delete the deck later. everyone feels polite. nothing moves. this usually happens after the prospect has heard enough to know they want out, but not enough to justify a hard no. that matters. this is not the same as a cold-call brush-off. it is a conflict-free exit. the job is not to refuse the request. the job is to make the request specific enough that it becomes a real buying step or exposes itself as a brush-off.",
+  "example_dialog": [
+    {
+      "speaker": "prospect",
+      "line": "can you just send me some information?"
+    },
+    {
+      "speaker": "rep",
+      "line": "yeah, absolutely. I'll send over our deck."
+    },
+    {
+      "speaker": "prospect",
+      "line": "great. thanks."
+    },
+    {
+      "speaker": "rep",
+      "line": "happy to send it. before I do, what would you actually want me to include that would help you decide if this is worth another conversation?"
+    },
+    {
+      "speaker": "prospect",
+      "line": "pricing and something that shows how this works for a team our size."
+    }
+  ],
+  "psychology": "most prospects do not want conflict on a sales call. \"send me information\" gives them a clean exit that sounds reasonable. the rep accepts because it lets them avoid hearing a harder no. that is the trap. both people choose politeness over clarity. the redirect works because it keeps the request alive but removes the hiding place. now the prospect has to say what would help them decide, or admit there is no decision process.",
+  "counter_frames": [
+    {
+      "label": "redirect question",
+      "copy": "ask what they want included that would actually help them decide. vague requests produce vague follow-up."
+    },
+    {
+      "label": "calendar pin",
+      "copy": "send the material with a small follow-up placeholder. if it is useful, you talk. if not, they decline."
+    },
+    {
+      "label": "specificity test",
+      "copy": "ask whether they need pricing, a peer example, security detail, or something else. real interest gets specific."
+    }
+  ],
+  "common_mistakes": [
+    "agreeing immediately because it feels like progress",
+    "sending a generic deck with no reason attached",
+    "sending without a follow-up date",
+    "going silent after the email",
+    "asking what they want you to send but not why they need it"
+  ],
+  "walk_away_when": [
+    "the prospect has a documented procurement process where info packets are a real evaluation step",
+    "you have confirmed you fit their criteria and they gave you a specific decision date",
+    "they refuse to define what information would help them decide"
+  ],
+  "brutus_angle": "Brutus listens for the transactional pivot: shorter answers, more formal cadence, and the prospect moving from conversation to admin. the live cue is: \"don't agree to send. ask what would help them decide.\"",
+  "related_slugs": [
+    "not-interested",
+    "bad-timing",
+    "need-to-think-about-it"
+  ],
+  "cta_variant": "Brutus flags the second your tone gives the prospect a polite exit. Stop emailing decks into a void. First 5 calls free.",
+  "faq_questions": [
+    "Is sending the deck ever the right move?",
+    "How fast should I follow up after sending?",
+    "Is calendar-pin pushy?"
+  ],
+  "author": {
+    "name": "Brutus AI",
+    "company": "Brutus AI"
+  },
+  "status": "reviewed",
+  "demand_verified": true,
+  "notes": "Wave 1 draft payload. Passed JSON, banned-pattern, and rough similarity checks. Do not render to HTML until the gold-standard browser quality pass is accepted."
+}

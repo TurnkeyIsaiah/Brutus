@@ -3,8 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Rep DNA Test — What Kind of Rep Are You? | Brutus AI</title>
-    <meta name="description" content="15 questions. Instant results. Find out your exact sales archetype and the blind spots that are killing your close rate.">
+    <title>Sales Rep DNA Test and Archetypes — Brutus AI</title>
+    <meta name="description" content="Take the Sales Rep DNA Test to find your archetype, uncover blind spots, and get a sharp breakdown of how you sell under pressure.">
+    <link rel="canonical" href="https://brutusai.coach/dna.html">
+    <link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://brutusai.coach/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Sales Rep DNA Test",
+          "item": "https://brutusai.coach/dna.html"
+        }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Brutus AI",
+      "url": "https://brutusai.coach",
+      "logo": "https://brutusai.coach/favicon.png",
+      "email": "hello@brutusai.coach",
+      "founder": {
+        "@type": "Person",
+        "name": "Isaiah Rios"
+      },
+      "parentOrganization": {
+        "@type": "Organization",
+        "name": "La Rios Co LLC"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "hello@brutusai.coach",
+        "availableLanguage": "English"
+      }
+    }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -45,7 +91,7 @@
         button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
         /* Nav */
-        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: max(20px, env(safe-area-inset-top)) 40px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(10,10,18,0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-subtle); }
+        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: max(20px, env(safe-area-inset-top)) 40px 20px; display: flex; justify-content: space-between; align-items: center; background: transparent; border-bottom: 0; box-shadow: none; }
         .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
         .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--red-primary), var(--red-secondary)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 20px; color: white; box-shadow: 0 4px 20px rgba(255,80,80,0.3); }
         .logo-text { font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; color: white; }
@@ -58,6 +104,12 @@
         .mobile-menu-btn { display: none; background: none; border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 10px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; line-height: 1; }
         .mobile-menu-btn .bar { display: block; width: 20px; height: 2px; background: currentColor; border-radius: 2px; transition: all 0.2s; }
         .mobile-menu-btn .bar + .bar { margin-top: 4px; }
+        .site-footer { position: relative; z-index: 10; border-top: 1px solid rgba(255,255,255,0.08); padding: 28px 20px 36px; }
+        .site-footer-inner { max-width: 960px; margin: 0 auto; text-align: center; }
+        .site-footer-links { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; margin-bottom: 12px; }
+        .site-footer-links a { color: rgba(255,255,255,0.55); text-decoration: none; font-size: 13px; }
+        .site-footer-links a:hover { color: #fff; }
+        .site-footer-copy { color: rgba(255,255,255,0.35); font-size: 12px; }
 
         /* Content wrapper */
         .content { position: relative; z-index: 10; padding-top: 82px; }
@@ -71,7 +123,7 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
 
-        /* ── HERO ── */
+        /* -- HERO -- */
         #phase-hero { min-height: calc(100vh - 82px); display: flex; align-items: center; justify-content: center; padding: 24px 20px; text-align: center; }
         .hero-inner { max-width: 600px; }
         .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.3); border-radius: 30px; font-size: 13px; color: var(--red-primary); margin-bottom: 14px; font-family: 'Space Mono', monospace; text-transform: lowercase; letter-spacing: 0.06em; }
@@ -82,11 +134,11 @@
         .hero-inner p { font-size: 16px; color: rgba(255,255,255,0.55); line-height: 1.6; margin-bottom: 20px; max-width: 480px; margin-left: auto; margin-right: auto; }
         .hero-meta { display: flex; justify-content: center; gap: 28px; margin-bottom: 20px; flex-wrap: wrap; }
         .hero-meta span { font-size: 13px; color: rgba(255,255,255,0.3); font-family: 'Space Mono', monospace; display: flex; align-items: center; gap: 6px; }
-        .hero-meta span::before { content: '→'; color: var(--red-primary); }
+        .hero-meta span::before { content: '->'; color: var(--red-primary); }
         .btn-start { padding: 16px 40px; background: linear-gradient(135deg, var(--red-primary), var(--red-secondary)); border: none; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 700; font-family: 'Space Mono', monospace; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 24px rgba(255,80,80,0.35); text-transform: lowercase; min-height: 52px; }
         .btn-start:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(255,80,80,0.5); }
 
-        /* ── QUESTIONS ── */
+        /* -- QUESTIONS -- */
         #phase-questions { min-height: calc(100vh - 82px); display: flex; align-items: center; justify-content: center; padding: 40px 16px; }
         .question-wrap { max-width: 560px; width: 100%; }
         .progress-bar-outer { height: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; margin-bottom: 28px; }
@@ -103,7 +155,7 @@
         .answer-btn:hover { background: rgba(255,80,80,0.07); border-color: rgba(255,80,80,0.3); color: #fff; transform: translateX(4px); }
         .answer-btn.selected { background: rgba(255,80,80,0.1); border-color: rgba(255,80,80,0.5); color: #fff; }
 
-        /* ── EMAIL GATE ── */
+        /* -- EMAIL GATE -- */
         #phase-email { min-height: calc(100vh - 82px); display: flex; align-items: center; justify-content: center; padding: 40px 16px; }
         .email-wrap { max-width: 480px; width: 100%; display: flex; flex-direction: column; gap: 16px; }
         .result-teaser-card { overflow: hidden; }
@@ -125,7 +177,7 @@
         .email-fine-print { font-size: 11px; color: rgba(255,255,255,0.2); text-align: center; margin-top: 6px; }
         .email-error { font-size: 12px; color: var(--red-primary); font-family: 'Space Mono', monospace; margin-top: 6px; }
 
-        /* ── RESULTS ── */
+        /* -- RESULTS -- */
         #phase-results { padding: 40px 16px 60px; }
         .results-inner { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
         .results-heading { text-align: center; }
@@ -145,7 +197,7 @@
         .card-list li { display: flex; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.8); }
         .card-list li span { flex-shrink: 0; }
         .brutus-says { background: rgba(255,80,80,0.06); border: 1px solid rgba(255,80,80,0.15); border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; }
-        .brutus-says-label { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; text-transform: lowercase; letter-spacing: 0.08em; color: rgba(255,80,80,0.8); margin-bottom: 8px; }
+        .brutus-says-label { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: rgba(255,80,80,0.8); margin-bottom: 8px; }
         .brutus-says-text { font-size: 13px; line-height: 1.6; font-style: italic; color: rgba(255,255,255,0.7); }
         .card-footer { text-align: center; }
         .card-footer-logo { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; }
@@ -161,7 +213,7 @@
 
         /* Coaching tip */
         .coaching-tip { background: rgba(255,80,80,0.05); border: 1px solid rgba(255,80,80,0.18); border-radius: 20px; padding: 20px 24px; }
-        .coaching-tip-label { font-family: 'Space Mono', monospace; font-size: 10px; text-transform: lowercase; letter-spacing: 0.08em; color: rgba(255,80,80,0.8); margin-bottom: 8px; }
+        .coaching-tip-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: rgba(255,80,80,0.8); margin-bottom: 8px; }
         .coaching-tip-text { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.8); }
 
         /* Score chart */
@@ -248,12 +300,12 @@
             .hero-meta { flex-direction: column; align-items: center; gap: 8px; }
         }
         @media (max-width: 500px) {
-            /* Email form — stacked */
+            /* Email form - stacked */
             .email-form { flex-direction: column; }
             .email-input, .btn-unlock { width: 100%; }
-            /* Share buttons — 2×2 grid */
+            /* Share buttons - 2x2 grid */
             .share-btns { display: grid; grid-template-columns: 1fr 1fr; }
-            /* Panel padding — tighter */
+            /* Panel padding - tighter */
             .archetype-card .card-body { padding: 20px 16px; }
             .dna-report { padding: 20px 16px; }
             .share-panel { padding: 20px 16px; }
@@ -277,12 +329,13 @@
         <nav>
             <a href="index.html" class="logo">
                 <div class="logo-icon">B</div>
-                <div class="logo-text">brutus <span>AI</span></div>
+                <div class="logo-text">Brutus <span>AI</span></div>
             </a>
             <div class="nav-links">
                 <a href="features.html">features</a>
                 <a href="pricing.html">pricing</a>
                 <a href="about.html">about</a>
+                <a href="articles/">articles</a>
                 <a href="https://app.brutusai.coach/login.html" class="nav-cta">get started</a>
             </div>
             <button class="mobile-menu-btn" aria-label="toggle menu">
@@ -297,13 +350,13 @@
             <div class="hero-inner fade-in">
                 <div class="hero-badge">sales rep dna test</div>
                 <h1>what kind of rep <span>are you?</span></h1>
-                <p>15 scenarios. instant results. find out your exact sales archetype — and the blind spots that are quietly killing your close rate.</p>
+                <p>15 scenarios. instant results. find out your exact sales archetype, and the blind spots that are quietly killing your close rate.</p>
                 <div class="hero-meta">
                     <span>15 questions</span>
                     <span>8 archetypes</span>
                     <span>3 minutes</span>
                 </div>
-                <button class="btn-start" onclick="startQuiz()">take the test →</button>
+                <button class="btn-start" onclick="startQuiz()">take the test -></button>
             </div>
         </div>
 
@@ -333,7 +386,7 @@
         <div class="modal-box" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <span class="modal-title" id="modal-title"></span>
-                <button class="modal-close" onclick="closeModal()">×</button>
+                <button class="modal-close" onclick="closeModal()">x</button>
             </div>
             <p class="modal-hint" id="modal-hint"></p>
             <textarea class="modal-textarea" id="modal-text" rows="5" readonly></textarea>
@@ -344,8 +397,25 @@
         </div>
     </div>
 
+    <footer class="site-footer">
+        <div class="site-footer-inner">
+            <div class="site-footer-links">
+                <a href="index.html">home</a>
+                <a href="features.html">features</a>
+                <a href="pricing.html">pricing</a>
+                <a href="about.html">about</a>
+                <a href="articles/">articles</a>
+                <a href="contact.html">contact</a>
+                <a href="privacy.html">privacy</a>
+                <a href="terms.html">terms</a>
+                <a href="refund.html">refunds</a>
+            </div>
+            <div class="site-footer-copy">(c) 2026 Brutus AI. all rights reserved.</div>
+        </div>
+    </footer>
+
     <script>
-    // ── DATA ──────────────────────────────────────────────────────────────────
+    // -- DATA ------------------------------------------------------------------
 
     const ARCHETYPES = {
         bulldozer: {
@@ -353,12 +423,12 @@
             oneLiner: "You don't take no for an answer. Sometimes you should.",
             strengths: ["Relentless persistence", "High activity volume", "Never afraid to ask for the close", "Thick skin on rejection"],
             blindSpots: ["Steamrolls prospects", "Doesn't listen enough", "Burns bridges by pushing too hard", "Mistakes aggression for confidence"],
-            roast: "You've got the energy of a freight train and the listening skills of one too. Your prospects aren't objecting because they're not interested — they're objecting because you haven't shut up long enough for them to tell you what they actually want.",
+            roast: "You've got the energy of a freight train and the listening skills of one too. Your prospects aren't objecting because they're not interested - they're objecting because you haven't shut up long enough for them to tell you what they actually want.",
             coachingTip: "Brutus would tell you in real-time: 'Stop talking. Ask a question. Let them fill the silence.' That one adjustment would double your close rate.",
             blindSpotDrills: ["On your next 3 calls, don't pitch until minute 5. Ask at least 4 questions first.", "After every objection, pause for 3 full seconds before responding. Let them fill the silence.", "Record your next call and count how many times you interrupt. If it's more than twice, you have work to do."],
             crushTypes: ["Decisive executives who respect directness", "Prospects in urgent pain who need someone to drive the process"],
             destroyedByTypes: ["Analytical buyers who need time and data (you'll push them away)", "Consensus-driven orgs where you need to build multiple relationships (you'll bulldoze the wrong person)"],
-            managerGuide: "Channel their energy rather than suppress it. Give them clear activity metrics so they feel productive. Pair them with a methodical rep to show them what slowing down looks like. Coach on listening — require them to summarize the prospect's problem before pitching on every call review."
+            managerGuide: "Channel their energy rather than suppress it. Give them clear activity metrics so they feel productive. Pair them with a methodical rep to show them what slowing down looks like. Coach on listening - require them to summarize the prospect's problem before pitching on every call review."
         },
         people_pleaser: {
             name: "The People Pleaser", color: "#3742fa",
@@ -367,22 +437,22 @@
             blindSpots: ["Avoids tension and challenging the prospect", "Never asks for the close", "Discounts too quickly to keep the peace", "Confuses being liked with being trusted"],
             roast: "Your prospects love talking to you. They also love not buying from you. You're so afraid of making things awkward that you'd rather lose the deal than risk a moment of discomfort. That's not selling, that's socializing on company time.",
             coachingTip: "Brutus would push you through the discomfort: 'They just gave you a buying signal. Ask for the close. Right now. Do it.'",
-            blindSpotDrills: ["On your next 5 calls, commit to asking for the close at least once — even if it's uncomfortable.", "Practice the phrase: 'I want to be direct with you.' Say it before your next pushback moment.", "Stop apologizing before you pitch pricing. Present the number without any qualifier."],
+            blindSpotDrills: ["On your next 5 calls, commit to asking for the close at least once - even if it's uncomfortable.", "Practice the phrase: 'I want to be direct with you.' Say it before your next pushback moment.", "Stop apologizing before you pitch pricing. Present the number without any qualifier."],
             crushTypes: ["Relationship-first buyers who want to feel known", "Warm inbound leads already interested in the product"],
             destroyedByTypes: ["Hard-nosed procurement buyers who see rapport as weakness", "Time-pressed executives who need a direct point, fast"],
-            managerGuide: "Help them separate likability from effectiveness. Role-play asking for the close repeatedly until it feels natural. Review calls and flag every buying signal they ignored. Celebrate when they hold firm on price — not just when they win."
+            managerGuide: "Help them separate likability from effectiveness. Role-play asking for the close repeatedly until it feels natural. Review calls and flag every buying signal they ignored. Celebrate when they hold firm on price - not just when they win."
         },
         scientist: {
             name: "The Scientist", color: "#a55eea",
             oneLiner: "You over-research, over-prepare, and under-ask.",
             strengths: ["Deep product and market knowledge", "Excellent discovery questions", "Builds bulletproof business cases", "Strong with technical and analytical buyers"],
-            blindSpots: ["Analysis paralysis — never knows when to close", "Turns calls into interrogations", "Over-prepares and under-executes", "Loses deals to faster competitors"],
+            blindSpots: ["Analysis paralysis - never knows when to close", "Turns calls into interrogations", "Over-prepares and under-executes", "Loses deals to faster competitors"],
             roast: "You know more about your prospect's company than their own CEO does. Impressive. Too bad you spent 45 minutes in discovery and forgot to actually sell them anything. Your pipeline is full of 'great conversations' that never close.",
             coachingTip: "Brutus would flag when you're over-indexing on discovery: 'You have enough. Transition to value. Present the solution. You're stalling.'",
-            blindSpotDrills: ["Set a hard 20-minute discovery cap on your next 3 calls. Pitch at minute 21 regardless.", "Pick one question to remove from your discovery bank this week — you're asking too many.", "After your next proposal, send it within 2 hours. Stop polishing. Done beats perfect."],
+            blindSpotDrills: ["Set a hard 20-minute discovery cap on your next 3 calls. Pitch at minute 21 regardless.", "Pick one question to remove from your discovery bank this week - you're asking too many.", "After your next proposal, send it within 2 hours. Stop polishing. Done beats perfect."],
             crushTypes: ["Technical buyers and engineers who love depth", "Complex enterprise deals where business cases are required"],
             destroyedByTypes: ["Gut-decision makers who are turned off by data overload", "Fast-moving SMBs where speed beats thoroughness"],
-            managerGuide: "Enforce time-boxed discovery. Review their proposals and help them cut 30% of the content — length is covering for insecurity. Celebrate speed wins. Pair them with a Closer archetype to model transitions from discovery to pitch."
+            managerGuide: "Enforce time-boxed discovery. Review their proposals and help them cut 30% of the content - length is covering for insecurity. Celebrate speed wins. Pair them with a Closer archetype to model transitions from discovery to pitch."
         },
         ghost: {
             name: "The Ghost", color: "#57606f",
@@ -394,55 +464,55 @@
             blindSpotDrills: ["For your next 5 calls: before hanging up, book the next meeting live on the call.", "Set a non-negotiable rule: recap email goes out within 30 minutes of every call.", "Do a pipeline audit right now. Flag every deal you haven't touched in 5+ days. That's your to-do list."],
             crushTypes: ["Highly engaged prospects who drive the process themselves", "Referrals from existing customers who already trust the brand"],
             destroyedByTypes: ["Busy executives who need to be chased or they move on", "Competitive deals where speed and follow-up tempo wins"],
-            managerGuide: "Implement a mandatory next-step requirement before any deal advances pipeline stages. Review their CRM weekly — no activity on an active deal for 3+ days is a flag. The behavior is fixable with systems; they're not lazy, they're unstructured."
+            managerGuide: "Implement a mandatory next-step requirement before any deal advances pipeline stages. Review their CRM weekly - no activity on an active deal for 3+ days is a flag. The behavior is fixable with systems; they're not lazy, they're unstructured."
         },
         closer: {
             name: "The Closer", color: "#2ed573",
             oneLiner: "You actually ask for the business. Rare.",
             strengths: ["Not afraid to ask for the close", "Reads buying signals accurately", "Creates genuine urgency", "Strong at objection handling and negotiation"],
             blindSpots: ["Sometimes rushes discovery to get to close faster", "Occasionally closes bad-fit customers", "Overconfidence on forecasting", "Can close before prospect is fully bought in"],
-            roast: "Look at you — you actually ask for the business. In 2026, that apparently makes you elite. Your discovery could be deeper and you sometimes close before the prospect is fully bought in, but honestly? You're ahead of 80% of reps who treat the close like a suggestion.",
+            roast: "Look at you - you actually ask for the business. In 2026, that apparently makes you elite. Your discovery could be deeper and you sometimes close before the prospect is fully bought in, but honestly? You're ahead of 80% of reps who treat the close like a suggestion.",
             coachingTip: "Brutus would refine your timing: 'Slow down here. They're not fully bought in yet. One more pain question, then close. You'll get a stronger yes.'",
             blindSpotDrills: ["On your next 3 calls, add one more discovery question after you feel ready to pitch. See what comes up.", "Before your next close attempt, ask yourself: 'Have I confirmed their decision process and timeline?' If no, ask first.", "Review your last 3 churned customers. Was the fit actually there at close, or did you push it through?"],
             crushTypes: ["Decisive buyers who respect someone who drives the process", "Prospects with clear pain and budget who just need someone to pull the trigger with them"],
             destroyedByTypes: ["Committee-driven decisions where every stakeholder needs to feel heard first", "Long-cycle enterprise deals where pushing too early kills trust"],
-            managerGuide: "Focus coaching on discovery depth, not closing mechanics — they already know how to close. Help them qualify fit earlier so they're not closing bad-fit deals. Their forecasting needs calibration; tie it to deal criteria rather than gut feel."
+            managerGuide: "Focus coaching on discovery depth, not closing mechanics - they already know how to close. Help them qualify fit earlier so they're not closing bad-fit deals. Their forecasting needs calibration; tie it to deal criteria rather than gut feel."
         },
         robot: {
             name: "The Robot", color: "#1e90ff",
             oneLiner: "Your pitch is flawless. Your conversation is nonexistent.",
             strengths: ["Knows the script cold every time", "Consistent and reliable delivery", "Hits every required talk track", "Great at demos and feature walkthroughs"],
-            blindSpots: ["Zero improvisation when calls go off-script", "Sounds rehearsed — no authentic personality", "Treats every prospect identically", "Can't connect at a human level"],
-            roast: "I've heard more warmth from an automated phone tree. Your pitch is technically perfect — every feature, every benefit, delivered in the exact same order every single time. The problem is your prospect is a human, not a checklist. They checked out 90 seconds in because they can tell you'd say the same thing to literally anyone.",
+            blindSpots: ["Zero improvisation when calls go off-script", "Sounds rehearsed - no authentic personality", "Treats every prospect identically", "Can't connect at a human level"],
+            roast: "I've heard more warmth from an automated phone tree. Your pitch is technically perfect - every feature, every benefit, delivered in the exact same order every single time. The problem is your prospect is a human, not a checklist. They checked out 90 seconds in because they can tell you'd say the same thing to literally anyone.",
             coachingTip: "Brutus would interrupt your script in real-time: 'They just mentioned their team is struggling. Stop the pitch. Ask about that. Be a human for 30 seconds.'",
             blindSpotDrills: ["On your next call, find ONE thing unique to this prospect from their LinkedIn or website and reference it in the first 2 minutes.", "Delete 2 slides from your demo. Replace them with questions about the prospect's specific situation.", "Record yourself. Then ask: would you want to be on the other end of this call? Be honest."],
             crushTypes: ["Process-driven buyers who want structure and predictability", "Technical evaluations where thoroughness matters more than personality"],
             destroyedByTypes: ["Relationship buyers who need to feel a genuine connection before buying", "Skeptical buyers who sniff out scripted pitches instantly"],
-            managerGuide: "Don't let them lean on the script as a crutch. Require call reviews focused exclusively on moments of improvisation — reward any deviation from the script that was authentic. Pair them with a Storyteller to model conversational selling."
+            managerGuide: "Don't let them lean on the script as a crutch. Require call reviews focused exclusively on moments of improvisation - reward any deviation from the script that was authentic. Pair them with a Storyteller to model conversational selling."
         },
         storyteller: {
             name: "The Storyteller", color: "#ff6348",
             oneLiner: "Your calls are entertaining. Your pipeline is empty.",
             strengths: ["Charismatic and highly engaging", "Paints vivid pictures with case studies", "Builds strong emotional connections", "Prospects remember the conversation"],
             blindSpots: ["Talks too much and loses track of time", "Stories don't always tie back to the prospect's pain", "Entertains but doesn't drive decisions", "Goes on tangents that derail call structure"],
-            roast: "You're the most entertaining rep on the floor. You could do a one-man show. Unfortunately, your prospect needed a 20-minute call and you gave them a 50-minute performance. The standing ovation was them saying 'Great chat, we'll circle back next quarter' — aka they enjoyed the show and bought nothing.",
-            coachingTip: "Brutus would keep you on track: 'Good story. Now tie it back to their problem. You have 8 minutes left — transition to next steps.'",
-            blindSpotDrills: ["Set a 2-minute timer when you start telling a case study. When it rings, immediately tie it to their specific situation.", "For your next 5 calls, write the next step you're driving to at the top of your notes before the call starts.", "After every story: say 'The reason I'm sharing this is because...' — out loud. If you can't finish the sentence, cut the story."],
-            crushTypes: ["Vision-driven leaders who need to see the dream before buying", "Skeptical buyers who need social proof — you deliver it better than anyone"],
+            roast: "You're the most entertaining rep on the floor. You could do a one-man show. Unfortunately, your prospect needed a 20-minute call and you gave them a 50-minute performance. The standing ovation was them saying 'Great chat, we'll circle back next quarter' - aka they enjoyed the show and bought nothing.",
+            coachingTip: "Brutus would keep you on track: 'Good story. Now tie it back to their problem. You have 8 minutes left - transition to next steps.'",
+            blindSpotDrills: ["Set a 2-minute timer when you start telling a case study. When it rings, immediately tie it to their specific situation.", "For your next 5 calls, write the next step you're driving to at the top of your notes before the call starts.", "After every story: say 'The reason I'm sharing this is because...' - out loud. If you can't finish the sentence, cut the story."],
+            crushTypes: ["Vision-driven leaders who need to see the dream before buying", "Skeptical buyers who need social proof - you deliver it better than anyone"],
             destroyedByTypes: ["Data-driven buyers who need facts, not anecdotes", "Time-pressed executives who want the point in 60 seconds"],
-            managerGuide: "They're your best storytellers — use that. Coach them on call structure, not content. Help them build a framework: intro → pain → story → tie-back → next step. Time their stories in call reviews. Their instincts are good; they just need guardrails."
+            managerGuide: "They're your best storytellers - use that. Coach them on call structure, not content. Help them build a framework: intro -> pain -> story -> tie-back -> next step. Time their stories in call reviews. Their instincts are good; they just need guardrails."
         },
         sniper: {
             name: "The Sniper", color: "#ff7850",
             oneLiner: "Efficient, precise, deadly. You only take shots you can make.",
-            strengths: ["Exceptional qualification — zero time on bad-fit deals", "Every call has a clear purpose and outcome", "Balances rapport with efficiency perfectly", "High close rate because pipeline is clean"],
+            strengths: ["Exceptional qualification - zero time on bad-fit deals", "Every call has a clear purpose and outcome", "Balances rapport with efficiency perfectly", "High close rate because pipeline is clean"],
             blindSpots: ["Can disqualify too early and miss real opportunities", "Sometimes comes across as cold or transactional", "Lower volume than peers", "Misses relationship buyers who need more warmth"],
-            roast: "You're the closest thing to a perfect rep in this assessment. Your pipeline is clean, your calls are structured, and you don't waste time. But let's be real — sometimes you're so focused on efficiency that you skip the human stuff. Not every prospect wants to feel like a qualified checkbox. Loosen up occasionally.",
-            coachingTip: "Brutus would help you find the edge cases: 'This one doesn't fit your ideal profile but the pain is real. Stay in the call — there might be something here.'",
-            blindSpotDrills: ["This week, stay in 2 calls past the point where you'd normally disqualify. See what you find.", "Add one purely relationship-building moment to each call this week — not related to the sale.", "Ask yourself after every disqualified prospect: 'Am I exiting too early because there's no fit, or because I'm uncomfortable with uncertainty?'"],
+            roast: "You're the closest thing to a perfect rep in this assessment. Your pipeline is clean, your calls are structured, and you don't waste time. But let's be real - sometimes you're so focused on efficiency that you skip the human stuff. Not every prospect wants to feel like a qualified checkbox. Loosen up occasionally.",
+            coachingTip: "Brutus would help you find the edge cases: 'This one doesn't fit your ideal profile but the pain is real. Stay in the call - there might be something here.'",
+            blindSpotDrills: ["This week, stay in 2 calls past the point where you'd normally disqualify. See what you find.", "Add one purely relationship-building moment to each call this week - not related to the sale.", "Ask yourself after every disqualified prospect: 'Am I exiting too early because there's no fit, or because I'm uncomfortable with uncertainty?'"],
             crushTypes: ["Busy executives who respect someone who values their time", "Mature buyers who have clear criteria and appreciate precision"],
             destroyedByTypes: ["Buyers who need extensive relationship-building before committing", "Deals with messy buying committees where process wins over precision"],
-            managerGuide: "Push them to increase activity volume on edge-case prospects — their instincts are good but overly conservative. Help them understand where warmth creates ROI. They're your most coachable rep; the adjustments are small."
+            managerGuide: "Push them to increase activity volume on edge-case prospects - their instincts are good but overly conservative. Help them understand where warmth creates ROI. They're your most coachable rep; the adjustments are small."
         }
     };
 
@@ -450,13 +520,13 @@
 
     const QUESTIONS = [
         { scenario: "You're 30 seconds into a cold call and the prospect says 'I'm busy, what is this about?' What do you do?", answers: [
-            { text: '"I\'ll be quick — we help companies like yours reduce churn by 30%. Got 60 seconds?"', scores: {bulldozer:3,closer:2} },
-            { text: '"Totally understand — when would be a better time to chat?"', scores: {people_pleaser:3,ghost:2} },
+            { text: '"I\'ll be quick - we help companies like yours reduce churn by 30%. Got 60 seconds?"', scores: {bulldozer:3,closer:2} },
+            { text: '"Totally understand - when would be a better time to chat?"', scores: {people_pleaser:3,ghost:2} },
             { text: '"Before I take your time, can I ask one quick question to see if this is even relevant for you?"', scores: {scientist:3,sniper:2} },
-            { text: '"Fair enough — I actually just got off a call with a competitor in your space who had the exact same reaction. Ended up being their biggest deal of the quarter."', scores: {storyteller:3,closer:2} }
+            { text: '"Fair enough - I actually just got off a call with a competitor in your space who had the exact same reaction. Ended up being their biggest deal of the quarter."', scores: {storyteller:3,closer:2} }
         ]},
         { scenario: "You just had a great discovery call. The prospect is excited. What do you do in the next 60 minutes?", answers: [
-            { text: "Strike while the iron is hot — send the proposal immediately and try to close this week.", scores: {bulldozer:3,closer:2} },
+            { text: "Strike while the iron is hot - send the proposal immediately and try to close this week.", scores: {bulldozer:3,closer:2} },
             { text: "Send a friendly recap and let them digest. Follow up in a few days.", scores: {people_pleaser:2,ghost:3} },
             { text: "Write a detailed recap with custom ROI calculations tied to everything they told you.", scores: {scientist:3,robot:2} },
             { text: "Send a quick recap, book the next meeting, and loop in their stakeholders before the energy dies.", scores: {sniper:3,closer:2} }
@@ -465,25 +535,25 @@
             { text: '"I hear that a lot. Most of our best customers said the same thing. Let me show you what you\'re missing."', scores: {bulldozer:3,robot:2} },
             { text: '"That\'s great to hear! If anything ever changes, keep me in mind."', scores: {people_pleaser:3,ghost:2} },
             { text: '"Out of curiosity, when was the last time you benchmarked what you\'re paying against the market?"', scores: {scientist:3,sniper:2} },
-            { text: '"Totally get it. One of our clients — similar size, same industry — said the same thing. Then they realized they were leaving $200K on the table annually. Want to hear what they found?"', scores: {storyteller:3,closer:2} }
+            { text: '"Totally get it. One of our clients - similar size, same industry - said the same thing. Then they realized they were leaving $200K on the table annually. Want to hear what they found?"', scores: {storyteller:3,closer:2} }
         ]},
         { scenario: "You're in a deal and a competitor just undercut your price by 30%. What's your move?", answers: [
             { text: "Match the price or find a way to discount. You can't lose this deal.", scores: {bulldozer:2,people_pleaser:3} },
             { text: "Build a side-by-side comparison showing total cost of ownership and where they fall short.", scores: {scientist:3,robot:2} },
-            { text: "Call your champion directly: 'I need to understand — is this a price decision or a value decision? Because if it's value, we should talk.'", scores: {closer:3,sniper:2} },
+            { text: "Call your champion directly: 'I need to understand - is this a price decision or a value decision? Because if it's value, we should talk.'", scores: {closer:3,sniper:2} },
             { text: "Tell a story about a customer who went with the cheaper option and came back 6 months later after it cost them more.", scores: {storyteller:3,closer:2} }
         ]},
         { scenario: "It's Friday afternoon. You have one deal that could close today if you push, but the prospect said they need the weekend to think. What do you do?", answers: [
             { text: "Call them anyway. Deals that go to the weekend die on Monday.", scores: {bulldozer:3,closer:2} },
             { text: "Respect their timeline. Send a nice email saying 'No rush, I'm here when you're ready.'", scores: {people_pleaser:3,ghost:2} },
             { text: "Send them a document over the weekend that addresses their likely concerns, so Monday morning they have everything they need.", scores: {scientist:3,sniper:2} },
-            { text: "Send a quick message: 'Totally respect that. Before the weekend, can I ask — what specifically do you need to think through? I might be able to help now so your Monday is clear.'", scores: {closer:3,sniper:2} }
+            { text: "Send a quick message: 'Totally respect that. Before the weekend, can I ask - what specifically do you need to think through? I might be able to help now so your Monday is clear.'", scores: {closer:3,sniper:2} }
         ]},
         { scenario: "You're on a demo and realize 10 minutes in that this prospect is not a good fit. What do you do?", answers: [
             { text: "Finish the demo anyway. You never know, maybe they'll surprise you.", scores: {robot:3,people_pleaser:2} },
-            { text: "Pivot the conversation to understanding their situation better — maybe there's an angle you're missing.", scores: {scientist:2,storyteller:2,sniper:1} },
-            { text: "Be direct: 'I want to be honest with you — based on what you've told me, I'm not sure we're the right fit. Here's why...'", scores: {sniper:3,closer:2} },
-            { text: "Power through a shortened version of the demo and try to close anyway — quota doesn't care about fit.", scores: {bulldozer:3,robot:2} }
+            { text: "Pivot the conversation to understanding their situation better - maybe there's an angle you're missing.", scores: {scientist:2,storyteller:2,sniper:1} },
+            { text: "Be direct: 'I want to be honest with you - based on what you've told me, I'm not sure we're the right fit. Here's why...'", scores: {sniper:3,closer:2} },
+            { text: "Power through a shortened version of the demo and try to close anyway - quota doesn't care about fit.", scores: {bulldozer:3,robot:2} }
         ]},
         { scenario: "Your manager asks for your forecast. You have a deal you're 50/50 on. How do you report it?", answers: [
             { text: "Put it in as committed. Confidence sells. You'll figure it out.", scores: {bulldozer:3,storyteller:2} },
@@ -495,7 +565,7 @@
             { text: "Keep calling and emailing. They're just busy. Persistence wins.", scores: {bulldozer:3,robot:2} },
             { text: "Move on. If they wanted to talk, they'd respond.", scores: {ghost:3,sniper:2} },
             { text: "Send a breakup email: 'Looks like the timing isn't right. I'm going to close out your file, but if things change, here's my direct line.'", scores: {closer:3,sniper:2} },
-            { text: "Try a completely different angle — find a different stakeholder, reference a new trigger event, or send something unexpected that resets the conversation.", scores: {storyteller:2,scientist:2,closer:1} }
+            { text: "Try a completely different angle - find a different stakeholder, reference a new trigger event, or send something unexpected that resets the conversation.", scores: {storyteller:2,scientist:2,closer:1} }
         ]},
         { scenario: "You're presenting pricing and the prospect visibly flinches. What do you do?", answers: [
             { text: "Immediately offer a discount or flexible terms to keep the conversation alive.", scores: {people_pleaser:3,bulldozer:2} },
@@ -504,25 +574,25 @@
             { text: "Reframe with a story: 'I know it's an investment. Let me share what a similar company was weighing at this point and what they ultimately decided.'", scores: {storyteller:3,closer:2} }
         ]},
         { scenario: "You won a big deal. Your manager asks you to share your approach with the team. What do you focus on?", answers: [
-            { text: "The hustle — how many calls, emails, and touches it took to get there.", scores: {bulldozer:3,robot:2} },
-            { text: "The relationship — how you built trust with the champion over time.", scores: {people_pleaser:3,storyteller:2} },
-            { text: "The process — your qualification criteria, the deal stages, and the specific turning points.", scores: {scientist:3,sniper:2} },
-            { text: "The key moments — the objection you handled, the negotiation tactic, the close itself.", scores: {closer:3,storyteller:2} }
+            { text: "The hustle - how many calls, emails, and touches it took to get there.", scores: {bulldozer:3,robot:2} },
+            { text: "The relationship - how you built trust with the champion over time.", scores: {people_pleaser:3,storyteller:2} },
+            { text: "The process - your qualification criteria, the deal stages, and the specific turning points.", scores: {scientist:3,sniper:2} },
+            { text: "The key moments - the objection you handled, the negotiation tactic, the close itself.", scores: {closer:3,storyteller:2} }
         ]},
         { scenario: "A prospect says 'Send me some information and I'll take a look.' How do you handle it?", answers: [
             { text: '"Sure! I\'ll send over our deck and some case studies." Then follow up in 3 days.', scores: {people_pleaser:2,ghost:3} },
             { text: '"Happy to. What specifically would be most useful for you to see? And when should we reconnect to discuss?"', scores: {closer:3,sniper:2} },
             { text: '"I could, but honestly a 2-minute conversation would be more useful than a 20-page deck. What if I just asked you 3 quick questions right now?"', scores: {bulldozer:2,closer:2,scientist:1} },
-            { text: '"Absolutely. But quick question before I do — most people who ask for info are trying to figure out one specific thing. Is that what you\'re evaluating?"', scores: {scientist:3,sniper:2} }
+            { text: '"Absolutely. But quick question before I do - most people who ask for info are trying to figure out one specific thing. Is that what you\'re evaluating?"', scores: {scientist:3,sniper:2} }
         ]},
         { scenario: "You're at 80% of quota with 5 days left in the month. What's your strategy?", answers: [
             { text: "Hammer the phones. Volume is the answer. Call everything in the pipeline.", scores: {bulldozer:3,robot:2} },
             { text: "Focus on the 2-3 deals most likely to close. Spend all your energy there.", scores: {sniper:3,scientist:2} },
-            { text: "Get creative — call in favors, offer month-end incentives, pull in your manager for executive alignment.", scores: {closer:3,storyteller:2} },
+            { text: "Get creative - call in favors, offer month-end incentives, pull in your manager for executive alignment.", scores: {closer:3,storyteller:2} },
             { text: "Honestly, 80% is pretty good. Don't want to burn relationships by being pushy at month-end.", scores: {people_pleaser:3,ghost:2} }
         ]},
-        { scenario: "You disagree with your prospect — they're about to make a bad decision that you know won't work. What do you do?", answers: [
-            { text: "Tell them directly. 'I have to be honest with you — I think that's the wrong move, and here's why.'", scores: {closer:3,sniper:2} },
+        { scenario: "You disagree with your prospect - they're about to make a bad decision that you know won't work. What do you do?", answers: [
+            { text: "Tell them directly. 'I have to be honest with you - I think that's the wrong move, and here's why.'", scores: {closer:3,sniper:2} },
             { text: "Subtly guide them by asking questions that lead them to the right conclusion.", scores: {scientist:3,storyteller:2} },
             { text: "Go along with it. It's their decision. You don't want to create conflict.", scores: {people_pleaser:3,ghost:2} },
             { text: "Share a story about another client who made the same choice and what happened.", scores: {storyteller:3,scientist:2} }
@@ -530,18 +600,18 @@
         { scenario: "It's Monday morning. You have no meetings booked this week. What's your first move?", answers: [
             { text: "Open the dialer and start making calls. Meetings don't book themselves.", scores: {bulldozer:3,closer:2} },
             { text: "Review your pipeline and build a strategic outreach plan for the week.", scores: {scientist:3,sniper:2} },
-            { text: "Check in with existing opportunities — nurture the relationships you already have.", scores: {people_pleaser:3,ghost:2} },
+            { text: "Check in with existing opportunities - nurture the relationships you already have.", scores: {people_pleaser:3,ghost:2} },
             { text: "Research 5 target accounts deeply, craft personalized outreach, and go for quality over quantity.", scores: {sniper:3,storyteller:2} }
         ]},
         { scenario: "A prospect asks 'Why should I choose you over [competitor]?' What's your instinct?", answers: [
             { text: "Go feature-by-feature on where you win. Make the case with facts and comparisons.", scores: {robot:3,scientist:2} },
-            { text: "'Good question. Before I answer — what's most important to you in making this decision?'", scores: {closer:3,sniper:2} },
+            { text: "'Good question. Before I answer - what's most important to you in making this decision?'", scores: {closer:3,sniper:2} },
             { text: "Tell a story about a customer who switched from that competitor and the results they got.", scores: {storyteller:3,closer:2} },
             { text: "'Honestly, [competitor] is solid for some use cases. Here's specifically where we're different and why it matters for YOUR situation.'", scores: {sniper:3,scientist:2} }
         ]}
     ];
 
-    // ── STATE ─────────────────────────────────────────────────────────────────
+    // -- STATE -----------------------------------------------------------------
 
     let state = {
         phase: 'hero',
@@ -555,7 +625,7 @@
     let activeModal = null;
     let copiedKey = null;
 
-    // ── SCORING ───────────────────────────────────────────────────────────────
+    // -- SCORING ---------------------------------------------------------------
 
     function calculateScores(answers) {
         const scores = {bulldozer:0,people_pleaser:0,scientist:0,ghost:0,closer:0,robot:0,storyteller:0,sniper:0};
@@ -580,7 +650,7 @@
         return Math.round((scores[key] / max) * 100);
     }
 
-    // ── PHASE TRANSITIONS ─────────────────────────────────────────────────────
+    // -- PHASE TRANSITIONS -----------------------------------------------------
 
     function show(id) {
         ['phase-hero','phase-questions','phase-email','phase-results'].forEach(p => {
@@ -664,7 +734,7 @@
                     <div class="locked-items">
                         ${["strengths + blind spots","blind spot drills","prospect matchups","manager guide"].map(item => `
                             <div class="locked-item">
-                                <span class="locked-item-arrow">→</span>
+                                <span class="locked-item-arrow">-></span>
                                 <span class="locked-item-label">${item}</span>
                                 <span class="locked-badge">locked</span>
                             </div>
@@ -673,7 +743,7 @@
                     <form onsubmit="submitEmail(event)">
                         <div class="email-form">
                             <input class="email-input" type="email" id="email-input" placeholder="your@email.com" autocomplete="email" autofocus>
-                            <button type="submit" class="btn-unlock" id="unlock-btn">see my results →</button>
+                            <button type="submit" class="btn-unlock" id="unlock-btn">see my results -></button>
                         </div>
                         <div id="email-error" class="email-error" style="display:none"></div>
                         <p class="email-fine-print">no spam. unsubscribe anytime.</p>
@@ -682,7 +752,7 @@
                         <a href="index.html" style="font-size:12px;color:rgba(255,255,255,0.2);text-decoration:none;font-family:'Space Mono',monospace;transition:color 0.2s"
                             onmouseover="this.style.color='rgba(255,255,255,0.45)'"
                             onmouseout="this.style.color='rgba(255,255,255,0.2)'">
-                            skip for now →
+                            skip for now ->
                         </a>
                     </div>
                 </div>
@@ -706,7 +776,7 @@
         btn.textContent = 'loading...';
         btn.disabled = true;
 
-        // Save to Supabase (non-blocking — don't wait for it)
+        // Save to Supabase (non-blocking - don't wait for it)
         saveToSupabase(email);
 
         renderResults();
@@ -762,19 +832,19 @@
                     <div class="card-divider"></div>
                     <p class="card-section-label" style="color:#50ff80">strengths</p>
                     <ul class="card-list">
-                        ${p.strengths.slice(0,3).map(s => `<li><span style="color:#50ff80">→</span>${s}</li>`).join('')}
+                        ${p.strengths.slice(0,3).map(s => `<li><span style="color:#50ff80">-></span>${s}</li>`).join('')}
                     </ul>
                     <p class="card-section-label" style="color:#ff5050">blind spots</p>
                     <ul class="card-list" style="margin-bottom:18px">
-                        ${p.blindSpots.slice(0,3).map(b => `<li><span style="color:#ff5050">→</span>${b}</li>`).join('')}
+                        ${p.blindSpots.slice(0,3).map(b => `<li><span style="color:#ff5050">-></span>${b}</li>`).join('')}
                     </ul>
                     <div class="card-divider"></div>
                     <div class="brutus-says">
-                        <p class="brutus-says-label">brutus says</p>
+                        <p class="brutus-says-label">Brutus says</p>
                         <p class="brutus-says-text">"${p.roast}"</p>
                     </div>
                     <div class="card-footer">
-                        <p class="card-footer-logo"><span style="color:#fff">brutus</span><span style="color:#ff5050">AI</span></p>
+                        <p class="card-footer-logo"><span style="color:#fff">Brutus</span><span style="color:#ff5050">AI</span></p>
                         <p class="card-footer-url">brutusai.coach/dna</p>
                     </div>
                 </div>
@@ -797,7 +867,7 @@
 
             <!-- Coaching tip -->
             <div class="coaching-tip">
-                <p class="coaching-tip-label">brutus coaching tip</p>
+                <p class="coaching-tip-label">Brutus coaching tip</p>
                 <p class="coaching-tip-text">${p.coachingTip}</p>
             </div>
 
@@ -845,13 +915,13 @@
                     <div class="matchup-box matchup-crush">
                         <p class="report-section-label" style="color:#50dc64">you crush</p>
                         <ul class="matchup-list">
-                            ${p.crushTypes.map(t => `<li><span style="color:#50dc64;flex-shrink:0">→</span>${t}</li>`).join('')}
+                            ${p.crushTypes.map(t => `<li><span style="color:#50dc64;flex-shrink:0">-></span>${t}</li>`).join('')}
                         </ul>
                     </div>
                     <div class="matchup-box matchup-destroy">
                         <p class="report-section-label" style="color:#ff5050">destroys you</p>
                         <ul class="matchup-list">
-                            ${p.destroyedByTypes.map(t => `<li><span style="color:#ff5050;flex-shrink:0">→</span>${t}</li>`).join('')}
+                            ${p.destroyedByTypes.map(t => `<li><span style="color:#ff5050;flex-shrink:0">-></span>${t}</li>`).join('')}
                         </ul>
                     </div>
                 </div>
@@ -895,9 +965,9 @@
             <!-- CTA -->
             <div class="cta-panel">
                 <p class="cta-title">now you know your type.</p>
-                <p class="cta-sub">let brutus coach you past your blind spots — live, on every call.</p>
-                <p class="cta-body">brutus AI listens to your sales calls in real-time and coaches you through the moments that matter. no more autopilot.</p>
-                <a href="https://app.brutusai.coach/signup" class="btn-cta">try brutus free →</a>
+                <p class="cta-sub">let Brutus coach you past your blind spots, live, on every call.</p>
+                <p class="cta-body">Brutus AI listens to your sales calls in real-time and coaches you through the moments that matter. no more autopilot.</p>
+                <a href="https://app.brutusai.coach/signup" class="btn-cta">try Brutus free -></a>
             </div>
 
             <div style="height:32px"></div>
@@ -907,7 +977,7 @@
                 <a href="index.html" style="display:inline-block;padding:14px 36px;border-radius:40px;font-size:14px;font-weight:600;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);text-decoration:none;font-family:'Space Mono',monospace;transition:all 0.3s"
                     onmouseover="this.style.color='rgba(255,255,255,0.85)';this.style.borderColor='rgba(255,80,80,0.3)'"
                     onmouseout="this.style.color='rgba(255,255,255,0.5)';this.style.borderColor='rgba(255,255,255,0.08)'">
-                    continue →
+                    continue ->
                 </a>
             </div>
         `;
@@ -918,20 +988,20 @@
         show('phase-hero');
     }
 
-    // ── SHARE ─────────────────────────────────────────────────────────────────
+    // -- SHARE -----------------------------------------------------------------
 
     const BASE_URL = 'https://brutusai.coach/dna';
 
     function shareTwitter() {
         const a = ARCHETYPES[state.primaryKey];
-        const text = `I just took the Sales Rep DNA Test and I'm "${a.name}"\n\n"${a.oneLiner}"\n\nWhat's your sales DNA? → ${BASE_URL}`;
+        const text = `I just took the Sales Rep DNA Test and I'm "${a.name}"\n\n"${a.oneLiner}"\n\nWhat's your sales DNA? -> ${BASE_URL}`;
         window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank', 'width=600,height=400');
     }
 
     function buildCaption(platform) {
         const a = ARCHETYPES[state.primaryKey];
-        if (platform === 'linkedin') return `Just took a Sales Rep DNA Test and got "${a.name}"\n\nStrengths: ${a.strengths.slice(0,2).join(', ')}\nBlind spots: ${a.blindSpots.slice(0,2).join(', ')}\n\nThe AI roast was brutal but accurate. Free to take → ${BASE_URL}\n\nWhat type are you? Drop it in the comments`;
-        if (platform === 'instagram') return `I'm "${a.name}" — what's your sales DNA?\n\n${BASE_URL}\n\n#sales #salestips #coldcalling #sdr #salesrep #salesdna #brutusai`;
+        if (platform === 'linkedin') return `Just took a Sales Rep DNA Test and got "${a.name}"\n\nStrengths: ${a.strengths.slice(0,2).join(', ')}\nBlind spots: ${a.blindSpots.slice(0,2).join(', ')}\n\nThe AI roast was brutal but accurate. Free to take -> ${BASE_URL}\n\nWhat type are you? Drop it in the comments`;
+        if (platform === 'instagram') return `I'm "${a.name}" - what's your sales DNA?\n\n${BASE_URL}\n\n#sales #salestips #coldcalling #sdr #salesrep #salesdna #brutusai`;
         return `POV: AI just told me I'm "${a.name}" and the roast was PERSONAL\n\nWhat's your sales DNA? ${BASE_URL}\n\n#salestok #salestips #coldcalling #sdr #salesrep #brutusai`;
     }
 
@@ -948,7 +1018,7 @@
 
         const actionBtn = document.getElementById('modal-action-btn');
         if (platform === 'linkedin') {
-            actionBtn.textContent = 'open linkedin →';
+            actionBtn.textContent = 'open linkedin ->';
             actionBtn.style.cssText = 'flex:1;padding:11px;border-radius:12px;font-weight:600;font-size:13px;cursor:pointer;background:#0A66C2;border:none;color:#fff;font-family:inherit';
         } else {
             actionBtn.textContent = 'download card';
@@ -1006,7 +1076,7 @@
         } catch(e) {}
     }
 
-    // ── NEURAL NETWORK ────────────────────────────────────────────────────────
+    // -- NEURAL NETWORK --------------------------------------------------------
 
     const canvas = document.getElementById('neural-canvas');
     const ctx = canvas.getContext('2d');
@@ -1035,7 +1105,7 @@
         document.documentElement.style.setProperty('--my', e.clientY + 'px');
     });
 
-    // ── MOBILE NAV ────────────────────────────────────────────────────────────
+    // -- MOBILE NAV ------------------------------------------------------------
 
     const menuBtn = document.querySelector('.mobile-menu-btn');
     const navLinks = document.querySelector('.nav-links');
@@ -1043,7 +1113,7 @@
         menuBtn.addEventListener('click', () => {
             navLinks.classList.toggle('open');
             menuBtn.innerHTML = navLinks.classList.contains('open')
-                ? '<span style="font-size:22px;line-height:1;display:block">×</span>'
+                ? '<span style="font-size:22px;line-height:1;display:block">x</span>'
                 : '<span class="bar"></span><span class="bar"></span><span class="bar"></span>';
         });
         navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
@@ -1058,3 +1128,9 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact and Support - Brutus AI</title>
+    <meta name="description" content="Contact Brutus AI for product questions, partnerships, account help, and general support.">
+    <link rel="canonical" href="https://brutusai.coach/contact.html">
+    <link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://brutusai.coach/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Contact",
+          "item": "https://brutusai.coach/contact.html"
+        }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Brutus AI",
+      "url": "https://brutusai.coach",
+      "logo": "https://brutusai.coach/favicon.png",
+      "email": "hello@brutusai.coach",
+      "founder": {
+        "@type": "Person",
+        "name": "Isaiah Rios"
+      },
+      "parentOrganization": {
+        "@type": "Organization",
+        "name": "La Rios Co LLC"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "hello@brutusai.coach",
+        "availableLanguage": "English"
+      }
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0a0a12;
+            --bg-card: rgba(20, 20, 35, 0.72);
+            --red-primary: #ff5050;
+            --red-secondary: #ff7850;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.62);
+            --border-subtle: rgba(255, 255, 255, 0.1);
+        }
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a12 0%, #12121f 30%, #0d1a2d 70%, #0a0a12 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        .content { position: relative; z-index: 10; }
+        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; background: transparent; border-bottom: 0; box-shadow: none; }
+        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--red-primary), var(--red-secondary)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 20px; color: white; }
+        .logo-text { font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; color: white; }
+        .logo-text span { color: var(--red-primary); }
+        .nav-links { display: flex; gap: 40px; align-items: center; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500; text-transform: lowercase; }
+        .nav-links a:hover, .nav-links a.active { color: var(--text-primary); }
+        .nav-cta { padding: 10px 24px; background: linear-gradient(135deg, var(--red-primary), var(--red-secondary)); border-radius: 30px; color: white !important; font-weight: 600; }
+        .page-shell { max-width: 1080px; margin: 0 auto; padding: 150px 24px 80px; }
+        .page-header { text-align: center; margin-bottom: 42px; }
+        .page-header h1 { font-size: clamp(38px, 6vw, 58px); margin-bottom: 16px; }
+        .page-header p { max-width: 720px; margin: 0 auto; color: var(--text-secondary); font-size: 18px; line-height: 1.75; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; margin-bottom: 28px; }
+        .card, .detail-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 24px;
+            padding: 28px;
+            backdrop-filter: blur(18px);
+        }
+        .card h2, .detail-card h2 { font-size: 22px; margin-bottom: 12px; }
+        .card p, .detail-card p, .detail-card li { color: var(--text-secondary); line-height: 1.75; font-size: 16px; }
+        .detail-card ul { padding-left: 18px; margin-top: 10px; }
+        a.inline-link { color: var(--red-secondary); text-decoration: none; }
+        a.inline-link:hover { color: var(--text-primary); }
+        footer { padding: 40px 24px 56px; border-top: 1px solid var(--border-subtle); }
+        .footer-content { max-width: 1080px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+        .footer-links { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; }
+        .footer-links a { color: var(--text-secondary); text-decoration: none; font-size: 14px; }
+        .footer-copyright { color: var(--text-secondary); font-size: 14px; }
+        @media (max-width: 768px) {
+            nav { padding: 16px 20px; }
+            .nav-links { display: none; }
+            .page-shell { padding-top: 122px; }
+            .footer-content { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <nav>
+            <a href="index.html" class="logo">
+                <div class="logo-icon">B</div>
+                <div class="logo-text">Brutus <span>AI</span></div>
+            </a>
+            <div class="nav-links">
+                <a href="features.html">features</a>
+                <a href="pricing.html">pricing</a>
+                <a href="about.html">about</a>
+                <a href="articles/">articles</a>
+                <a href="contact.html" class="active">contact</a>
+                <a href="https://app.brutusai.coach/login.html" class="nav-cta">get started</a>
+            </div>
+        </nav>
+
+        <main class="page-shell">
+            <section class="page-header">
+                <h1>contact Brutus AI</h1>
+                <p>If you have product questions, partnership ideas, or need help understanding how Brutus fits your sales workflow, this is the public contact point.</p>
+            </section>
+
+            <section class="card-grid">
+                <article class="card">
+                    <h2>general inquiries</h2>
+                    <p>Email <a class="inline-link" href="mailto:hello@brutusai.coach">hello@brutusai.coach</a> for product, partnership, and public-site questions.</p>
+                </article>
+                <article class="card">
+                    <h2>app access</h2>
+                    <p>The product lives at <a class="inline-link" href="https://app.brutusai.coach">app.brutusai.coach</a>. If you already have an account, use the in-app routes first for signup, login, and call analysis.</p>
+                </article>
+                <article class="card">
+                    <h2>company</h2>
+                    <p>Brutus AI is operated through La Rios Co LLC and built by Isaiah Rios.</p>
+                </article>
+            </section>
+
+            <section class="detail-card">
+                <h2>what to include when you email</h2>
+                <p>The fastest support comes from specific details. Include:</p>
+                <ul>
+                    <li>what you were trying to do</li>
+                    <li>which page or part of the product you were using</li>
+                    <li>what happened instead</li>
+                    <li>any screenshot or exact error text if you have it</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <a href="index.html" class="logo">
+                    <div class="logo-icon">B</div>
+                    <div class="logo-text">Brutus <span>AI</span></div>
+                </a>
+                <div class="footer-links">
+                    <a href="features.html">features</a>
+                    <a href="pricing.html">pricing</a>
+                    <a href="about.html">about</a>
+                    <a href="articles/">articles</a>
+                    <a href="contact.html">contact</a>
+                    <a href="privacy.html">privacy</a>
+                    <a href="terms.html">terms</a>
+                    <a href="refund.html">refunds</a>
+                </div>
+                <div class="footer-copyright">(c) 2026 Brutus AI. all rights reserved.</div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,78 @@
+{
+  "slug": "not-interested",
+  "target_query": "how to handle not interested objection",
+  "objection_phrase": "not interested",
+  "search_intent": "mixed",
+  "page_title": "What to Say When a Prospect Says \"Not Interested\" - Brutus AI",
+  "meta_description": "When a prospect says 'not interested' in the first 15 seconds, it is usually a reflex, not a real objection. Use a permission-based interrupt to earn 30 more seconds.",
+  "h1": "what to say when a prospect says \"not interested\" in the first 15 seconds",
+  "intro": "\"not interested\" in the first 15 seconds is not a position. it is a reflex. the prospect has not processed your pitch, your company, or your reason for calling. their brain registered one thing: stranger on phone, interruption, end this fast. if you treat that reflex like a real objection, you start arguing with a person who has not even listened yet. that is how reps lose the call before it becomes a call. the move is not to sell harder. the move is to interrupt the pattern, ask for a tiny amount of permission, and give them a clean no if you miss. you are not trying to win the deal in that moment. you are trying to earn 30 seconds.",
+  "example_dialog": [
+    {
+      "speaker": "prospect",
+      "line": "not interested."
+    },
+    {
+      "speaker": "rep",
+      "line": "totally understand. we help teams reduce manual follow-up and improve pipeline visibility."
+    },
+    {
+      "speaker": "prospect",
+      "line": "yeah, like I said, not interested."
+    },
+    {
+      "speaker": "rep",
+      "line": "fair. mind if I take 30 seconds, and if it still sounds irrelevant you can tell me to go away?"
+    },
+    {
+      "speaker": "prospect",
+      "line": "fine. 30 seconds."
+    }
+  ],
+  "psychology": "cold calls trigger the interruption reflex before the meaning of your words lands. the prospect hears a stranger, feels the interruption, and reaches for the fastest socially acceptable exit. that is why the phrase comes out while the rep is still in sentence two. the prospect is not evaluating the offer yet. they are protecting their attention. a pattern interrupt works because it names the moment, lowers the pressure, and gives control back to the prospect. now they can listen without feeling trapped.",
+  "counter_frames": [
+    {
+      "label": "permission-based interrupt",
+      "copy": "ask for 30 seconds and give them the right to say no after. it lowers resistance because the prospect gets control back."
+    },
+    {
+      "label": "role-specific value frame",
+      "copy": "tie the reason for the call to their job in one sentence. not your product. their problem."
+    },
+    {
+      "label": "disqualifying question",
+      "copy": "flip the dynamic by asking if the problem is even relevant to them. real buyers correct you. bad fits self-select out."
+    }
+  ],
+  "common_mistakes": [
+    "arguing with the phrase as if the prospect heard enough to reject you",
+    "pitching harder because silence feels uncomfortable",
+    "ignoring the blow-off and continuing the script",
+    "asking broad discovery questions before you have earned any rapport",
+    "apologizing so much that you train the prospect to end the call"
+  ],
+  "walk_away_when": [
+    "the prospect gives a coherent disqualifier after you ask what specifically is not interesting",
+    "the company size, category, or use case is genuinely wrong",
+    "the prospect has a hard policy against your category and can explain it clearly"
+  ],
+  "brutus_angle": "Brutus listens for the first-15-second blow-off pattern: clipped answers, low engagement, and the rep starting to speed up. the live cue is: \"don't sell harder. ask for 30 seconds and a no.\"",
+  "related_slugs": [
+    "send-me-information",
+    "bad-timing",
+    "too-expensive"
+  ],
+  "cta_variant": "Hear yourself fall into the 'not interested' trap in real time. Brutus flags it the second you start pitching harder. First 5 calls free.",
+  "faq_questions": [
+    "Is 'not interested' ever a real objection?",
+    "How long should I push past it?",
+    "Is the pattern interrupt manipulative?"
+  ],
+  "author": {
+    "name": "Brutus AI",
+    "company": "Brutus AI"
+  },
+  "status": "reviewed",
+  "demand_verified": true,
+  "notes": "Wave 1 draft payload. Passed JSON, banned-pattern, and rough similarity checks. Do not render to HTML until the gold-standard browser quality pass is accepted."
+}

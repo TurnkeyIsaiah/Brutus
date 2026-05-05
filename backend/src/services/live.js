@@ -78,7 +78,7 @@ async function handleTranscriptChunk(userId, payload) {
 
     const hasFunds = await hasTokens(userId);
     if (!hasFunds) {
-      return { type: 'error', code: 'OUT_OF_TOKENS', text: "you're out of tokens. add credits to keep brutus watching." };
+      return { type: 'error', code: 'OUT_OF_TOKENS', text: "you're out of tokens. add credits to keep Brutus watching." };
     }
 
     let transcript = transcriptChunk;

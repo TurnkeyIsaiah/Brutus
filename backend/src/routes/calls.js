@@ -310,7 +310,7 @@ router.delete('/:id', async (req, res, next) => {
     });
     
     res.json({
-      message: 'Call deleted. brutus forgets nothing though.'
+      message: 'Call deleted. Brutus forgets nothing though.'
     });
     
   } catch (error) {
@@ -442,7 +442,7 @@ router.patch('/:id/popup-feedback', async (req, res, next) => {
       data: { settings: { ...currentSettings, firstCallFeedbackShown: true } }
     });
 
-    res.json({ message: 'Thanks. brutus heard you.' });
+    res.json({ message: 'Thanks. Brutus heard you.' });
   } catch (error) {
     next(error);
   }

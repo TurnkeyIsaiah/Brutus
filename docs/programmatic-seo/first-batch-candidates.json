@@ -1,0 +1,203 @@
+[
+  {
+    "slug": "too-expensive",
+    "target_query": "how to handle too expensive sales objection",
+    "objection_phrase": "this is too expensive",
+    "priority": "high",
+    "demand_verified": true,
+    "demand_signals": "10+ dedicated pages from major SEO competitors (HubSpot, Close, Copper, Docket, Salesmate, pclub.io, MTD, SalesInsightsLab). Flagship objection. Highest commercial intent.",
+    "competition": "high",
+    "wave_1_pick": true
+  },
+  {
+    "slug": "not-interested",
+    "target_query": "how to handle not interested objection",
+    "objection_phrase": "not interested",
+    "priority": "high",
+    "demand_verified": true,
+    "demand_signals": "10+ dedicated pages (Cognism, FreshPerspective, Salesbuzz, RAIN, MrInsideSales, Klenty, MTD, Syrenn). Cold call flagship.",
+    "competition": "high",
+    "wave_1_pick": true
+  },
+  {
+    "slug": "send-me-information",
+    "target_query": "how to handle send me information objection",
+    "objection_phrase": "send me some information",
+    "priority": "high",
+    "demand_verified": true,
+    "demand_signals": "10+ dedicated pages (Salesbuzz, Intelemark, Hubspot, Salesscripter, Klenty, Mailshake, Close, 30mpc). Phone-specific, matches Brutus positioning.",
+    "competition": "high",
+    "wave_1_pick": true
+  },
+  {
+    "slug": "need-to-think-about-it",
+    "target_query": "how to handle i need to think about it objection",
+    "objection_phrase": "we need to think about it",
+    "priority": "high",
+    "demand_verified": true,
+    "demand_signals": "10+ dedicated pages (SalesGravy, Salesbuzz, Modjo, PhoneBurner, MrInsideSales, PrimaResource). Late-funnel, strong commercial intent.",
+    "competition": "high",
+    "wave_1_pick": true
+  },
+  {
+    "slug": "no-budget",
+    "target_query": "how to handle no budget objection",
+    "objection_phrase": "we don't have budget",
+    "priority": "high",
+    "demand_verified": true,
+    "demand_signals": "10+ dedicated pages (Nutshell, NASP, Bridgegroup, PPAI, Klenty, Cognism, SalesInsightsLab). Bottom-of-funnel commercial intent.",
+    "competition": "high",
+    "wave_1_pick": true
+  },
+  {
+    "slug": "happy-with-current-process",
+    "target_query": "how to handle we are happy with our current vendor objection",
+    "objection_phrase": "we're happy with our current vendor",
+    "priority": "medium",
+    "demand_verified": true,
+    "demand_signals": "10+ dedicated pages (MTD, B2BSalesConnections, Lushin, Hyperbound, Menemsha, Salesbuzz, RAIN, HubSpot, Docket). Strong demand. Note: likely overlaps with 'we-already-use-a-competitor' — pick one for wave 1.",
+    "competition": "high",
+    "wave_1_pick": false
+  },
+  {
+    "slug": "bad-timing",
+    "target_query": "how to handle now is not a good time objection",
+    "objection_phrase": "now is not a good time",
+    "priority": "medium",
+    "demand_verified": true,
+    "demand_signals": "10 dedicated pages (TheSalesBlog, HubSpot, CrankWheel, Mailshake, Docket, InsightSquared, Pipedrive, Salesforce, Cognism). Strong.",
+    "competition": "high",
+    "wave_1_pick": false
+  },
+  {
+    "slug": "competitor-is-cheaper",
+    "target_query": "how to handle competitor is cheaper objection",
+    "objection_phrase": "your competitor is cheaper",
+    "priority": "high",
+    "demand_verified": true,
+    "demand_signals": "Mostly bundled into 'too expensive' pages, only Docket and a few have dedicated coverage. Differentiation opportunity but high overlap risk with 'too-expensive' — defer to wave 2.",
+    "competition": "medium",
+    "wave_1_pick": false
+  },
+  {
+    "slug": "we-already-use-a-competitor",
+    "target_query": "how to handle we already use a competitor objection",
+    "objection_phrase": "we already use a competitor",
+    "priority": "high",
+    "demand_verified": false,
+    "demand_signals": "No dedicated SERP results for this exact phrasing. Likely absorbed by 'happy with current vendor' queries. Use 'happy-with-current-process' instead.",
+    "competition": "low",
+    "wave_1_pick": false,
+    "notes": "Recommend dropping this slug or merging into happy-with-current-process."
+  },
+  {
+    "slug": "call-me-next-quarter",
+    "target_query": "how to handle call me next quarter objection",
+    "objection_phrase": "call me next quarter",
+    "priority": "medium",
+    "demand_verified": true,
+    "demand_signals": "Only 3 SERP results (TheSalesBlog x2, VC Unfiltered). Lower volume but lower competition — long-tail opportunity for wave 2.",
+    "competition": "low",
+    "wave_1_pick": false
+  },
+  {
+    "slug": "we-handle-this-internally",
+    "target_query": "how to handle we handle this internally objection",
+    "objection_phrase": "we handle this internally",
+    "priority": "medium",
+    "demand_verified": false,
+    "demand_signals": "No dedicated SERP results. Either low demand or untouched niche. Skip for wave 1.",
+    "competition": "unknown",
+    "wave_1_pick": false
+  },
+  {
+    "slug": "email-me-instead",
+    "target_query": "how to handle email me instead objection",
+    "objection_phrase": "just email me",
+    "priority": "medium",
+    "demand_verified": false,
+    "demand_signals": "Only 1 SERP result (SalesPort). Likely overlaps with 'send-me-information.' Skip for wave 1 to avoid cannibalization.",
+    "competition": "low",
+    "wave_1_pick": false
+  },
+  {
+    "slug": "under-contract",
+    "target_query": "how to handle we are under contract objection",
+    "objection_phrase": "we're under contract",
+    "priority": "medium",
+    "demand_verified": null,
+    "demand_signals": "Not yet validated.",
+    "competition": "unknown",
+    "wave_1_pick": false
+  },
+  {
+    "slug": "we-tried-this-before",
+    "target_query": "how to handle we tried this before objection",
+    "objection_phrase": "we tried something like this before",
+    "priority": "medium",
+    "demand_verified": null,
+    "demand_signals": "Not yet validated.",
+    "competition": "unknown",
+    "wave_1_pick": false
+  },
+  {
+    "slug": "no-bandwidth",
+    "target_query": "how to handle we don't have bandwidth objection",
+    "objection_phrase": "we don't have the bandwidth",
+    "priority": "medium",
+    "demand_verified": null,
+    "demand_signals": "Not yet validated.",
+    "competition": "unknown",
+    "wave_1_pick": false
+  },
+  {
+    "slug": "no-headcount",
+    "target_query": "how to handle no headcount objection",
+    "objection_phrase": "we don't have the headcount",
+    "priority": "medium",
+    "demand_verified": null,
+    "demand_signals": "Not yet validated.",
+    "competition": "unknown",
+    "wave_1_pick": false
+  },
+  {
+    "slug": "need-manager-approval",
+    "target_query": "how to handle I need manager approval objection",
+    "objection_phrase": "I need my manager's approval",
+    "priority": "medium",
+    "demand_verified": null,
+    "demand_signals": "Not yet validated.",
+    "competition": "unknown",
+    "wave_1_pick": false
+  },
+  {
+    "slug": "no-urgency",
+    "target_query": "how to handle there is no urgency objection",
+    "objection_phrase": "there's no urgency right now",
+    "priority": "medium",
+    "demand_verified": null,
+    "demand_signals": "Not yet validated. May overlap with bad-timing.",
+    "competition": "unknown",
+    "wave_1_pick": false
+  },
+  {
+    "slug": "need-to-talk-to-the-team",
+    "target_query": "how to handle need to talk to the team objection",
+    "objection_phrase": "I need to talk to the team",
+    "priority": "medium",
+    "demand_verified": null,
+    "demand_signals": "Not yet validated.",
+    "competition": "unknown",
+    "wave_1_pick": false
+  },
+  {
+    "slug": "just-looking",
+    "target_query": "how to handle just looking objection",
+    "objection_phrase": "we're just looking",
+    "priority": "medium",
+    "demand_verified": null,
+    "demand_signals": "Not yet validated. More retail than B2B — may be off-persona.",
+    "competition": "unknown",
+    "wave_1_pick": false
+  }
+]

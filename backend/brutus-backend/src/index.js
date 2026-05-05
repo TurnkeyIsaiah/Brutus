@@ -33,7 +33,7 @@ app.use('/live', liveRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'brutus is watching.' });
+  res.json({ status: 'ok', message: 'Brutus is watching.' });
 });
 
 // ==================== WEBSOCKET (for real-time feedback) ====================
@@ -126,7 +126,7 @@ wss.on('connection', async (ws, req) => {
     // Send welcome message
     ws.send(JSON.stringify({
       type: 'connected',
-      payload: { message: 'brutus is ready to judge you.' }
+      payload: { message: 'Brutus is ready to judge you.' }
     }));
     
   } catch (error) {

@@ -411,7 +411,7 @@ Generate an updated profile in JSON:
   "badHabits": ["habit that keeps appearing across calls", "..."],
   "strengths": ["genuine strength shown across multiple calls", "..."],
   "areasImproving": ["something getting measurably better", "..."],
-  "summary": "2-3 sentence brutus-style summary of where they're at and what to fix next"
+  "summary": "2-3 sentence Brutus-style summary of where they're at and what to fix next"
 }`
         }
       ]

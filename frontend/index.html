@@ -484,7 +484,6 @@
         .panel-title {
             font-family: 'Space Mono', monospace;
             font-size: 12px;
-            text-transform: lowercase;
             color: rgba(255, 80, 80, 0.8);
             margin-bottom: 16px;
             letter-spacing: 1px;
@@ -2028,7 +2027,7 @@
         <div class="auth-container">
             <div class="auth-logo">
                 <div class="auth-logo-icon">B</div>
-                <div class="auth-logo-text">brutus <span>AI</span></div>
+                <div class="auth-logo-text">Brutus <span>AI</span></div>
             </div>
             
             <div class="auth-tabs">
@@ -2062,7 +2061,7 @@
     <!-- Logo -->
     <div class="logo">
         <div class="logo-icon">B</div>
-        <div class="logo-text">brutus <span>AI</span></div>
+        <div class="logo-text">Brutus <span>AI</span></div>
     </div>
     
     <!-- Token Balance Badge -->
@@ -2149,7 +2148,7 @@
             
             <!-- Chat Panel -->
             <div class="floating-panel chat-panel" data-panel="chat">
-                <div class="panel-title">chat with brutus</div>
+                <div class="panel-title">chat with Brutus</div>
                 <div class="chat-messages" id="chat-messages">
                     <div class="chat-message">
                         <div class="message-avatar brutus-avatar">B</div>
@@ -2160,7 +2159,7 @@
                     </div>
                 </div>
                 <div class="chat-input-container">
-                    <input type="text" class="chat-input" id="chat-input" placeholder="ask brutus anything...">
+                    <input type="text" class="chat-input" id="chat-input" placeholder="ask Brutus anything...">
                     <button class="chat-send-btn" id="chat-send-btn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
@@ -2254,7 +2253,7 @@
                     <button class="call-modal-close" id="first-call-feedback-skip">✕</button>
                 </div>
                 <div style="margin-bottom: 20px;">
-                    <div class="popup-label">did brutus help on this call?</div>
+                    <div class="popup-label">did Brutus help on this call?</div>
                     <div class="popup-helpful-row">
                         <button type="button" class="popup-helpful-btn" data-value="yes">yes</button>
                         <button type="button" class="popup-helpful-btn" data-value="kind_of">kind of</button>
@@ -2263,13 +2262,13 @@
                 </div>
                 <div style="margin-bottom: 16px;">
                     <div class="popup-label">what worked best?</div>
-                    <textarea id="popup-what-worked" class="popup-textarea" placeholder="anything brutus nailed"></textarea>
+                    <textarea id="popup-what-worked" class="popup-textarea" placeholder="anything Brutus nailed"></textarea>
                 </div>
                 <div style="margin-bottom: 24px;">
                     <div class="popup-label">what was missing or annoying?</div>
                     <textarea id="popup-what-didnt" class="popup-textarea" placeholder="what should we fix"></textarea>
                 </div>
-                <button type="button" id="popup-submit-btn" class="popup-submit-btn">send to brutus</button>
+                <button type="button" id="popup-submit-btn" class="popup-submit-btn">send to Brutus</button>
             </div>
         </div>
 
@@ -2278,7 +2277,7 @@
             <div class="call-modal" style="max-width: 480px;">
                 <div class="call-modal-header">
                     <div>
-                        <div class="call-modal-title">brutus is ready. let's get you on a call.</div>
+                        <div class="call-modal-title">Brutus is ready. let's get you on a call.</div>
                         <div class="walkthrough-subhead">three quick things before your next sales call.</div>
                     </div>
                     <button class="call-modal-close" id="walkthrough-close">✕</button>
@@ -2288,7 +2287,7 @@
                     <div class="walkthrough-step-num">1</div>
                     <div class="walkthrough-step-text">
                         <div class="walkthrough-step-title">download the desktop app</div>
-                        <div class="walkthrough-step-body">brutus listens through your computer. web alone won't cut it.</div>
+                        <div class="walkthrough-step-body">Brutus listens through your computer. web alone won't cut it.</div>
                     </div>
                 </div>
 
@@ -2303,7 +2302,7 @@
                 <div class="walkthrough-step">
                     <div class="walkthrough-step-num">3</div>
                     <div class="walkthrough-step-text">
-                        <div class="walkthrough-step-title">watch brutus judge you in real time</div>
+                        <div class="walkthrough-step-title">watch Brutus judge you in real time</div>
                         <div class="walkthrough-step-body">a panel pops up on top of your call. roasts incoming.</div>
                     </div>
                 </div>
@@ -2341,7 +2340,7 @@
                     <div class="balance-amount" id="credits-balance-display">---</div>
                     <div class="balance-sublabel" id="credits-balance-dollars"></div>
                     <div id="credits-low-warning" class="balance-warning" style="display:none">
-                        running low — top up to keep brutus watching your calls
+                        running low — top up to keep Brutus watching your calls
                     </div>
                 </div>
 
@@ -2702,7 +2701,7 @@
                 </div>
 
                 <div id="delete-progress-copy" class="delete-loss-copy">
-                    brutus learned your style across these calls. that context goes away the second this account is gone. give it one more real call before you decide.
+                    Brutus learned your style across these calls. that context goes away the second this account is gone. give it one more real call before you decide.
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-top: 22px;">
@@ -3539,7 +3538,7 @@
 
             // Default: hide stats grid, show fallback copy until data loads
             grid.style.display = 'none';
-            copy.textContent = "brutus is still calibrating to your style. one real call is usually when it clicks.";
+            copy.textContent = "Brutus is still calibrating to your style. one real call is usually when it clicks.";
             overlay.classList.remove('hidden');
 
             // Pull fresh stats from the dashboard endpoint. If anything fails, the
@@ -3568,7 +3567,7 @@
                     document.getElementById('delete-stat-tokens').textContent = tokens;
 
                     grid.style.display = 'grid';
-                    copy.textContent = "brutus learned your style across these calls. that context goes away the second this account is gone. give it one more real call before you decide.";
+                    copy.textContent = "Brutus learned your style across these calls. that context goes away the second this account is gone. give it one more real call before you decide.";
                 }
             } catch (_) {
                 // Keep the fallback copy
@@ -3952,7 +3951,7 @@
             return `
                 <div class="empty-call-card">
                     <div class="empty-call-card-title">no calls yet.</div>
-                    <div class="empty-call-card-sub">brutus is bored.</div>
+                    <div class="empty-call-card-sub">Brutus is bored.</div>
                     <ol class="empty-call-card-steps">
                         <li>download the desktop app</li>
                         <li>start a session before your next call</li>
@@ -4368,7 +4367,7 @@
             whatDidntEl.value = '';
             helpfulBtns.forEach(b => b.classList.remove('selected'));
             submitBtn.disabled = false;
-            submitBtn.textContent = 'send to brutus';
+            submitBtn.textContent = 'send to Brutus';
 
             helpfulBtns.forEach(btn => {
                 btn.onclick = () => {

@@ -1,0 +1,74 @@
+{
+  "slug": "too-expensive",
+  "target_query": "how to handle too expensive sales objection",
+  "objection_phrase": "this is too expensive",
+  "search_intent": "mixed",
+  "page_title": "How to Handle the \"Too Expensive\" Objection (Without Discounting) - Brutus AI",
+  "meta_description": "The 'too expensive' sales objection is rarely about price. Diagnose the three flavors (budget, value, anchoring) in 30 seconds and respond without dropping your price.",
+  "h1": "how to handle the \"too expensive\" objection without dropping your price",
+  "intro": "\"too expensive\" is almost never a price problem. it is one of three problems that share the same words: a real budget gap, a value misunderstanding, or an anchoring reflex. defend the wrong flavor and you lose the deal. discount the wrong flavor and you train the prospect to push you every quarter. either way, you bleed margin you did not have to. the dangerous part is how fast reps answer. the prospect says the number feels high, and the rep starts justifying, listing features, or cutting price before they know what kind of expensive they are dealing with on this call. slow down. diagnose the flavor in under 30 seconds. then give the right response, not the reflex one.",
+  "example_dialog": [
+    {
+      "speaker": "prospect",
+      "line": "honestly, that's way too expensive."
+    },
+    {
+      "speaker": "rep",
+      "line": "ok, hold on. when you say expensive, are you saying you don't have the budget for it, or that you're not sure it's worth that much?"
+    },
+    {
+      "speaker": "prospect",
+      "line": "honestly... probably the second one. I don't see how it pays for itself."
+    },
+    {
+      "speaker": "rep",
+      "line": "that's a different conversation. what's the problem costing you per month right now?"
+    }
+  ],
+  "psychology": "people do not judge price against value first. they judge price against a reference point. the first dollar figure they hear in a category becomes the anchor. when your number lands above that anchor, \"too expensive\" can come out before they have processed what they are buying. the right move is to surface the anchor, reset it if it is wrong, or confirm that the budget gap is real.",
+  "counter_frames": [
+    {
+      "label": "real budget gap",
+      "copy": "switch to scope, not price. if the budget gap is real, cut scope instead of discounting the same package."
+    },
+    {
+      "label": "value misunderstanding",
+      "copy": "re-anchor on the cost of doing nothing. the prospect has not connected the price to the problem yet."
+    },
+    {
+      "label": "anchoring reflex",
+      "copy": "surface the anchor. ask what number they had in mind and where that number came from."
+    }
+  ],
+  "common_mistakes": [
+    "defending the price before diagnosing the flavor",
+    "offering a discount in the first 60 seconds after the objection",
+    "listing more features when the prospect is asking a value or anchor question",
+    "asking \"compared to what\" as the opener instead of as a follow-up",
+    "restating the number louder"
+  ],
+  "walk_away_when": [
+    "the prospect can name a hard ceiling and a documented reason for it, and your minimum is above it",
+    "price keeps coming back after multiple rounds of diagnostic and counter-frame",
+    "the prospect keeps asking for a discount without engaging on scope or value"
+  ],
+  "brutus_angle": "Brutus catches the moment a rep starts defending price, listing features, or floating a discount in the opening reaction. the live cue is: \"don't defend. ask which kind of expensive.\"",
+  "related_slugs": [
+    "competitor-is-cheaper",
+    "no-budget",
+    "need-to-think-about-it"
+  ],
+  "cta_variant": "Stop defending price on calls. Try Brutus free for 5 calls and let it call out the moment you start justifying.",
+  "faq_questions": [
+    "Is 'too expensive' ever a real price problem?",
+    "Should I ever discount on the 'too expensive' objection?",
+    "How do I tell anchoring from a real budget gap?"
+  ],
+  "author": {
+    "name": "Brutus AI",
+    "company": "Brutus AI"
+  },
+  "status": "reviewed",
+  "demand_verified": true,
+  "notes": "Gold-standard wave 1 page drafted from locked brief on 2026-05-05. HTML output lives at website/objections/too-expensive.html. Passed JSON, banned-pattern, and rough similarity checks."
+}

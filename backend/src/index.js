@@ -89,7 +89,7 @@ app.use('/frontend', express.static(path.join(__dirname, '..', '..', 'frontend')
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'brutus is watching.' });
+  res.json({ status: 'ok', message: 'Brutus is watching.' });
 });
 
 // ==================== WEBSOCKET (for real-time feedback) ====================
@@ -176,7 +176,7 @@ wss.on('connection', async (ws, req) => {
         wsConnectionCount.set(user.id, (wsConnectionCount.get(user.id) || 0) + 1);
         registerSession(user.id, ws);
         console.log(`WebSocket authenticated for user: ${user.email}`);
-        ws.send(JSON.stringify({ type: 'connected', payload: { message: 'brutus is ready to judge you.' } }));
+        ws.send(JSON.stringify({ type: 'connected', payload: { message: 'Brutus is ready to judge you.' } }));
         return;
       }
 

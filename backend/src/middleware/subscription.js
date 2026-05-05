@@ -4,7 +4,7 @@ const checkTokenBalance = (req, res, next) => {
   if (req.user.tokenBalance <= 0n) {
     return res.status(403).json({
       error: {
-        message: "you're out of tokens. add credits to keep brutus working.",
+        message: "you're out of tokens. add credits to keep Brutus working.",
         code: 'OUT_OF_TOKENS'
       }
     });
