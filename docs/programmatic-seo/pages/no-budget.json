@@ -45,11 +45,12 @@
     }
   ],
   "common_mistakes": [
-    "offering an immediate discount",
-    "splitting the deal smaller without changing the decision conversation",
-    "accepting \"call us next quarter\" without identifying who controls budget",
-    "multi-threading behind the contact's back and burning trust",
-    "treating a department manager like a final economic buyer"
+    "offering an immediate discount. fix: discount answers a price objection. this is an authority objection. confirm who controls budget before you change the number.",
+    "splitting the deal smaller without changing the decision conversation. fix: a smaller deal still needs the budget owner. shrinking the package without finding them just locks in a smaller no.",
+    "accepting 'call us next quarter' without identifying who controls budget. fix: agree to the timing only after you know whose budget unfreezes. otherwise you are scheduling a follow-up with the wrong person.",
+    "multi-threading behind the contact's back and burning trust. fix: ask for permission. 'would it make sense to pull in the person who owns this category?' turns multi-threading into a partnership instead of a betrayal.",
+    "treating a department manager like a final economic buyer. fix: managers can recommend, block, and champion. they rarely decide alone. plan the call accordingly.",
+    "assuming 'no budget' always means the same thing across deals. fix: run the authority test on every one. authority deflection and real spend constraints are very different problems with very different next moves."
   ],
   "walk_away_when": [
     "there is a documented company-wide spend freeze tied to layoffs, missed quarter, or a cost-out program",
@@ -69,10 +70,10 @@
     "When should I multi-thread vs. wait?"
   ],
   "author": {
-    "name": "Brutus AI",
+    "name": "Isaiah Rios",
     "company": "Brutus AI"
   },
-  "status": "reviewed",
+  "status": "published",
   "demand_verified": true,
-  "notes": "Wave 1 draft payload. Passed JSON, banned-pattern, and rough similarity checks. Do not render to HTML until the gold-standard browser quality pass is accepted."
+  "notes": "Wave 1 published article. HTML at website/objections/no-budget.html. Person author schema (Isaiah Rios, founder) rendered in JSON-LD and visible byline."
 }

@@ -73,7 +73,8 @@
     },
     "counter_frames": {
       "type": "array",
-      "minItems": 3,
+      "minItems": 1,
+      "description": "Use the actual number of distinct interpretations or response paths the objection deserves. Do not force a fixed-count structure.",
       "items": {
         "type": "object",
         "required": ["label", "copy"],
@@ -90,6 +91,7 @@
     "common_mistakes": {
       "type": "array",
       "minItems": 3,
+      "description": "Mistakes should be specific, and the surrounding article should explain what to do instead or how to decide when to do it.",
       "items": {
         "type": "string"
       }

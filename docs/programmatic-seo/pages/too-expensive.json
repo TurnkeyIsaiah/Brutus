@@ -4,9 +4,9 @@
   "objection_phrase": "this is too expensive",
   "search_intent": "mixed",
   "page_title": "How to Handle the \"Too Expensive\" Objection (Without Discounting) - Brutus AI",
-  "meta_description": "The 'too expensive' sales objection is rarely about price. Diagnose the three flavors (budget, value, anchoring) in 30 seconds and respond without dropping your price.",
+  "meta_description": "The 'too expensive' sales objection is rarely about price. Diagnose the real meaning on this call and respond without dropping your price.",
   "h1": "how to handle the \"too expensive\" objection without dropping your price",
-  "intro": "\"too expensive\" is almost never a price problem. it is one of three problems that share the same words: a real budget gap, a value misunderstanding, or an anchoring reflex. defend the wrong flavor and you lose the deal. discount the wrong flavor and you train the prospect to push you every quarter. either way, you bleed margin you did not have to. the dangerous part is how fast reps answer. the prospect says the number feels high, and the rep starts justifying, listing features, or cutting price before they know what kind of expensive they are dealing with on this call. slow down. diagnose the flavor in under 30 seconds. then give the right response, not the reflex one.",
+  "intro": "\"too expensive\" is almost never just a price problem. it can be a real budget gap, a value misunderstanding, an anchor mismatch, or a different buying concern hiding behind the number. defend the wrong meaning and you lose the deal. discount the wrong meaning and you train the prospect to push you every quarter. either way, you bleed margin you did not have to. the dangerous part is how fast reps answer. the prospect says the number feels high, and the rep starts justifying, listing features, or cutting price before they know what the objection actually means on this call. slow down. diagnose the real meaning in under 30 seconds. then give the right response, not the reflex one.",
   "example_dialog": [
     {
       "speaker": "prospect",
@@ -29,23 +29,23 @@
   "counter_frames": [
     {
       "label": "real budget gap",
-      "copy": "switch to scope, not price. if the budget gap is real, cut scope instead of discounting the same package."
+    "copy": "switch to scope, not price. if the budget gap is real, cut scope or timing instead of discounting the same package."
     },
     {
       "label": "value misunderstanding",
-      "copy": "re-anchor on the cost of doing nothing. the prospect has not connected the price to the problem yet."
+    "copy": "re-anchor on the cost of doing nothing. the prospect has not connected the price to the problem yet, so the number lands as a shock instead of a tradeoff."
     },
     {
       "label": "anchoring reflex",
-      "copy": "surface the anchor. ask what number they had in mind and where that number came from."
+    "copy": "surface the anchor. ask what number they had in mind and where that number came from. the answer usually tells you whether you are too high, too early, or too broad."
     }
   ],
   "common_mistakes": [
-    "defending the price before diagnosing the flavor",
-    "offering a discount in the first 60 seconds after the objection",
-    "listing more features when the prospect is asking a value or anchor question",
-    "asking \"compared to what\" as the opener instead of as a follow-up",
-    "restating the number louder"
+    "defending the price before diagnosing the meaning of the objection. fix: slow down, ask which kind of expensive this is, and let them name it before you respond.",
+    "offering a discount in the first 60 seconds after the objection. fix: never discount on a reflex. discounts answer real price gaps, not value or anchoring problems.",
+    "listing more features when the prospect is asking a value or anchor question. fix: answer the concern they actually raised, not the one you wish they had raised.",
+    "asking 'compared to what' too early. fix: surface the anchor first ('what number did you have in mind?'), then compare.",
+    "restating the number louder instead of changing the conversation. fix: change the scope, the timing, or the anchor before you change the number."
   ],
   "walk_away_when": [
     "the prospect can name a hard ceiling and a documented reason for it, and your minimum is above it",
@@ -65,10 +65,10 @@
     "How do I tell anchoring from a real budget gap?"
   ],
   "author": {
-    "name": "Brutus AI",
+    "name": "Isaiah Rios",
     "company": "Brutus AI"
   },
-  "status": "reviewed",
+  "status": "published",
   "demand_verified": true,
-  "notes": "Gold-standard wave 1 page drafted from locked brief on 2026-05-05. HTML output lives at website/objections/too-expensive.html. Passed JSON, banned-pattern, and rough similarity checks."
+  "notes": "Gold-standard wave 1 published article. HTML output at website/objections/too-expensive.html. Person author schema (Isaiah Rios, founder) rendered in JSON-LD and visible byline."
 }

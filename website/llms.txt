@@ -13,6 +13,10 @@ Brutus AI is distinct from post-call analytics tools. It coaches during the call
 - [Sales Rep DNA Test](https://brutusai.coach/dna.html): free lead-magnet quiz that classifies sales reps into 8 archetypes based on their selling style. Shows your archetype name immediately; email unlocks the full breakdown of strengths, blind spots, prospect matchups, and a manager guide.
 - [Articles](https://brutusai.coach/articles/): sales articles and guides covering objection handling, discovery, follow-up, live-call coaching, Brutus product updates, and sales rep habits
 - [Too Expensive Objection](https://brutusai.coach/objections/too-expensive.html): explains the three flavors behind "too expensive" and how to respond without immediately discounting
+- [Not Interested Objection](https://brutusai.coach/objections/not-interested.html): shows how to handle the first-15-seconds reflex without turning the call into a pitch
+- [Send Me Information](https://brutusai.coach/objections/send-me-information.html): covers the polite brush-off and how to stop emailing decks into a void
+- [I Need to Think About It](https://brutusai.coach/objections/need-to-think-about-it.html): breaks down the hidden blockers behind a vague stall
+- [No Budget](https://brutusai.coach/objections/no-budget.html): explains why budget language is often really an authority problem
 
 ## Pricing
 

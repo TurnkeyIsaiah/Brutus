@@ -19,6 +19,18 @@ Every drafting sub-agent and every review sub-agent must invoke the `article-wri
 
 The main agent must include the skill invocation in the sub-agent prompt. Do not assume the sub-agent will pick it up on its own.
 
+## Mandatory SEO playbook reference
+
+Every drafting and review sub-agent must also read the Brutus SEO playbook at `docs/seo/playbook.md` before producing any output. The playbook governs:
+
+- per-page programmatic-content requirements (uniqueness, word range, sibling links, byline, schemas)
+- the ≥70% similarity rejection bar
+- the hard "do not" list (no `HowTo` schema, no fake `aggregateRating`, no LCP lazy-load, no writing to a word count target, etc.)
+- title format conventions and meta-description targets
+- the technical reference at `docs/seo/technical.md` and the content reference at `docs/seo/content.md`
+
+Drafts that violate the playbook (e.g., near-duplicate intros across the batch, deprecated schema types, missing canonical, missing sibling links) are rejected at review.
+
 ## Mandatory voice reference
 
 The skill calls for voice examples. Ours live at `voice-references/brutus-voice.md`. Every draft must mirror that voice. The reference covers:
@@ -67,6 +79,8 @@ Sub-agents are drafting workers, not the editorial system.
    - CTA sameness
    - FAQ sameness
    - whether the page is useful without Brutus
+   - whether the draft forces a fixed-count explanation when the objection actually has more or fewer real meanings
+   - whether the correction section explains what to do instead, not just what not to do
 5. Main agent runs similarity checks against the batch.
 6. Only approved pages get rendered to HTML.
 
@@ -78,6 +92,7 @@ Every brief should include:
 - the exact objection wording
 - what makes this page different from the closest sibling
 - one required example scenario
+- a required meaning map that lists every real interpretation the objection has on the page, with no forced count
 - one required "when to walk away" condition
 - one Brutus-specific coaching moment
 - 3-5 related pages it should link to
@@ -93,6 +108,7 @@ Reject the draft if any of these are true:
 - CTA is copy-pasted from another page
 - FAQ questions are recycled boilerplate
 - the page reads like a product ad more than a help page
+- the draft uses a fixed 3-part structure even though the objection clearly has a different number of real meanings
 - the draft contains any banned pattern from the article-writing skill (generic landscape openings, filler transitions, hype phrases, unsourced biographical claims)
 - the draft contains em dashes mid-sentence
 - the draft contains emojis

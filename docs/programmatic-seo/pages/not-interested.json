@@ -45,11 +45,12 @@
     }
   ],
   "common_mistakes": [
-    "arguing with the phrase as if the prospect heard enough to reject you",
-    "pitching harder because silence feels uncomfortable",
-    "ignoring the blow-off and continuing the script",
-    "asking broad discovery questions before you have earned any rapport",
-    "apologizing so much that you train the prospect to end the call"
+    "arguing with the phrase as if the prospect heard enough to reject you. fix: name the moment instead. 'i caught you cold, give me 30 seconds and a no.'",
+    "pitching harder because silence feels uncomfortable. fix: stop selling. ask one specific question tied to their role, then wait.",
+    "ignoring the blow-off and continuing the script. fix: acknowledge the blow-off out loud. you cannot earn permission you have not asked for.",
+    "asking broad discovery questions before you have earned any rapport. fix: lead with a one-line value frame, then ask if it is even relevant.",
+    "apologizing so much that you train the prospect to end the call. fix: confidence is not rudeness. earn the next 30 seconds, not their forgiveness.",
+    "treating a coherent disqualifier as another reflex. fix: when they give you a real reason, thank them and move on. that is a fast win, not a loss."
   ],
   "walk_away_when": [
     "the prospect gives a coherent disqualifier after you ask what specifically is not interesting",
@@ -69,10 +70,10 @@
     "Is the pattern interrupt manipulative?"
   ],
   "author": {
-    "name": "Brutus AI",
+    "name": "Isaiah Rios",
     "company": "Brutus AI"
   },
-  "status": "reviewed",
+  "status": "published",
   "demand_verified": true,
-  "notes": "Wave 1 draft payload. Passed JSON, banned-pattern, and rough similarity checks. Do not render to HTML until the gold-standard browser quality pass is accepted."
+  "notes": "Wave 1 published article. HTML at website/objections/not-interested.html. Person author schema (Isaiah Rios, founder) rendered in JSON-LD and visible byline."
 }

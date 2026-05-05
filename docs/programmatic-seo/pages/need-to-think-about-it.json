@@ -49,11 +49,12 @@
     }
   ],
   "common_mistakes": [
-    "scheduling a vague follow-up and calling it next steps",
-    "sending more case studies without knowing the missing proof",
-    "dropping the price before price has been named",
-    "asking \"is it the price?\" first and signaling that you think it is",
-    "letting the prospect leave without naming the blocker"
+    "scheduling a vague follow-up and calling it next steps. fix: any follow-up needs a named blocker attached. 'we will talk thursday' is not progress. 'we will talk thursday after you walk this past the CFO' is.",
+    "sending more case studies without knowing the missing proof. fix: ask which kind of proof would change their mind, then send only that. random social proof reads like filler.",
+    "dropping the price before price has been named. fix: run the price diagnostic question first. discounting an objection nobody raised teaches the prospect your number was inflated.",
+    "asking 'is it the price?' first and signaling that you think it is. fix: ask the neutral version. 'if we set price aside, would the rest of this be a yes?' lets price surface without you leading them to it.",
+    "letting the prospect leave without naming the blocker. fix: end the call by either confirming a blocker and a next step, or honestly admitting you don't have one and asking for one. silence after the call is the signal you missed it.",
+    "treating all three blockers like the same problem. fix: price gets a scope or value answer. authority gets a multi-thread answer. trust gets a proof answer. do not bring scope to a trust problem."
   ],
   "walk_away_when": [
     "the prospect names a specific stakeholder concern outside their control",
@@ -73,10 +74,10 @@
     "Should I ever just accept the stall?"
   ],
   "author": {
-    "name": "Brutus AI",
+    "name": "Isaiah Rios",
     "company": "Brutus AI"
   },
-  "status": "reviewed",
+  "status": "published",
   "demand_verified": true,
-  "notes": "Wave 1 draft payload. Passed JSON, banned-pattern, and rough similarity checks. Do not render to HTML until the gold-standard browser quality pass is accepted."
+  "notes": "Wave 1 published article. HTML at website/objections/need-to-think-about-it.html. Person author schema (Isaiah Rios, founder) rendered in JSON-LD and visible byline."
 }

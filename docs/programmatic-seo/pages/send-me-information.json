@@ -45,11 +45,12 @@
     }
   ],
   "common_mistakes": [
-    "agreeing immediately because it feels like progress",
-    "sending a generic deck with no reason attached",
-    "sending without a follow-up date",
-    "going silent after the email",
-    "asking what they want you to send but not why they need it"
+    "agreeing immediately because it feels like progress. fix: pause for one beat and ask what would actually help them decide. a clear answer means it is real. silence means it was a brush-off.",
+    "sending a generic deck with no reason attached. fix: only send something specific they asked for, with a one-line subject pinned to that ask. otherwise the email lands like spam.",
+    "sending without a follow-up date. fix: drop a 5 or 10-minute placeholder on the calendar with a clear out: 'if this is useful we talk, if not, decline.' mutual next steps beat solo hope.",
+    "going silent after the email. fix: send a one-sentence follow-up tied to a real reason ('did the team-size example match?') rather than a check-in. nudges that ask a question outperform nudges that ask for time.",
+    "asking what they want you to send but not why they need it. fix: layer the question. the why surfaces the actual decision criteria, which is the only thing that turns the email into a step instead of a deflection.",
+    "treating a procurement-driven request the same as a brush-off. fix: if they have a real evaluation process, send the specific document with a real follow-up date, not a redirect. respect real process, redirect fake process."
   ],
   "walk_away_when": [
     "the prospect has a documented procurement process where info packets are a real evaluation step",
@@ -69,10 +70,10 @@
     "Is calendar-pin pushy?"
   ],
   "author": {
-    "name": "Brutus AI",
+    "name": "Isaiah Rios",
     "company": "Brutus AI"
   },
-  "status": "reviewed",
+  "status": "published",
   "demand_verified": true,
-  "notes": "Wave 1 draft payload. Passed JSON, banned-pattern, and rough similarity checks. Do not render to HTML until the gold-standard browser quality pass is accepted."
+  "notes": "Wave 1 published article. HTML at website/objections/send-me-information.html. Person author schema (Isaiah Rios, founder) rendered in JSON-LD and visible byline."
 }
