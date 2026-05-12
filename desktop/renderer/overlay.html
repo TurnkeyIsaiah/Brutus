@@ -71,6 +71,194 @@
       color: rgba(255, 80, 80, 0.9);
       letter-spacing: 1px;
     }
+
+    /* Cold-call mode badge (shown only when sessionMode === 'cold-call') */
+    .mode-badge {
+      display: none;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #ff5050, #ff7850);
+      color: #fff;
+      text-transform: uppercase;
+      box-shadow: 0 2px 8px rgba(255, 80, 80, 0.3);
+    }
+
+    body.cold-call .mode-badge { display: inline-block; }
+    body.cold-call .header-title { display: none; }
+
+    /* Cold-call controls (visible only during a cold-call session) */
+    .cold-call-controls {
+      display: none;
+      padding: 12px 20px;
+      background: rgba(255, 80, 80, 0.05);
+      border-bottom: 1px solid rgba(255, 80, 80, 0.15);
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    body.cold-call .cold-call-controls.session-active { display: flex; }
+    /* In cold-call mode the duration metric becomes session-total; talk ratio and
+       interrupts still reflect the rolling session so they stay useful on connects. */
+
+    .cc-attempt-counter {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.7);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .cc-attempt-counter strong {
+      color: #ff7850;
+      font-weight: 700;
+    }
+    .cc-attempt-timer {
+      font-family: 'Space Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      min-width: 56px;
+      text-align: center;
+    }
+    .cc-next-btn {
+      margin-left: auto;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #ff5050, #ff7850);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 12px rgba(255, 80, 80, 0.3);
+    }
+    .cc-next-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(255, 80, 80, 0.45);
+    }
+    .cc-next-btn:active { transform: translateY(0); }
+    .cc-next-btn[disabled] { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* Outcome picker modal — same pattern as source picker */
+    .outcome-picker-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 18, 0.98);
+      z-index: 1100;
+      border-radius: 20px;
+      flex-direction: column;
+      padding: 20px;
+    }
+    .outcome-picker-overlay.active { display: flex; }
+    .outcome-picker-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .outcome-picker-subtitle {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 14px;
+    }
+    .outcome-picker-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .outcome-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 16px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      color: rgba(255, 255, 255, 0.85);
+      text-transform: lowercase;
+    }
+    .outcome-item:hover {
+      border-color: rgba(255, 80, 80, 0.6);
+      background: rgba(255, 80, 80, 0.08);
+      color: #fff;
+    }
+    .outcome-picker-cancel {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      transition: color 0.15s;
+    }
+    .outcome-picker-cancel:hover { color: rgba(255, 255, 255, 0.6); }
+
+    /* Cold-call summary card rendered in feedback list on session end */
+    .cc-summary-card {
+      background: rgba(255, 80, 80, 0.05);
+      border: 1px solid rgba(255, 80, 80, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 8px 0;
+      font-family: 'Inter', sans-serif;
+    }
+    .cc-summary-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #ff7850;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .cc-summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
+      font-size: 12px;
+    }
+    .cc-summary-grid div { color: rgba(255, 255, 255, 0.7); }
+    .cc-summary-grid strong {
+      color: #fff;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+    .cc-summary-top {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 80, 80, 0.15);
+    }
+    .cc-summary-top-label {
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: rgba(255, 255, 255, 0.4);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .cc-summary-top-item {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .cc-summary-top-item span:last-child {
+      font-family: 'Space Mono', monospace;
+      color: rgba(255, 80, 80, 0.9);
+    }
     
     .header-status {
       display: flex;
@@ -740,6 +928,7 @@
       <div class="header-left">
         <div class="brutus-avatar">B</div>
         <div class="header-title">Brutus AI live coaching</div>
+        <div class="mode-badge" id="mode-badge">cold call</div>
       </div>
       <div class="header-status">
         <div class="status-dot"></div>
@@ -756,6 +945,13 @@
     <!-- Feedback Flash -->
     <div class="feedback-flash" id="feedback-flash">
       <div class="flash-text" id="flash-text"></div>
+    </div>
+
+    <!-- Cold-call controls (hidden unless cold-call session active) -->
+    <div class="cold-call-controls" id="cold-call-controls">
+      <div class="cc-attempt-counter">call <strong id="cc-attempt-num">1</strong></div>
+      <div class="cc-attempt-timer" id="cc-attempt-timer">0:00</div>
+      <button class="cc-next-btn" id="cc-next-btn">next call</button>
     </div>
 
     <!-- Audio Visualizer -->
@@ -831,8 +1027,17 @@
     let ws = null;
     let isConnected = false;
     let sessionId = null;
+    let sessionMode = null; // null = standard | 'cold-call'
     let wsReconnectAttempts = 0;
     let startTime = null;
+
+    // Cold-call mode state
+    let currentAttemptId = null;
+    let attemptCount = 0;
+    let attemptStartTime = null;
+    let attemptTimerInterval = null;
+    let coldCallOutcomes = []; // populated from GET /coldcall/outcomes
+    let isAdvancingAttempt = false; // guard against double-click on "next call"
     let durationInterval = null;
     let audioContext = null;
     let audioMixNode = null;
@@ -1182,6 +1387,10 @@
       WS_URL = API_URL.replace('http', 'ws') + '/ws';
       savedTtsVoice = settings.ttsVoice || '';
 
+      // Read session mode (set on the dashboard before the session starts)
+      sessionMode = await window.brutus.getSessionMode();
+      applyModeUI();
+
       // Check headphone status on init
       await checkHeadphonesConnected();
 
@@ -1245,6 +1454,191 @@
     }
     
     // ==================== SESSION MANAGEMENT ====================
+    function applyModeUI() {
+      document.body.classList.toggle('cold-call', sessionMode === 'cold-call');
+    }
+
+    // ==================== COLD-CALL ATTEMPT LIFECYCLE ====================
+
+    function showColdCallControls(show) {
+      const el = document.getElementById('cold-call-controls');
+      el.classList.toggle('session-active', !!show);
+    }
+
+    async function fetchColdCallOutcomes() {
+      try {
+        const res = await fetch(`${API_URL}/coldcall/outcomes`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        coldCallOutcomes = Array.isArray(data && data.outcomes) ? data.outcomes : [];
+      } catch (e) {
+        console.error('[ColdCall] failed to fetch outcomes:', e);
+        // Fallback so the dropdown still works if the network blip; matches backend VALID_OUTCOMES.
+        coldCallOutcomes = ['voicemail', 'no-answer', 'connect', 'wrong-number', 'abandoned', 'other'];
+      }
+    }
+
+    function setAttemptCounter(n) {
+      attemptCount = n;
+      document.getElementById('cc-attempt-num').textContent = n;
+    }
+
+    function startAttemptTimer() {
+      attemptStartTime = Date.now();
+      if (attemptTimerInterval) clearInterval(attemptTimerInterval);
+      updateAttemptTimer();
+      attemptTimerInterval = setInterval(updateAttemptTimer, 1000);
+    }
+
+    function stopAttemptTimer() {
+      if (attemptTimerInterval) {
+        clearInterval(attemptTimerInterval);
+        attemptTimerInterval = null;
+      }
+      attemptStartTime = null;
+      document.getElementById('cc-attempt-timer').textContent = '0:00';
+    }
+
+    function updateAttemptTimer() {
+      if (!attemptStartTime) return;
+      const elapsed = Math.floor((Date.now() - attemptStartTime) / 1000);
+      const m = Math.floor(elapsed / 60);
+      const s = elapsed % 60;
+      document.getElementById('cc-attempt-timer').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    async function startColdCallAttempt() {
+      try {
+        const res = await fetch(`${API_URL}/coldcall/attempt/start`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ sessionId })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.attempt) {
+          throw new Error((data && data.error && data.error.message) || `attempt/start failed (${res.status})`);
+        }
+        currentAttemptId = data.attempt.id;
+        setAttemptCounter(data.attempt.ordinal);
+        startAttemptTimer();
+      } catch (e) {
+        console.error('[ColdCall] startAttempt failed:', e);
+        addFeedback('warning', 'could not open next attempt. brutus will keep coaching, but call counts may be off.');
+      }
+    }
+
+    async function endColdCallAttempt(outcome) {
+      if (!currentAttemptId) return;
+      const attemptId = currentAttemptId;
+      currentAttemptId = null;
+      stopAttemptTimer();
+      try {
+        const res = await fetch(`${API_URL}/coldcall/attempt/${attemptId}/end`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ outcome })
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error((data.error && data.error.message) || `attempt/end failed (${res.status})`);
+        }
+      } catch (e) {
+        console.error('[ColdCall] endAttempt failed:', e);
+        addFeedback('warning', `failed to log outcome "${outcome}". session continues.`);
+      }
+    }
+
+    // "Next call" flow: pick outcome, close current, open next.
+    async function advanceColdCallAttempt() {
+      if (isAdvancingAttempt || sessionMode !== 'cold-call') return;
+      const outcome = await showOutcomePicker();
+      if (!outcome) return; // user cancelled
+      isAdvancingAttempt = true;
+      try {
+        await endColdCallAttempt(outcome);
+        await startColdCallAttempt();
+      } finally {
+        isAdvancingAttempt = false;
+      }
+    }
+
+    // Promise-based outcome picker; resolves with outcome string or null on cancel.
+    function showOutcomePicker() {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('outcome-picker');
+        const grid = document.getElementById('outcome-picker-grid');
+        const cancel = document.getElementById('outcome-picker-cancel');
+        grid.innerHTML = '';
+        coldCallOutcomes.forEach((outcome) => {
+          const item = document.createElement('div');
+          item.className = 'outcome-item';
+          item.textContent = outcome;
+          item.addEventListener('click', () => {
+            modal.classList.remove('active');
+            resolve(outcome);
+          });
+          grid.appendChild(item);
+        });
+        cancel.onclick = () => {
+          modal.classList.remove('active');
+          resolve(null);
+        };
+        modal.classList.add('active');
+      });
+    }
+
+    function showColdCallSummary(summary) {
+      if (!summary) return;
+      const c = summary.counts || {};
+      const total = summary.totalDials || 0;
+      const connectPct = Math.round((summary.connectRate || 0) * 100);
+      const totalMin = Math.floor((summary.totalDurationSec || 0) / 60);
+      const avgConnect = summary.avgConnectSec || 0;
+      const avgMin = Math.floor(avgConnect / 60);
+      const avgSec = avgConnect % 60;
+      const top = Array.isArray(summary.topFeedback) ? summary.topFeedback : [];
+
+      const card = document.createElement('div');
+      card.className = 'cc-summary-card';
+      const topHtml = top.length
+        ? `<div class="cc-summary-top">
+             <div class="cc-summary-top-label">most-heard coaching</div>
+             ${top.map((t) => `<div class="cc-summary-top-item"><span>${escapeHtml(t.msg)}</span><span>×${t.count}</span></div>`).join('')}
+           </div>`
+        : '';
+      card.innerHTML = `
+        <div class="cc-summary-title">session summary</div>
+        <div class="cc-summary-grid">
+          <div>dials<strong>${total}</strong></div>
+          <div>connects<strong>${c.connect || 0}</strong></div>
+          <div>voicemails<strong>${c.voicemail || 0}</strong></div>
+          <div>no-answer<strong>${c['no-answer'] || 0}</strong></div>
+          <div>connect rate<strong>${connectPct}%</strong></div>
+          <div>avg connect<strong>${avgMin}:${avgSec.toString().padStart(2, '0')}</strong></div>
+          <div>session time<strong>${totalMin} min</strong></div>
+          <div>other outcomes<strong>${(c['wrong-number'] || 0) + (c.abandoned || 0) + (c.other || 0)}</strong></div>
+        </div>
+        ${topHtml}
+      `;
+
+      const container = document.getElementById('feedback-container');
+      const emptyState = document.getElementById('empty-state');
+      if (emptyState) emptyState.style.display = 'none';
+      container.appendChild(card);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
     async function startSession() {
       // Clear previous session messages and state
       feedbackItems = [];
@@ -1260,21 +1654,41 @@
       container.innerHTML = '<div class="empty-state" id="empty-state"><div class="empty-state-text">listening for your sales call...</div></div>';
 
       try {
+        // Re-read mode in case the user toggled it on the dashboard right before clicking start.
+        sessionMode = await window.brutus.getSessionMode();
+        applyModeUI();
+
         // Start session on backend
+        const startBody = sessionMode === 'cold-call' ? { mode: 'cold-call' } : {};
         const response = await fetch(`${API_URL}/live/start`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`
-          }
+          },
+          body: JSON.stringify(startBody)
         });
-        
+
         const data = await response.json();
+        if (!response.ok) {
+          throw new Error((data && data.error && data.error.message) || `start failed (${response.status})`);
+        }
         if (!data || !data.session || !data.session.id) {
           throw new Error('Invalid session response from backend');
         }
         sessionId = data.session.id;
-        
+        // Trust the backend on the active mode (handles race where dashboard toggle changed mid-start).
+        sessionMode = data.session.sessionMode || null;
+        applyModeUI();
+
+        // Cold-call mode: fetch outcomes (for dropdown) and open the first attempt.
+        // Both are best-effort — failures degrade gracefully (see helper functions).
+        if (sessionMode === 'cold-call') {
+          showColdCallControls(true);
+          await fetchColdCallOutcomes();
+          await startColdCallAttempt();
+        }
+
         // Connect WebSocket
         connectWebSocket();
 
@@ -1289,7 +1703,9 @@
         document.getElementById('empty-state').style.display = 'none';
 
         // Add initial feedback
-        addFeedback('insight', 'monitoring started. let\'s see what you\'ve got.');
+        addFeedback('insight', sessionMode === 'cold-call'
+          ? 'cold call mode active. dial the first prospect.'
+          : 'monitoring started. let\'s see what you\'ve got.');
 
         // Start screen capture (only if enabled) - non-blocking, won't abort session on failure
         if (isScreenCaptureEnabled) {
@@ -1329,7 +1745,12 @@
             body: JSON.stringify({ sessionId })
           });
           const endData = await endRes.json();
-          if (endData.analysis) {
+          // Cold-call sessions return { sessionMode:'cold-call', summary, ... } instead
+          // of the standard { analysis, ... } shape.
+          if (endData && endData.sessionMode === 'cold-call') {
+            addFeedback('insight', 'cold call session ended.');
+            showColdCallSummary(endData.summary);
+          } else if (endData && endData.analysis) {
             showPostCallSummary(endData.analysis);
             updateTalkRatio(endData.analysis.talkRatio);
             interruptCount = endData.analysis.interruptionCount || 0;
@@ -1350,6 +1771,14 @@
         ws.close();
         ws = null;
       }
+
+      // Clean up cold-call state. attempt id is cleared in endColdCallAttempt; this
+      // catches the case where the user hit "end session" mid-attempt (server-side
+      // endSession auto-closes any open attempt for us).
+      stopAttemptTimer();
+      currentAttemptId = null;
+      setAttemptCounter(0);
+      showColdCallControls(false);
 
       sessionId = null;
       startTime = null;
@@ -1805,6 +2234,11 @@
       await window.brutus.stopMonitoring();
     });
 
+    // ==================== COLD CALL CONTROLS ====================
+    document.getElementById('cc-next-btn').addEventListener('click', () => {
+      advanceColdCallAttempt();
+    });
+
     // ==================== DRAG TO MOVE ====================
     const overlayHeader = document.querySelector('.overlay-header');
     let dragState = null;
@@ -1916,6 +2350,14 @@
     <div class="source-picker-subtitle">Brutus will only watch this — nothing else on your screen.</div>
     <div class="source-picker-grid" id="source-picker-grid"></div>
     <div class="source-picker-skip" id="source-picker-skip">skip — audio only</div>
+  </div>
+
+  <!-- Outcome Picker Modal (cold-call mode) -->
+  <div class="outcome-picker-overlay" id="outcome-picker">
+    <div class="outcome-picker-title">how did that call end?</div>
+    <div class="outcome-picker-subtitle">tag the outcome to log it. brutus uses this to roll up the session.</div>
+    <div class="outcome-picker-grid" id="outcome-picker-grid"></div>
+    <div class="outcome-picker-cancel" id="outcome-picker-cancel">cancel</div>
   </div>
 </body>
 </html>

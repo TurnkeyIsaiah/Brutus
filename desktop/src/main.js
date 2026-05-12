@@ -429,6 +429,28 @@ ipcMain.handle('open-dashboard', async () => {
   return true;
 });
 
+// ==================== SESSION MODE ====================
+// Persisted across launches via electron-store. Valid values: null (standard) | 'cold-call'.
+
+const VALID_SESSION_MODES = new Set(['cold-call']);
+
+ipcMain.handle('get-session-mode', () => {
+  const stored = store.get('sessionMode', null);
+  return VALID_SESSION_MODES.has(stored) ? stored : null;
+});
+
+ipcMain.handle('set-session-mode', (event, mode) => {
+  if (mode === null || mode === 'standard') {
+    store.delete('sessionMode');
+    return null;
+  }
+  if (!VALID_SESSION_MODES.has(mode)) {
+    throw new Error(`unsupported session mode: ${mode}`);
+  }
+  store.set('sessionMode', mode);
+  return mode;
+});
+
 ipcMain.handle('open-external', async (event, url) => {
   if (typeof url !== 'string' || !url.startsWith('https://')) {
     throw new Error('Only https:// URLs may be opened externally');

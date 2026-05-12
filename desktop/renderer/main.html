@@ -316,9 +316,50 @@
       padding: 16px 32px;
       font-size: 16px;
     }
-    
+
     .monitor-btn.active {
       background: linear-gradient(135deg, #ff5050, #cc3030);
+    }
+
+    /* Session mode toggle (pill segmented control) */
+    .mode-toggle {
+      display: inline-flex;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      padding: 4px;
+      margin-bottom: 16px;
+      font-size: 12px;
+    }
+
+    .mode-pill {
+      padding: 6px 14px;
+      border-radius: 999px;
+      color: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: lowercase;
+      letter-spacing: 0.5px;
+      user-select: none;
+    }
+
+    .mode-pill:hover {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .mode-pill.active {
+      background: linear-gradient(135deg, #ff5050, #ff7850);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(255, 80, 80, 0.25);
+    }
+
+    .mode-pill.active:hover {
+      color: #fff;
+    }
+
+    .mode-pill[disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
     }
     
     /* Stats */
@@ -651,6 +692,10 @@
               <div class="status-indicator-inner"></div>
             </div>
             <div class="status-text" id="status-text">not monitoring</div>
+            <div class="mode-toggle" id="mode-toggle" role="tablist" aria-label="session mode">
+              <div class="mode-pill active" data-mode="standard" role="tab">standard</div>
+              <div class="mode-pill" data-mode="cold-call" role="tab">cold call</div>
+            </div>
             <button class="btn btn-primary monitor-btn" id="monitor-btn">start monitoring</button>
             <button class="btn btn-secondary show-overlay-btn hidden" id="show-overlay-btn">show overlay</button>
           </div>
@@ -776,6 +821,7 @@
     let authToken = null;
     let currentUser = null;
     let isMonitoring = false;
+    let sessionMode = null; // null = standard | 'cold-call'
     
     // ==================== INIT ====================
     async function init() {
@@ -803,7 +849,20 @@
       
       // Check monitoring status
       isMonitoring = await window.brutus.isMonitoring();
+
+      // Load persisted session mode and reflect in toggle UI
+      sessionMode = await window.brutus.getSessionMode();
+      updateModeToggleUI();
+
       updateMonitoringUI();
+    }
+
+    function updateModeToggleUI() {
+      const pills = document.querySelectorAll('#mode-toggle .mode-pill');
+      pills.forEach((pill) => {
+        const mode = pill.dataset.mode === 'standard' ? null : pill.dataset.mode;
+        pill.classList.toggle('active', mode === sessionMode);
+      });
     }
     
     // ==================== API ====================
@@ -1097,25 +1156,43 @@
       }
       updateMonitoringUI();
     });
-    
+
+    // Mode toggle: clicking a pill persists the choice and updates the button label.
+    // Disabled while a session is active — switching modes mid-session would be confusing.
+    document.getElementById('mode-toggle').addEventListener('click', async (e) => {
+      const pill = e.target.closest('.mode-pill');
+      if (!pill || isMonitoring) return;
+      const next = pill.dataset.mode === 'standard' ? null : pill.dataset.mode;
+      if (next === sessionMode) return;
+      sessionMode = await window.brutus.setSessionMode(next);
+      updateModeToggleUI();
+      updateMonitoringUI();
+    });
+
     function updateMonitoringUI() {
       const indicator = document.getElementById('status-indicator');
       const statusText = document.getElementById('status-text');
       const btn = document.getElementById('monitor-btn');
       const showOverlayBtn = document.getElementById('show-overlay-btn');
+      const toggle = document.getElementById('mode-toggle');
+
+      const inCallMode = sessionMode === 'cold-call';
 
       if (isMonitoring) {
         indicator.classList.add('active');
-        statusText.textContent = 'monitoring active';
-        btn.textContent = 'stop monitoring';
+        statusText.textContent = inCallMode ? 'cold call session active' : 'monitoring active';
+        btn.textContent = inCallMode ? 'end cold call session' : 'stop monitoring';
         btn.classList.add('active');
         showOverlayBtn.classList.remove('hidden');
+        // Lock the mode toggle while a session is running.
+        toggle.querySelectorAll('.mode-pill').forEach((p) => p.setAttribute('disabled', ''));
       } else {
         indicator.classList.remove('active');
-        statusText.textContent = 'not monitoring';
-        btn.textContent = 'start monitoring';
+        statusText.textContent = inCallMode ? 'cold call mode ready' : 'not monitoring';
+        btn.textContent = inCallMode ? 'start cold call session' : 'start monitoring';
         btn.classList.remove('active');
         showOverlayBtn.classList.add('hidden');
+        toggle.querySelectorAll('.mode-pill').forEach((p) => p.removeAttribute('disabled'));
       }
     }
     

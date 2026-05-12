@@ -52,6 +52,10 @@ contextBridge.exposeInMainWorld('brutus', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
   setSettings: (settings) => ipcRenderer.invoke('set-settings', settings),
 
+  // Session mode (null = standard | 'cold-call')
+  getSessionMode: () => ipcRenderer.invoke('get-session-mode'),
+  setSessionMode: (mode) => ipcRenderer.invoke('set-session-mode', mode),
+
   // Dashboard
   openDashboard: () => ipcRenderer.invoke('open-dashboard'),
 
