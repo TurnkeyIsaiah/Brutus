@@ -279,6 +279,12 @@ function startMonitoring() {
 }
 
 function stopMonitoring() {
+  // Idempotent: a renderer-side bug (or impatient user) can fire this IPC
+  // multiple times during the slow /live/end window. Without this guard,
+  // each call sends another monitoring-stopped event, the renderer fires
+  // stopSession multiple times, and the backend can create duplicate Call
+  // rows under READ COMMITTED isolation.
+  if (!isMonitoring) return;
   isMonitoring = false;
   updateTrayMenu();
 

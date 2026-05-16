@@ -1060,6 +1060,7 @@
     let attemptTimerInterval = null;
     let coldCallOutcomes = []; // populated from GET /coldcall/outcomes
     let isAdvancingAttempt = false; // guard against double-click on "next call"
+    let isStopping = false; // guard against double-click on close / re-entry of stopSession
     let durationInterval = null;
     let audioContext = null;
     let audioMixNode = null;
@@ -1680,6 +1681,10 @@
       const container = document.getElementById('feedback-container');
       container.innerHTML = '<div class="empty-state" id="empty-state"><div class="empty-state-text">listening for your sales call...</div></div>';
 
+      // Defensive reset: in case a previous stopSession crashed before
+      // clearing the guard, ensure a fresh session can be started.
+      isStopping = false;
+
       try {
         // Re-read mode in case the user toggled it on the dashboard right before clicking start.
         sessionMode = await window.brutus.getSessionMode();
@@ -1748,6 +1753,27 @@
     }
     
     async function stopSession() {
+      // Re-entry guard: cold-call /live/end can take 5-15s while the
+      // backend analyzer runs, and the user may click the X (or fire
+      // the monitoring-stopped event) multiple times during that
+      // window. Bail on subsequent calls.
+      if (isStopping) return;
+      isStopping = true;
+
+      // Surface that the click registered. The backend may take several
+      // seconds to return, especially in cold-call mode.
+      const closeBtn = document.getElementById('close-btn');
+      if (closeBtn) {
+        closeBtn.disabled = true;
+        closeBtn.style.opacity = '0.5';
+        closeBtn.style.cursor = 'not-allowed';
+      }
+      if (sessionMode === 'cold-call') {
+        addFeedback('insight', 'ending cold call session...');
+      } else if (sessionId) {
+        addFeedback('insight', 'ending session...');
+      }
+
       // Stop audio capture
       stopAudioCapture();
 
@@ -1759,7 +1785,7 @@
         clearInterval(durationInterval);
         durationInterval = null;
       }
-      
+
       // End session on backend
       if (sessionId) {
         try {
@@ -1816,6 +1842,15 @@
       if (!wasColdCall) {
         window.brutus.hideOverlay();
       }
+
+      // Re-enable the X button so the user can dismiss the cold-call
+      // summary (or so a future session can be started cleanly).
+      if (closeBtn) {
+        closeBtn.disabled = false;
+        closeBtn.style.opacity = '';
+        closeBtn.style.cursor = '';
+      }
+      isStopping = false;
     }
     
     // ==================== WEBSOCKET ====================
@@ -2265,6 +2300,9 @@
 
     // ==================== WINDOW CONTROLS ====================
     document.getElementById('close-btn').addEventListener('click', async () => {
+      // Cheap front-stop: avoid sending redundant IPCs if the session is
+      // already winding down. The full re-entry guard lives in stopSession.
+      if (isStopping) return;
       await window.brutus.stopMonitoring();
     });
 
