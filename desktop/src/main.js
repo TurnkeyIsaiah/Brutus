@@ -280,9 +280,11 @@ function startMonitoring() {
 
 function stopMonitoring() {
   isMonitoring = false;
-  hideOverlay();
   updateTrayMenu();
 
+  // Overlay is no longer hidden here. The renderer calls `hide-overlay` after it
+  // finishes ending the session — in cold-call mode it keeps the overlay open so
+  // the user can read the session summary.
   if (overlayWindow) {
     overlayWindow.webContents.send('monitoring-stopped');
   }
@@ -391,6 +393,10 @@ ipcMain.handle('move-overlay', (event, { x, y }) => {
   }
 });
 
+ipcMain.handle('hide-overlay', () => {
+  hideOverlay();
+});
+
 ipcMain.handle('resize-overlay', (event, { width, height }) => {
   if (overlayWindow) {
     overlayWindow.setSize(width, height);
@@ -427,6 +433,28 @@ ipcMain.handle('set-settings', (event, settings) => {
 ipcMain.handle('open-dashboard', async () => {
   await shell.openExternal('https://app.brutusai.coach/index.html');
   return true;
+});
+
+// ==================== SESSION MODE ====================
+// Persisted across launches via electron-store. Valid values: null (standard) | 'cold-call'.
+
+const VALID_SESSION_MODES = new Set(['cold-call']);
+
+ipcMain.handle('get-session-mode', () => {
+  const stored = store.get('sessionMode', null);
+  return VALID_SESSION_MODES.has(stored) ? stored : null;
+});
+
+ipcMain.handle('set-session-mode', (event, mode) => {
+  if (mode === null || mode === 'standard') {
+    store.delete('sessionMode');
+    return null;
+  }
+  if (!VALID_SESSION_MODES.has(mode)) {
+    throw new Error(`unsupported session mode: ${mode}`);
+  }
+  store.set('sessionMode', mode);
+  return mode;
 });
 
 ipcMain.handle('open-external', async (event, url) => {

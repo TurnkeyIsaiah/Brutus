@@ -47,10 +47,15 @@ contextBridge.exposeInMainWorld('brutus', {
   getOverlayBounds: () => ipcRenderer.invoke('get-overlay-bounds'),
   moveOverlay: (x, y) => ipcRenderer.invoke('move-overlay', { x, y }),
   resizeOverlay: (width, height) => ipcRenderer.invoke('resize-overlay', { width, height }),
+  hideOverlay: () => ipcRenderer.invoke('hide-overlay'),
 
   // Settings
   getSettings: () => ipcRenderer.invoke('get-settings'),
   setSettings: (settings) => ipcRenderer.invoke('set-settings', settings),
+
+  // Session mode (null = standard | 'cold-call')
+  getSessionMode: () => ipcRenderer.invoke('get-session-mode'),
+  setSessionMode: (mode) => ipcRenderer.invoke('set-session-mode', mode),
 
   // Dashboard
   openDashboard: () => ipcRenderer.invoke('open-dashboard'),
