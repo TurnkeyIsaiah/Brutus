@@ -280,9 +280,11 @@ function startMonitoring() {
 
 function stopMonitoring() {
   isMonitoring = false;
-  hideOverlay();
   updateTrayMenu();
 
+  // Overlay is no longer hidden here. The renderer calls `hide-overlay` after it
+  // finishes ending the session — in cold-call mode it keeps the overlay open so
+  // the user can read the session summary.
   if (overlayWindow) {
     overlayWindow.webContents.send('monitoring-stopped');
   }
@@ -389,6 +391,10 @@ ipcMain.handle('move-overlay', (event, { x, y }) => {
   if (overlayWindow) {
     overlayWindow.setPosition(x, y);
   }
+});
+
+ipcMain.handle('hide-overlay', () => {
+  hideOverlay();
 });
 
 ipcMain.handle('resize-overlay', (event, { width, height }) => {

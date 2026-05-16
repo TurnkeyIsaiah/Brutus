@@ -43,7 +43,7 @@
       padding: 16px 20px;
       background: rgba(0, 0, 0, 0.3);
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      cursor: grab;
+      -webkit-app-region: drag;
     }
     
     .header-left {
@@ -259,7 +259,29 @@
       font-family: 'Space Mono', monospace;
       color: rgba(255, 80, 80, 0.9);
     }
-    
+    .cc-summary-done {
+      display: block;
+      width: 100%;
+      margin-top: 14px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #ff5050, #ff7850);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 12px rgba(255, 80, 80, 0.3);
+    }
+    .cc-summary-done:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(255, 80, 80, 0.45);
+    }
+    .cc-summary-done:active { transform: translateY(0); }
+
     .header-status {
       display: flex;
       align-items: center;
@@ -1626,7 +1648,12 @@
           <div>other outcomes<strong>${(c['wrong-number'] || 0) + (c.abandoned || 0) + (c.other || 0)}</strong></div>
         </div>
         ${topHtml}
+        <button class="cc-summary-done" type="button">done</button>
       `;
+
+      card.querySelector('.cc-summary-done').addEventListener('click', () => {
+        window.brutus.hideOverlay();
+      });
 
       const container = document.getElementById('feedback-container');
       const emptyState = document.getElementById('empty-state');
@@ -1780,8 +1807,15 @@
       setAttemptCounter(0);
       showColdCallControls(false);
 
+      const wasColdCall = sessionMode === 'cold-call';
       sessionId = null;
       startTime = null;
+
+      // Standard sessions auto-hide the overlay; cold-call sessions stay open so
+      // the user can read the summary card and dismiss it manually.
+      if (!wasColdCall) {
+        window.brutus.hideOverlay();
+      }
     }
     
     // ==================== WEBSOCKET ====================
@@ -2239,33 +2273,8 @@
       advanceColdCallAttempt();
     });
 
-    // ==================== DRAG TO MOVE ====================
-    const overlayHeader = document.querySelector('.overlay-header');
-    let dragState = null;
-
-    overlayHeader.addEventListener('mousedown', (e) => {
-      if (e.target.closest('button, input, label, .header-controls')) return;
-      dragState = { startX: e.screenX, startY: e.screenY };
-      overlayHeader.style.cursor = 'grabbing';
-      e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', async (e) => {
-      if (!dragState) return;
-      const dx = e.screenX - dragState.startX;
-      const dy = e.screenY - dragState.startY;
-      dragState.startX = e.screenX;
-      dragState.startY = e.screenY;
-      const pos = await window.brutus.getOverlayBounds();
-      await window.brutus.moveOverlay(pos.x + dx, pos.y + dy);
-    });
-
-    document.addEventListener('mouseup', () => {
-      if (dragState) {
-        dragState = null;
-        overlayHeader.style.cursor = 'grab';
-      }
-    });
+    // Drag to move is handled by native OS via `-webkit-app-region: drag` on
+    // `.overlay-header`. Interactive header elements have `no-drag` to remain clickable.
 
     // ==================== RESIZE HANDLE ====================
     const resizeHandle = document.getElementById('resize-handle');

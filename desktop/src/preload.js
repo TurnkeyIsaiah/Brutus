@@ -47,6 +47,7 @@ contextBridge.exposeInMainWorld('brutus', {
   getOverlayBounds: () => ipcRenderer.invoke('get-overlay-bounds'),
   moveOverlay: (x, y) => ipcRenderer.invoke('move-overlay', { x, y }),
   resizeOverlay: (width, height) => ipcRenderer.invoke('resize-overlay', { width, height }),
+  hideOverlay: () => ipcRenderer.invoke('hide-overlay'),
 
   // Settings
   getSettings: () => ipcRenderer.invoke('get-settings'),
