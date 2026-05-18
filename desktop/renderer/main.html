@@ -695,6 +695,7 @@
             <div class="mode-toggle" id="mode-toggle" role="tablist" aria-label="session mode">
               <div class="mode-pill active" data-mode="standard" role="tab">standard</div>
               <div class="mode-pill" data-mode="cold-call" role="tab">cold call</div>
+              <div class="mode-pill" data-mode="roleplay" role="tab">roleplay</div>
             </div>
             <button class="btn btn-primary monitor-btn" id="monitor-btn">start monitoring</button>
             <button class="btn btn-secondary show-overlay-btn hidden" id="show-overlay-btn">show overlay</button>
@@ -821,7 +822,7 @@
     let authToken = null;
     let currentUser = null;
     let isMonitoring = false;
-    let sessionMode = null; // null = standard | 'cold-call'
+    let sessionMode = null; // null = standard | 'cold-call' | 'roleplay'
     
     // ==================== INIT ====================
     async function init() {
@@ -1176,20 +1177,24 @@
       const showOverlayBtn = document.getElementById('show-overlay-btn');
       const toggle = document.getElementById('mode-toggle');
 
-      const inCallMode = sessionMode === 'cold-call';
+      const modeLabels = {
+        'cold-call': { active: 'cold call session active', ready: 'cold call mode ready', start: 'start cold call session', stop: 'end cold call session' },
+        'roleplay':  { active: 'roleplay active',          ready: 'roleplay ready',         start: 'start roleplay',         stop: 'end roleplay' }
+      };
+      const labels = modeLabels[sessionMode] || { active: 'monitoring active', ready: 'not monitoring', start: 'start monitoring', stop: 'stop monitoring' };
 
       if (isMonitoring) {
         indicator.classList.add('active');
-        statusText.textContent = inCallMode ? 'cold call session active' : 'monitoring active';
-        btn.textContent = inCallMode ? 'end cold call session' : 'stop monitoring';
+        statusText.textContent = labels.active;
+        btn.textContent = labels.stop;
         btn.classList.add('active');
         showOverlayBtn.classList.remove('hidden');
         // Lock the mode toggle while a session is running.
         toggle.querySelectorAll('.mode-pill').forEach((p) => p.setAttribute('disabled', ''));
       } else {
         indicator.classList.remove('active');
-        statusText.textContent = inCallMode ? 'cold call mode ready' : 'not monitoring';
-        btn.textContent = inCallMode ? 'start cold call session' : 'start monitoring';
+        statusText.textContent = labels.ready;
+        btn.textContent = labels.start;
         btn.classList.remove('active');
         showOverlayBtn.classList.add('hidden');
         toggle.querySelectorAll('.mode-pill').forEach((p) => p.removeAttribute('disabled'));

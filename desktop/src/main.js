@@ -442,9 +442,10 @@ ipcMain.handle('open-dashboard', async () => {
 });
 
 // ==================== SESSION MODE ====================
-// Persisted across launches via electron-store. Valid values: null (standard) | 'cold-call'.
+// Persisted across launches via electron-store. Valid values:
+//   null = standard | 'cold-call' | 'roleplay'
 
-const VALID_SESSION_MODES = new Set(['cold-call']);
+const VALID_SESSION_MODES = new Set(['cold-call', 'roleplay']);
 
 ipcMain.handle('get-session-mode', () => {
   const stored = store.get('sessionMode', null);
