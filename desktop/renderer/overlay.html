@@ -92,8 +92,8 @@
     /* Roleplay mode badge (purple to match chat-send + distinguish from cold-call red) */
     body.roleplay .mode-badge {
       display: inline-block;
-      background: linear-gradient(135deg, #a064ff, #c080ff);
-      box-shadow: 0 2px 8px rgba(160, 100, 255, 0.35);
+      background: linear-gradient(135deg, #ff5050, #ff7850);
+      box-shadow: 0 2px 8px rgba(255, 80, 80, 0.35);
     }
     body.roleplay .header-title { display: none; }
     /* Hide cold-call-only chrome when in roleplay (and vice-versa via existing rules). */
@@ -105,8 +105,8 @@
     .roleplay-controls {
       display: none;
       padding: 10px 20px;
-      background: rgba(160, 100, 255, 0.06);
-      border-bottom: 1px solid rgba(160, 100, 255, 0.18);
+      background: rgba(255, 80, 80, 0.06);
+      border-bottom: 1px solid rgba(255, 80, 80, 0.18);
       gap: 12px;
       align-items: center;
       flex-wrap: wrap;
@@ -119,7 +119,7 @@
       color: #fff;
       padding: 4px 10px;
       border-radius: 999px;
-      background: rgba(160, 100, 255, 0.3);
+      background: rgba(255, 80, 80, 0.3);
       text-transform: uppercase;
     }
     .rp-persona {
@@ -135,17 +135,17 @@
       padding: 8px 14px;
       border: none;
       border-radius: 8px;
-      background: linear-gradient(135deg, #a064ff, #c080ff);
-      color: #fff;
+      background: linear-gradient(135deg, #ffb050, #ff7850);
+      color: #1a0808;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 1px;
       text-transform: uppercase;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(160, 100, 255, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 176, 80, 0.3);
       transition: transform 0.1s, box-shadow 0.2s;
     }
-    .rp-pause-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(160, 100, 255, 0.45); }
+    .rp-pause-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255, 176, 80, 0.45); }
     .rp-pause-btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; }
     .rp-pause-btn.hidden { display: none; }
 
@@ -179,15 +179,15 @@
       color: rgba(255, 255, 255, 0.4);
       text-transform: uppercase;
     }
-    #brutus-visualizer .audio-bar { background: linear-gradient(to top, #a064ff, #c080ff); }
+    #brutus-visualizer .audio-bar { background: linear-gradient(to top, #ff3030, #ff5050); }
 
     /* Roleplay summary card */
     .rp-summary-card {
       margin: 12px;
       padding: 16px;
       border-radius: 14px;
-      background: rgba(160, 100, 255, 0.08);
-      border: 1px solid rgba(160, 100, 255, 0.3);
+      background: rgba(255, 80, 80, 0.08);
+      border: 1px solid rgba(255, 80, 80, 0.3);
     }
     .rp-summary-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 8px; }
     .rp-summary-persona {
@@ -195,7 +195,7 @@
       color: rgba(255, 255, 255, 0.85);
       margin-bottom: 10px;
       padding: 6px 10px;
-      background: rgba(160, 100, 255, 0.15);
+      background: rgba(255, 80, 80, 0.15);
       border-radius: 8px;
     }
     .rp-summary-grid {
@@ -212,7 +212,7 @@
       padding: 10px;
       border: none;
       border-radius: 8px;
-      background: linear-gradient(135deg, #a064ff, #c080ff);
+      background: linear-gradient(135deg, #ff5050, #ff7850);
       color: #fff;
       font-weight: 600;
       letter-spacing: 1px;
@@ -618,9 +618,9 @@
     }
 
     .type-suggestion {
-      background: rgba(160, 100, 255, 0.2);
-      color: #a064ff;
-      border-left: 3px solid #a064ff;
+      background: rgba(255, 80, 80, 0.2);
+      color: #ff7850;
+      border-left: 3px solid #ff7850;
     }
 
     .type-brutus {
@@ -935,7 +935,7 @@
 
     .chat-input:focus {
       background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(160, 100, 255, 0.4);
+      border-color: rgba(255, 80, 80, 0.4);
     }
 
     .chat-input::placeholder {
@@ -945,7 +945,7 @@
     .chat-send-btn {
       width: 36px;
       height: 36px;
-      background: linear-gradient(135deg, #a064ff, #c080ff);
+      background: linear-gradient(135deg, #ff5050, #ff7850);
       border: none;
       border-radius: 10px;
       color: #fff;
@@ -959,7 +959,7 @@
 
     .chat-send-btn:hover {
       transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(160, 100, 255, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 80, 80, 0.3);
     }
 
     .chat-send-btn:disabled {
@@ -978,8 +978,8 @@
     }
 
     .chat-message.user {
-      background: rgba(160, 100, 255, 0.15);
-      border: 1px solid rgba(160, 100, 255, 0.3);
+      background: rgba(255, 80, 80, 0.15);
+      border: 1px solid rgba(255, 80, 80, 0.3);
       color: rgba(255, 255, 255, 0.9);
       margin-left: 20px;
       text-align: right;
