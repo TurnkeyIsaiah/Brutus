@@ -1,6 +1,6 @@
 {
   "name": "brutus-desktop",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Brutus AI - Real-time AI Sales Coach",
   "author": "Brutus AI",
   "main": "src/main.js",
@@ -39,10 +39,16 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "TurnkeyIsaiah",
+      "repo": "Brutus"
     }
   },
   "dependencies": {
     "electron-store": "^8.2.0",
+    "electron-updater": "^6.3.9",
     "ws": "^8.17.0"
   },
   "devDependencies": {

@@ -1,9 +1,10 @@
 console.log('Starting Brutus Desktop...');
 console.log('App is ready, creating window...');
-const { app, BrowserWindow, Tray, Menu, ipcMain, screen, nativeImage, shell, desktopCapturer, safeStorage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, screen, nativeImage, shell, desktopCapturer, safeStorage, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const Store = require('electron-store');
+const { autoUpdater } = require('electron-updater');
 
 const store = new Store();
 
@@ -496,12 +497,53 @@ ipcMain.handle('set-selected-source', (event, sourceId) => {
   return true;
 });
 
+// ==================== AUTO UPDATE ====================
+// Polls the GitHub Releases for this repo (configured in package.json build.publish)
+// for a `latest.yml` with a newer version. Downloads silently in the background;
+// prompts the user to restart when an update is ready. Skipped in dev (npm start)
+// because the updater requires a packaged app.
+
+function setupAutoUpdate() {
+  if (!app.isPackaged) return;
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('error', (err) => {
+    console.error('[autoUpdater]', err?.message || err);
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('[autoUpdater] update available:', info?.version);
+  });
+
+  autoUpdater.on('update-downloaded', async (info) => {
+    const choice = await dialog.showMessageBox({
+      type: 'info',
+      title: 'Update ready',
+      message: `Brutus AI ${info?.version || 'update'} has been downloaded.`,
+      detail: 'Restart to install. Your current session will end.',
+      buttons: ['Restart now', 'Later'],
+      defaultId: 0,
+      cancelId: 1
+    });
+    if (choice.response === 0) {
+      autoUpdater.quitAndInstall();
+    }
+  });
+
+  autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+    console.error('[autoUpdater] check failed:', err?.message || err);
+  });
+}
+
 // ==================== APP LIFECYCLE ====================
 
 app.whenReady().then(() => {
   createMainWindow();
   createTray();
-  
+  setupAutoUpdate();
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createMainWindow();
