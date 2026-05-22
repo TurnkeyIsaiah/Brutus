@@ -615,10 +615,31 @@
       flex: 1;
     }
 
+    /* Neural network background — matches the web app's animated canvas
+     * background on app.brutusai.coach. Positioned absolute inside
+     * .app-container so it stays within the rounded-corner window frame.
+     * Sibling content (title-bar, .content) sits on top by source order. */
+    #neural-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      border-radius: 16px;
+    }
+    .app-container > .title-bar,
+    .app-container > .content {
+      position: relative;
+      z-index: 1;
+    }
+
   </style>
 </head>
 <body>
   <div class="app-container">
+    <canvas id="neural-canvas"></canvas>
     <!-- Title Bar -->
     <div class="title-bar">
       <div class="title-bar-logo">
@@ -1229,6 +1250,85 @@
 
     // ==================== START ====================
     init();
+  </script>
+
+  <!-- Neural network background animation. Self-contained IIFE; matches the
+       canvas animation in the web app's index.html (~line 3468). Sizes to
+       the .app-container, not the viewport, since the desktop window is
+       rounded-rectangle and we want the animation contained within. -->
+  <script>
+    (function () {
+      const canvas = document.getElementById('neural-canvas');
+      if (!canvas) return;
+      const container = canvas.parentElement;
+      const ctx = canvas.getContext('2d');
+      let nodes = [];
+
+      function resizeCanvas() {
+        const rect = container.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        initNodes();
+      }
+
+      function initNodes() {
+        nodes = [];
+        const numNodes = 30;
+        for (let i = 0; i < numNodes; i++) {
+          nodes.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            radius: Math.random() * 2 + 1,
+            pulse: Math.random() * Math.PI * 2,
+            type: Math.random() > 0.8 ? 'active' : 'normal'
+          });
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const dx = nodes[i].x - nodes[j].x;
+            const dy = nodes[i].y - nodes[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 200) {
+              const opacity = (1 - dist / 200) * 0.15;
+              ctx.beginPath();
+              ctx.moveTo(nodes[i].x, nodes[i].y);
+              ctx.lineTo(nodes[j].x, nodes[j].y);
+              ctx.strokeStyle = `rgba(255, 80, 80, ${opacity})`;
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+          }
+        }
+
+        nodes.forEach(node => {
+          node.pulse += 0.02;
+          const pulseSize = Math.sin(node.pulse) * 0.5 + 1;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, node.radius * pulseSize, 0, Math.PI * 2);
+          ctx.fillStyle = node.type === 'active'
+            ? 'rgba(255, 80, 80, 0.6)'
+            : 'rgba(100, 150, 255, 0.4)';
+          ctx.fill();
+          node.x += node.vx;
+          node.y += node.vy;
+          if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
+          if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
+        });
+
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+      draw();
+    })();
   </script>
 </body>
 </html>
