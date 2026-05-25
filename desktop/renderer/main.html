@@ -25,12 +25,14 @@
     .app-container {
       width: 100%;
       height: 100vh;
-      background: linear-gradient(135deg, #0a0a12 0%, #12121f 50%, #0d1a2d 100%);
+      background: linear-gradient(135deg, #0a0a12 0%, #12121f 30%, #0d1a2d 70%, #0a0a12 100%);
       border-radius: 16px;
       border: 1px solid rgba(255, 80, 80, 0.2);
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      position: relative;
+      isolation: isolate;
     }
     
     /* Title Bar */
@@ -615,10 +617,8 @@
       flex: 1;
     }
 
-    /* Neural network background — matches the web app's animated canvas
-     * background on app.brutusai.coach. Positioned absolute inside
-     * .app-container so it stays within the rounded-corner window frame.
-     * Sibling content (title-bar, .content) sits on top by source order. */
+    /* Neural network background. Uses the website canvas colors and motion,
+       contained within the rounded desktop window frame. */
     #neural-canvas {
       position: absolute;
       top: 0;
@@ -1252,10 +1252,8 @@
     init();
   </script>
 
-  <!-- Neural network background animation. Self-contained IIFE; matches the
-       canvas animation in the web app's index.html (~line 3468). Sizes to
-       the .app-container, not the viewport, since the desktop window is
-       rounded-rectangle and we want the animation contained within. -->
+  <!-- Neural network background animation. It mirrors the website canvas
+       values, but sizes to the desktop window frame instead of the viewport. -->
   <script>
     (function () {
       const canvas = document.getElementById('neural-canvas');
@@ -1273,7 +1271,7 @@
 
       function initNodes() {
         nodes = [];
-        const numNodes = 30;
+        const numNodes = Math.max(18, Math.floor((canvas.width * canvas.height) / 40000));
         for (let i = 0; i < numNodes; i++) {
           nodes.push({
             x: Math.random() * canvas.width,
@@ -1282,7 +1280,7 @@
             vy: (Math.random() - 0.5) * 0.3,
             radius: Math.random() * 2 + 1,
             pulse: Math.random() * Math.PI * 2,
-            type: Math.random() > 0.8 ? 'active' : 'normal'
+            type: Math.random() > 0.85 ? 'active' : 'normal'
           });
         }
       }
@@ -1295,8 +1293,8 @@
             const dx = nodes[i].x - nodes[j].x;
             const dy = nodes[i].y - nodes[j].y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 200) {
-              const opacity = (1 - dist / 200) * 0.15;
+            if (dist < 180) {
+              const opacity = (1 - dist / 180) * 0.12;
               ctx.beginPath();
               ctx.moveTo(nodes[i].x, nodes[i].y);
               ctx.lineTo(nodes[j].x, nodes[j].y);

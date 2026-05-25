@@ -25,7 +25,7 @@
     .overlay-container {
       width: 100%;
       height: 100vh;
-      background: rgba(10, 10, 18, 0.92);
+      background: linear-gradient(135deg, rgba(10, 10, 18, 0.94) 0%, rgba(18, 18, 31, 0.94) 30%, rgba(13, 26, 45, 0.94) 70%, rgba(10, 10, 18, 0.94) 100%);
       backdrop-filter: blur(20px);
       border-radius: 20px;
       border: 1px solid rgba(255, 80, 80, 0.3);
@@ -33,6 +33,24 @@
       flex-direction: column;
       overflow: hidden;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      position: relative;
+      isolation: isolate;
+    }
+
+    #overlay-neural-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      border-radius: 20px;
+      opacity: 0.8;
+    }
+
+    .overlay-container > :not(#overlay-neural-canvas) {
+      position: relative;
+      z-index: 1;
     }
     
     /* Header */
@@ -1077,6 +1095,7 @@
 </head>
 <body>
   <div class="overlay-container">
+    <canvas id="overlay-neural-canvas"></canvas>
     <!-- Header -->
     <div class="overlay-header">
       <div class="header-left">
@@ -2996,6 +3015,83 @@
 
     // ==================== START ====================
     init();
+  </script>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById('overlay-neural-canvas');
+      if (!canvas) return;
+      const container = canvas.parentElement;
+      const ctx = canvas.getContext('2d');
+      let nodes = [];
+
+      function resizeCanvas() {
+        const rect = container.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        initNodes();
+      }
+
+      function initNodes() {
+        nodes = [];
+        const numNodes = Math.max(18, Math.floor((canvas.width * canvas.height) / 40000));
+        for (let i = 0; i < numNodes; i++) {
+          nodes.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            radius: Math.random() * 2 + 1,
+            pulse: Math.random() * Math.PI * 2,
+            type: Math.random() > 0.85 ? 'active' : 'normal'
+          });
+        }
+      }
+
+      function drawNeuralNetwork() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const dx = nodes[i].x - nodes[j].x;
+            const dy = nodes[i].y - nodes[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < 180) {
+              const opacity = (1 - dist / 180) * 0.12;
+              ctx.beginPath();
+              ctx.moveTo(nodes[i].x, nodes[i].y);
+              ctx.lineTo(nodes[j].x, nodes[j].y);
+              ctx.strokeStyle = `rgba(255, 80, 80, ${opacity})`;
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+          }
+        }
+
+        nodes.forEach((node) => {
+          node.pulse += 0.02;
+          const pulseSize = Math.sin(node.pulse) * 0.5 + 1;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, node.radius * pulseSize, 0, Math.PI * 2);
+          ctx.fillStyle = node.type === 'active'
+            ? 'rgba(255, 80, 80, 0.6)'
+            : 'rgba(100, 150, 255, 0.4)';
+          ctx.fill();
+
+          node.x += node.vx;
+          node.y += node.vy;
+          if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
+          if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
+        });
+
+        requestAnimationFrame(drawNeuralNetwork);
+      }
+
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+      drawNeuralNetwork();
+    })();
   </script>
 
   <!-- Source Picker Modal -->
