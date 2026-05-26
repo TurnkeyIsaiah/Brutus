@@ -97,6 +97,7 @@ function createOverlayWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      backgroundThrottling: false,
       preload: path.join(__dirname, 'preload.js')
       // webSecurity enabled (default) — backend CORS allows null origin from Electron
     }
@@ -129,13 +130,6 @@ function createOverlayWindow() {
     }
   });
 
-  overlayWindow.on('hide', () => {
-    // If monitoring is still active but the window got hidden (e.g. by Windows), re-show it
-    if (isMonitoring) {
-      overlayWindow.show();
-    }
-  });
-
   overlayWindow.on('minimize', () => {
     // Prevent minimizing — restore immediately
     overlayWindow.restore();
@@ -159,6 +153,7 @@ function showOverlay() {
   } else {
     overlayWindow.show();
   }
+  if (overlayWindow) overlayWindow.focus();
 }
 
 function hideOverlay() {
@@ -233,8 +228,8 @@ function createTray() {
 
 function updateTrayMenu() {
   if (!tray) return;
-  
-  const contextMenu = Menu.buildFromTemplate([
+
+  const template = [
     {
       label: 'Open Brutus',
       click: () => {
@@ -244,7 +239,19 @@ function updateTrayMenu() {
           createMainWindow();
         }
       }
-    },
+    }
+  ];
+
+  if (isMonitoring) {
+    template.push({
+      label: 'Show Overlay',
+      click: () => {
+        showOverlay();
+      }
+    });
+  }
+
+  template.push(
     {
       label: isMonitoring ? 'Stop Monitoring' : 'Start Monitoring',
       click: () => {
@@ -262,7 +269,9 @@ function updateTrayMenu() {
         app.quit();
       }
     }
-  ]);
+  );
+
+  const contextMenu = Menu.buildFromTemplate(template);
   
   tray.setContextMenu(contextMenu);
 }
@@ -289,9 +298,9 @@ function stopMonitoring() {
   isMonitoring = false;
   updateTrayMenu();
 
-  // Overlay is no longer hidden here. The renderer calls `hide-overlay` after it
-  // finishes ending the session — in cold-call mode it keeps the overlay open so
-  // the user can read the session summary.
+  // The renderer owns whether this stop should hide the overlay. Normal
+  // cold-call/roleplay stops can keep summaries visible; the overlay X sets an
+  // explicit end-and-hide intent.
   if (overlayWindow) {
     overlayWindow.webContents.send('monitoring-stopped');
   }

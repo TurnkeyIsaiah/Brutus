@@ -68,6 +68,8 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      min-width: 0;
+      flex: 1;
     }
     
     .brutus-avatar {
@@ -88,6 +90,9 @@
       font-size: 13px;
       color: rgba(255, 80, 80, 0.9);
       letter-spacing: 1px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     /* Cold-call mode badge (shown only when sessionMode === 'cold-call') */
@@ -436,6 +441,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-shrink: 0;
       -webkit-app-region: no-drag;
     }
     
@@ -740,6 +746,14 @@
       background: rgba(255, 80, 80, 0.1);
       border-color: rgba(255, 80, 80, 0.3);
       color: #fff;
+    }
+
+    .action-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.45);
     }
 
     .action-btn.active {
@@ -1111,7 +1125,7 @@
           <span class="header-toggle-text">screen</span>
         </label>
         <button class="tts-btn locked" id="tts-btn">audio off</button>
-        <button class="close-btn" id="close-btn">×</button>
+        <button class="close-btn" id="close-btn" title="End session and close overlay" aria-label="End session and close overlay">×</button>
       </div>
     </div>
 
@@ -1161,6 +1175,7 @@
     <div class="quick-actions">
       <button class="action-btn note-btn" id="note-btn" title="Take a quick note">note</button>
       <button class="action-btn research-btn" id="research-btn" title="Request research">research</button>
+      <button class="action-btn hide-overlay-btn" id="hide-overlay-btn" title="Close overlay without ending the session">close overlay</button>
     </div>
 
     <!-- AI Notes Toggle -->
@@ -1230,6 +1245,7 @@
     let coldCallOutcomes = []; // populated from GET /coldcall/outcomes
     let isAdvancingAttempt = false; // guard against double-click on "next call"
     let isStopping = false; // guard against double-click on close / re-entry of stopSession
+    let hideOverlayAfterStop = false; // X ends the session; hide button only hides the window
     let durationInterval = null;
 
     // Roleplay mode state
@@ -1645,7 +1661,7 @@
       });
       
       window.brutus.onMonitoringStopped(() => {
-        stopSession();
+        stopSession({ closeOverlay: hideOverlayAfterStop });
       });
 
       // Clear in-memory auth when backend URL changes (auth invalidated in main process)
@@ -2348,22 +2364,28 @@
       }
     }
     
-    async function stopSession() {
+    async function stopSession({ closeOverlay = false } = {}) {
       // Re-entry guard: cold-call /live/end can take 5-15s while the
       // backend analyzer runs, and the user may click the X (or fire
       // the monitoring-stopped event) multiple times during that
       // window. Bail on subsequent calls.
-      if (isStopping) return;
+      if (isStopping) {
+        if (closeOverlay) hideOverlayAfterStop = true;
+        return;
+      }
+      hideOverlayAfterStop = hideOverlayAfterStop || closeOverlay;
       isStopping = true;
 
       // Surface that the click registered. The backend may take several
       // seconds to return, especially in cold-call mode.
       const closeBtn = document.getElementById('close-btn');
+      const hideBtn = document.getElementById('hide-overlay-btn');
       if (closeBtn) {
         closeBtn.disabled = true;
         closeBtn.style.opacity = '0.5';
         closeBtn.style.cursor = 'not-allowed';
       }
+      if (hideBtn) hideBtn.disabled = true;
       if (sessionMode === 'cold-call') {
         addFeedback('insight', 'ending cold call session...');
       } else if (sessionMode === 'roleplay') {
@@ -2457,19 +2479,21 @@
       currentPhase = 'setup';
       currentPersona = null;
 
-      // Standard sessions auto-hide the overlay; cold-call + roleplay sessions stay
-      // open so the user can read the summary card and dismiss it manually.
-      if (!wasModalSession) {
-        window.brutus.hideOverlay();
+      // Standard sessions auto-hide on normal stop. The X button sets an explicit
+      // end-and-hide intent, so modal summaries do not keep the overlay stuck open.
+      const shouldHideOverlay = hideOverlayAfterStop || !wasModalSession;
+      hideOverlayAfterStop = false;
+      if (shouldHideOverlay) {
+        await window.brutus.hideOverlay();
       }
 
-      // Re-enable the X button so the user can dismiss the cold-call
-      // summary (or so a future session can be started cleanly).
+      // Re-enable the header controls so a future session can be started cleanly.
       if (closeBtn) {
         closeBtn.disabled = false;
         closeBtn.style.opacity = '';
         closeBtn.style.cursor = '';
       }
+      if (hideBtn) hideBtn.disabled = false;
       isStopping = false;
     }
     
@@ -2925,11 +2949,25 @@
     }
 
     // ==================== WINDOW CONTROLS ====================
-    document.getElementById('close-btn').addEventListener('click', async () => {
-      // Cheap front-stop: avoid sending redundant IPCs if the session is
-      // already winding down. The full re-entry guard lives in stopSession.
+    document.getElementById('hide-overlay-btn').addEventListener('click', async () => {
       if (isStopping) return;
-      await window.brutus.stopMonitoring();
+      await window.brutus.hideOverlay();
+    });
+
+    document.getElementById('close-btn').addEventListener('click', async () => {
+      hideOverlayAfterStop = true;
+      if (isStopping) return;
+
+      const monitoring = await window.brutus.isMonitoring();
+      if (monitoring) {
+        await window.brutus.stopMonitoring();
+        await window.brutus.hideOverlay();
+      } else if (sessionId) {
+        await stopSession({ closeOverlay: true });
+      } else {
+        hideOverlayAfterStop = false;
+        await window.brutus.hideOverlay();
+      }
     });
 
     // ==================== COLD CALL CONTROLS ====================
