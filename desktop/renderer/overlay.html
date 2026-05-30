@@ -1270,12 +1270,25 @@
     const VAD_MIN_SPEECH_MS = 350;
     const DEFAULT_BRUTUS_VOICE = 'UgBBYS2sOqTuMpoF3BR0'; // Mark; backend default
     let audioContext = null;
-    let audioMixNode = null;
     let analyser = null;
     let mediaStream = null;
-    let mediaRecorder = null;
     let recordingInterval = null;
     let screenStream = null;
+    // Dual-channel speaker capture: rep = mic, prospect = system audio loopback.
+    // Recorded separately so the backend can label REP/PROSPECT instead of
+    // transcribing one mixed blob it can't attribute.
+    let repRecorder = null;        // MediaRecorder on the mic-only stream (REP)
+    let prospectRecorder = null;   // MediaRecorder on the system-audio-only stream (PROSPECT)
+    let prospectStream = null;     // MediaStream wrapping the display-capture audio tracks
+    // All flush operations (periodic flush, prospect drain, final teardown flush) are
+    // serialized onto this one chain so they never overlap and any caller can await the
+    // ACTUAL in-flight work — see enqueueFlush(). Replaces an earlier flushing-boolean +
+    // loosely-tracked-promise scheme that had teardown/flush/drain races.
+    let flushChain = Promise.resolve();
+    // Set true the instant audio teardown begins. Flushes check it and will NOT restart
+    // recorders once stopping, so no audio is captured after the user ends monitoring.
+    let audioCaptureStopping = false;
+    const MIN_CHUNK_BYTES = 1200;  // skip near-silent channels (don't pay Whisper for empty audio)
 
     let feedbackItems = [];
     let interruptCount = 0;
@@ -1393,7 +1406,19 @@
           await startScreenCapture();
           addFeedback('insight', 'screen capture enabled');
         } else {
-          stopScreenCapture();
+          // Snapshot the current recorder/streams synchronously, then stop the
+          // system-audio + screen tracks IMMEDIATELY so nothing new is captured the
+          // moment the user disables screen capture — even if a periodic flush is mid
+          // flight (its restart is now also gated). The recorder keeps its buffered
+          // chunks and auto-stops as its tracks end. Binding the drain to this exact
+          // recorder instance means a quick re-enable (which creates a fresh recorder)
+          // can't be clobbered by this queued drain.
+          const rec = prospectRecorder;
+          const strm = prospectStream;
+          if (strm) strm.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+          if (screenStream) { screenStream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} }); screenStream = null; }
+          if (prospectStream === strm) prospectStream = null;
+          try { await enqueueFlush(() => flushAndDropProspect(rec)); } catch (e) {}
           addFeedback('insight', 'screen capture disabled');
         }
       }
@@ -2405,8 +2430,9 @@
         ttsAnalyser = null;
       }
 
-      // Stop audio capture
-      stopAudioCapture();
+      // Stop audio capture — awaited so the final/short-call audio chunk is sent
+      // BEFORE we tear down the prospect tracks and call /live/end below.
+      await stopAudioCapture();
 
       // Stop screen capture
       stopScreenCapture();
@@ -2573,8 +2599,185 @@
     }
     
     // ==================== AUDIO CAPTURE ====================
+
+    // Accumulate each 30s recording into per-recorder chunks (finalized on stop).
+    function attachChunkCollector(recorder) {
+      recorder._chunks = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) recorder._chunks.push(e.data);
+      };
+    }
+
+    // Synchronously take a recorder's buffered chunks as one standalone webm Blob
+    // (consuming the buffer), or null if empty / below the near-silence threshold.
+    function takeBufferedBlob(recorder) {
+      const chunks = recorder._chunks || [];
+      recorder._chunks = [];
+      if (chunks.length === 0) return null;
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      return blob.size < MIN_CHUNK_BYTES ? null : blob;
+    }
+
+    // Stop a recorder and resolve with its finalized Blob — WITHOUT base64 encoding.
+    // Keeping encoding out of this path means flushChunk can restart the recorders the
+    // instant the blobs are detached (the gap is just the stop round-trip, a few ms),
+    // then base64-encode in the background while recording continues.
+    // - recording: one-shot 'stop' listener (no stale handler lingers across restarts)
+    //   grabs the buffer once the final dataavailable has flushed.
+    // - inactive (auto-stopped via OS/browser "Stop sharing"): read its buffer directly;
+    //   stop() would throw on an inactive recorder.
+    function stopAndGetBlob(recorder) {
+      return new Promise((resolve) => {
+        if (!recorder) { resolve(null); return; }
+        if (recorder.state === 'inactive') { resolve(takeBufferedBlob(recorder)); return; }
+        recorder.addEventListener('stop', () => { resolve(takeBufferedBlob(recorder)); }, { once: true });
+        recorder.stop();
+      });
+    }
+
+    // Base64-encode a Blob (the slow part — deferred until after recorders restart).
+    function blobToBase64(blob) {
+      return new Promise((resolve) => {
+        if (!blob) { resolve(null); return; }
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    // True only while a stream still has at least one live audio track. Once the user
+    // stops screen sharing the prospect tracks end, and restarting a recorder backed
+    // by ended tracks throws — so we use this to drop the channel instead.
+    function streamHasLiveTracks(stream) {
+      return !!stream && stream.getAudioTracks().some(t => t.readyState === 'live');
+    }
+
+    // Flush both channels on the same boundary: stop → capture blobs → RESTART → send.
+    // Restart happens immediately after the blobs are captured (not after the slower
+    // screenshot/send), so the recording gap between windows is only the few ms it
+    // takes MediaRecorder to stop — not the upload latency or the 5s screenshot timeout.
+    // Each restart is individually guarded so a restart failure can never drop the
+    // already-captured audio that we send below. When isFinal is true (teardown) we send
+    // the last partial window — including calls shorter than the 30s interval — and do
+    // NOT restart.
+    // Serialize a flush operation onto the single flush chain so periodic flushes,
+    // prospect drains, and the final teardown flush never overlap. Returns a promise for
+    // THIS operation (so teardown can await the real in-flight work, not a stand-in).
+    function enqueueFlush(fn) {
+      const run = flushChain.then(fn, fn); // run regardless of the previous op's outcome
+      flushChain = run.catch(() => {});    // keep the chain alive past a failed op
+      return run;
+    }
+
+    async function flushChunk(isFinal = false) {
+      try {
+        // Phase 1 — stop both channels and grab their raw blobs. No base64 here, so
+        // this resolves as soon as the (fast) stop events fire. stopAndGetBlob also
+        // drains a recorder that auto-stopped on track end (OS/browser "Stop sharing"),
+        // so prospect audio is never dropped just because capture ended out-of-band.
+        const [repBlob, prospectBlob] = await Promise.all([
+          stopAndGetBlob(repRecorder),
+          stopAndGetBlob(prospectRecorder)
+        ]);
+
+        // Phase 2 — restart IMMEDIATELY (unless tearing down) so recording resumes
+        // before the slower base64 encode/send below. The gap is just the stop
+        // round-trip. Each restart is guarded so a failure can't drop captured audio.
+        // Never restart once teardown has begun (audioCaptureStopping) — otherwise a
+        // periodic flush already in flight would resume capture after the stop click.
+        if (!isFinal && !audioCaptureStopping) {
+          if (repRecorder && repRecorder.state === 'inactive') {
+            try { repRecorder.start(); }
+            catch (e) { console.warn('[Audio Capture] rep recorder restart failed:', e.message); }
+          }
+          // Restart the prospect channel only if its tracks are still live. If screen
+          // share ended, drop the channel and continue rep-only instead of throwing.
+          if (prospectRecorder && prospectRecorder.state === 'inactive') {
+            if (streamHasLiveTracks(prospectStream)) {
+              try { prospectRecorder.start(); }
+              catch (e) { console.warn('[Audio Capture] prospect recorder restart failed:', e.message); prospectRecorder = null; }
+            } else {
+              console.log('[Audio Capture] prospect tracks ended — continuing rep-only');
+              prospectRecorder = null;
+            }
+          }
+        }
+
+        // Phase 3 — base64-encode (the slow part) and send, while the recorders above
+        // are already recording the next window.
+        const [repAudio, prospectAudio] = await Promise.all([
+          blobToBase64(repBlob),
+          blobToBase64(prospectBlob)
+        ]);
+
+        if (repAudio || prospectAudio) {
+          chunkCounter++;
+          // Capture screenshot on-demand every 4th chunk (~2 minutes)
+          const shouldCapture = isScreenCaptureEnabled && screenStream && (chunkCounter % 4 === 0);
+          const screenshotData = shouldCapture ? await captureScreenshot() : null;
+
+          // Dual-channel payload (no legacy `audioData`). Back-compat is handled by
+          // DEPLOY ORDERING, not by duplicating audio here: the backend ships first and
+          // accepts BOTH the legacy single-stream `audioData` (from old desktop builds)
+          // AND these `repAudio`/`prospectAudio` fields, so a new desktop only ever talks
+          // to a backend that understands it. We intentionally do NOT send a mixed
+          // `audioData` fallback — that would mean re-introducing the rep+prospect mixing
+          // this feature removes (and a rep-only fallback silently drops the customer
+          // side). If the backend is ever rolled back below this contract, redeploy it.
+          sendToBackend('monitoring_data', {
+            sessionId,
+            repAudio,
+            prospectAudio,
+            screenshot: screenshotData,
+            timestamp: Date.now(),
+            timeIntoCall: Math.floor((Date.now() - startTime) / 1000),
+            mimeType: 'audio/webm',
+            aiNotesEnabled: isAiNotesEnabled
+          });
+        }
+      } catch (err) {
+        console.error('[Audio Capture] flushChunk failed:', err.message);
+        if (!isFinal) {
+          try { if (repRecorder && repRecorder.state === 'inactive') repRecorder.start(); } catch (e) {}
+        }
+      }
+    }
+
+    // Drain + drop ONLY the prospect channel (used when the user disables screen capture
+    // mid-session). Unlike flushChunk, this does NOT restart the prospect recorder and
+    // does NOT touch the rep recorder. It is bound to a SPECIFIC recorder instance (rec)
+    // captured at enqueue time — so if the user re-enables screen capture before this
+    // runs and a fresh prospectRecorder is created, this never stops/nulls the new one.
+    // Always run via enqueueFlush() so it's serialized against other flushes.
+    async function flushAndDropProspect(rec) {
+      if (!rec) return;
+      try {
+        const blob = await stopAndGetBlob(rec);
+        if (prospectRecorder === rec) prospectRecorder = null; // only drop if not replaced
+        const prospectAudio = await blobToBase64(blob);
+        if (prospectAudio) {
+          chunkCounter++;
+          sendToBackend('monitoring_data', {
+            sessionId,
+            repAudio: null,
+            prospectAudio,
+            screenshot: null,
+            timestamp: Date.now(),
+            timeIntoCall: Math.floor((Date.now() - startTime) / 1000),
+            mimeType: 'audio/webm',
+            aiNotesEnabled: isAiNotesEnabled
+          });
+        }
+      } catch (e) {
+        console.warn('[Audio Capture] flushAndDropProspect failed:', e.message);
+        if (prospectRecorder === rec) prospectRecorder = null;
+      }
+    }
+
     async function startAudioCapture() {
       try {
+        audioCaptureStopping = false; // fresh session — allow restarts again
         console.log('[Audio Capture] Starting audio capture (mic + system audio)...');
 
         // Step 1: Get microphone stream
@@ -2591,21 +2794,16 @@
         // Expose mic-only stream to roleplay so its per-turn MediaRecorder can attach.
         roleplayMicStream = micStream;
 
-        // Set up audio mix — system audio is added by startScreenCapture once display stream is ready
+        // Audio context is for visualization + roleplay VAD only. We deliberately do
+        // NOT mix mic and system audio anymore — they're recorded as separate channels
+        // (rep mic / prospect system audio) so the backend can attribute speakers.
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        audioMixNode = audioContext.createMediaStreamDestination();
 
-        // Connect microphone
-        const micSource = audioContext.createMediaStreamSource(micStream);
-        const micGain = audioContext.createGain();
-        micGain.gain.value = 1.0;
-        micSource.connect(micGain);
-        micGain.connect(audioMixNode);
-
-        // The mixed stream (system audio will be spliced in by startScreenCapture)
-        mediaStream = audioMixNode.stream;
+        // Track the mic stream for teardown (rep recorder records this directly).
+        mediaStream = micStream;
 
         // Set up audio visualization (from mic only for visual feedback)
+        const micSource = audioContext.createMediaStreamSource(micStream);
         analyser = audioContext.createAnalyser();
         micSource.connect(analyser);  // Visualize mic input
         analyser.fftSize = 64;
@@ -2640,58 +2838,17 @@
         }
         updateVisualization();
 
-        // Set up media recorder to send chunks (records the MIXED stream)
-        mediaRecorder = new MediaRecorder(mediaStream, {
-          mimeType: 'audio/webm;codecs=opus'
-        });
+        // Rep channel: record the mic directly (mic-only = the rep we coach).
+        // Prospect channel (system audio) is attached by startScreenCapture into
+        // prospectRecorder once the display stream is available.
+        repRecorder = new MediaRecorder(micStream, { mimeType: 'audio/webm;codecs=opus' });
+        attachChunkCollector(repRecorder);
 
-        let chunks = [];
+        // Record in synchronized 30 second chunks across both channels.
+        repRecorder.start();
+        recordingInterval = setInterval(() => { enqueueFlush(() => flushChunk(false)); }, 30000);
 
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            chunks.push(event.data);
-          }
-        };
-
-        mediaRecorder.onstop = async () => {
-          if (chunks.length === 0) return;
-
-          const blob = new Blob(chunks, { type: 'audio/webm' });
-          chunks = [];
-
-          // Convert to base64 and send
-          const reader = new FileReader();
-          reader.onloadend = async () => {
-            const audioBase64 = reader.result.split(',')[1];
-
-            chunkCounter++;
-            // Capture screenshot on-demand every 4th chunk (~2 minutes)
-            const shouldCapture = isScreenCaptureEnabled && screenStream && (chunkCounter % 4 === 0);
-            const screenshotData = shouldCapture ? await captureScreenshot() : null;
-
-            sendToBackend('monitoring_data', {
-              sessionId,
-              audioData: audioBase64,
-              screenshot: screenshotData,
-              timestamp: Date.now(),
-              timeIntoCall: Math.floor((Date.now() - startTime) / 1000),
-              mimeType: 'audio/webm',
-              aiNotesEnabled: isAiNotesEnabled
-            });
-          };
-          reader.readAsDataURL(blob);
-        };
-
-        // Record in 30 second chunks
-        mediaRecorder.start();
-        recordingInterval = setInterval(() => {
-          if (mediaRecorder && mediaRecorder.state === 'recording') {
-            mediaRecorder.stop();
-            mediaRecorder.start();
-          }
-        }, 30000);
-
-        console.log('[Audio Capture] Audio capture started successfully');
+        console.log('[Audio Capture] Audio capture started successfully (dual-channel)');
         addFeedback('insight', 'mic active. waiting for screen capture...');
 
       } catch (error) {
@@ -2703,23 +2860,46 @@
       }
     }
     
-    function stopAudioCapture() {
-      // Stop recording interval
+    async function stopAudioCapture() {
+      // Mark teardown FIRST so any in-flight/queued periodic flush won't restart the
+      // recorders, and stop the periodic interval so no new window starts.
+      audioCaptureStopping = true;
       if (recordingInterval) {
         clearInterval(recordingInterval);
         recordingInterval = null;
       }
-      
-      // Stop media recorder
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-        mediaRecorder = null;
+
+      // Do NOT stop the recorders directly here: stop() flips state to 'inactive'
+      // synchronously while the final dataavailable fires later, so a direct stop would
+      // make the final flush read _chunks before the last blob lands (dropping the tail,
+      // or ALL audio on a short call). The audioCaptureStopping flag above already stops
+      // capture by preventing any restart; the final flush below is what stops each
+      // recorder and AWAITS its 'stop' event (via stopAndGetBlob) before draining.
+      //
+      // Enqueue the final flush LAST on the chain: it runs after every pending periodic
+      // flush / prospect drain and we await it, so the tail of every call — and the
+      // entire audio of calls shorter than the 30s interval — is captured and sent.
+      try { await enqueueFlush(() => flushChunk(true)); } catch (e) {}
+
+      if (repRecorder && repRecorder.state !== 'inactive') {
+        repRecorder.stop();
       }
-      
-      // Stop media stream
+      repRecorder = null;
+      if (prospectRecorder && prospectRecorder.state !== 'inactive') {
+        prospectRecorder.stop();
+      }
+      prospectRecorder = null;
+
+      // Stop media stream (mic)
       if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
         mediaStream = null;
+      }
+
+      // Stop prospect (system audio) stream
+      if (prospectStream) {
+        prospectStream.getTracks().forEach(track => track.stop());
+        prospectStream = null;
       }
       
       // Close audio context
@@ -2727,7 +2907,6 @@
         audioContext.close();
         audioContext = null;
         analyser = null;
-        audioMixNode = null;
       }
       
       // Reset audio bars
@@ -2748,21 +2927,31 @@
 
         console.log('[Screen Capture] Media stream created successfully');
 
-        // Connect system audio (loopback) to the mic mix if available
+        // Record system audio (loopback) as its OWN channel = the PROSPECT.
+        // Kept separate from the mic so the backend can label speakers.
+        //
+        // Only start it when the rep channel + flush loop are actually live. If mic
+        // capture was denied, startAudioCapture() returned before creating repRecorder
+        // and recordingInterval, but startSession() still calls us — without this guard
+        // the prospect recorder would run with NOTHING to flush it, accumulating system
+        // audio in memory for the whole session and emitting one oversized blob on stop.
         const audioTracks = screenStream.getAudioTracks();
-        if (audioTracks.length > 0 && audioContext && audioMixNode) {
+        if (audioTracks.length > 0 && repRecorder && recordingInterval) {
           try {
-            const sysSource = audioContext.createMediaStreamSource(new MediaStream(audioTracks));
-            const sysGain = audioContext.createGain();
-            sysGain.gain.value = 1.0;
-            sysSource.connect(sysGain);
-            sysGain.connect(audioMixNode);
-            console.log('[Screen Capture] System audio connected to mix');
+            prospectStream = new MediaStream(audioTracks);
+            prospectRecorder = new MediaRecorder(prospectStream, { mimeType: 'audio/webm;codecs=opus' });
+            attachChunkCollector(prospectRecorder);
+            prospectRecorder.start(); // flushChunk re-syncs it to the rep window on the next tick
+            console.log('[Screen Capture] System audio captured as prospect channel');
             addFeedback('insight', 'capturing both sides of the conversation.');
           } catch (e) {
-            console.warn('[Screen Capture] Could not connect system audio:', e.message);
-            addFeedback('insight', 'screen capture active. audio mix unavailable.');
+            console.warn('[Screen Capture] Could not capture system audio:', e.message);
+            addFeedback('insight', 'screen capture active. capturing your voice only.');
           }
+        } else if (audioTracks.length > 0) {
+          // System audio is available but there's no active audio flush loop (mic
+          // failed). Skip recording it so it can't grow unbounded; screenshots still work.
+          console.warn('[Screen Capture] System audio present but no active mic/flush loop — not recording prospect channel');
         } else {
           console.log('[Screen Capture] No system audio in display stream');
           addFeedback('insight', 'screen capture active. capturing your voice only.');
@@ -2804,6 +2993,19 @@
     }
 
     function stopScreenCapture() {
+      // Tear down the prospect channel first — its tracks are the screen stream's
+      // audio tracks, so once we stop screenStream they'd be 'ended' and any later
+      // restart would throw. Stopping + nulling here also prevents an orphaned
+      // recorder if the user toggles screen capture back on.
+      if (prospectRecorder && prospectRecorder.state !== 'inactive') {
+        try { prospectRecorder.stop(); } catch (e) {}
+      }
+      prospectRecorder = null;
+      if (prospectStream) {
+        prospectStream.getTracks().forEach(track => track.stop());
+        prospectStream = null;
+      }
+
       if (screenStream) {
         screenStream.getTracks().forEach(track => track.stop());
         screenStream = null;
