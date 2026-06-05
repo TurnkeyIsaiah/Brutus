@@ -1,6 +1,6 @@
 {
   "name": "brutus-desktop",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Brutus AI - Real-time AI Sales Coach",
   "author": "Brutus AI",
   "main": "src/main.js",
@@ -24,7 +24,13 @@
     },
     "mac": {
       "target": [
-        { "target": "dmg", "arch": ["x64", "arm64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ],
       "category": "public.app-category.business",
       "hardenedRuntime": true,
