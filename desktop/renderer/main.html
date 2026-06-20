@@ -822,7 +822,7 @@
               <div class="section-title">about</div>
               <div class="about-info">
                 <p><strong>Brutus AI Desktop</strong></p>
-                <p>Version 1.0.0</p>
+                <p>Version 1.3.2</p>
                 <p class="setting-hint">The brutally honest AI sales coach</p>
               </div>
             </div>
@@ -892,6 +892,9 @@
     async function apiCall(endpoint, options = {}) {
       const headers = {
         'Content-Type': 'application/json',
+        // Identify the desktop client so the backend can constrain CORS on this
+        // header instead of permitting all origin-less requests (audit BR-14).
+        'X-Brutus-Client': 'brutus-desktop',
         ...options.headers
       };
 

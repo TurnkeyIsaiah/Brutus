@@ -4,11 +4,12 @@ Real-time AI sales coaching that runs during your calls.
 
 ## Features
 
-- **Live Monitoring** - Captures audio during Zoom/Teams/phone calls
+- **Live Monitoring** - Captures your mic plus the prospect's system audio during Zoom/Teams/phone calls
 - **Real-time Coaching** - Brutus gives you feedback while you're on the call
 - **Floating Overlay** - Always-on-top panel shows coaching tips
 - **Background Running** - Lives in system tray, always ready
 - **Metrics Tracking** - Talk ratio, interruptions, call duration
+- **Session Modes** - Standard live coaching, cold-call tracking, and interactive roleplay
 
 ## Setup
 
@@ -30,14 +31,14 @@ For now, you can create simple placeholder icons or use any PNG.
 
 ### 3. Make Sure Backend is Running
 
-The desktop app connects to your Brutus backend:
+The desktop app connects to your Brutus backend. By default it talks to the
+production backend at `https://api.brutusai.coach`. To run against a local
+backend instead, start it and point the API URL in Settings at it:
 
 ```bash
 cd ../brutus-backend
 npm run dev
 ```
-
-Backend should be running on `http://localhost:3001`
 
 ### 4. Run the App
 
@@ -58,12 +59,12 @@ npm start
 
 ```
 Desktop App (Electron)
-├── Captures microphone audio
-├── Records in 5-second chunks
-├── Sends chunks to backend via WebSocket
+├── Captures rep mic + optional prospect/system audio
+├── Records both channels in 30-second chunks
+├── Sends chunks (with periodic screenshot) to backend via WebSocket
 │
 Backend
-├── Receives audio chunk
+├── Receives audio chunks
 ├── Transcribes with Whisper (~1-2 sec)
 ├── Analyzes with Claude/Brutus
 ├── Sends feedback back via WebSocket
@@ -95,19 +96,18 @@ Creates AppImage in `dist/` folder.
 
 ## Configuration
 
-Settings are stored locally. Default API URL is `http://localhost:3001`.
+Settings are stored locally. Default API URL is `https://api.brutusai.coach`.
 
-For production, update the API URL in settings to your deployed backend.
+To run against a local or self-hosted backend, update the API URL in settings.
 
 ## Known Limitations
 
-- Currently captures microphone only (not system audio)
-- System audio capture requires additional native modules
-- For full Zoom/Teams capture, users may need virtual audio cable software
+- Prospect (system) audio capture relies on screen-capture loopback and may be
+  unavailable on some platforms/configurations; the app then falls back to
+  rep-only audio
 
 ## Future Enhancements
 
-- [ ] System audio capture (hear both sides of call)
 - [ ] Auto-detect when Zoom/Teams opens
 - [ ] Hotkey to start/stop monitoring
 - [ ] Custom overlay positioning memory

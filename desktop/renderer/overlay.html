@@ -1106,6 +1106,74 @@
       transition: color 0.15s;
     }
     .source-picker-skip:hover { color: rgba(255,255,255,0.6); }
+
+    /* Recording-consent notice (shown before each non-roleplay session) */
+    .consent-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 18, 0.98);
+      z-index: 1100;
+      border-radius: 20px;
+      flex-direction: column;
+      justify-content: center;
+      padding: 26px 22px;
+      overflow-y: auto;
+    }
+    .consent-overlay.active { display: flex; }
+    .consent-label {
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,80,80,0.8);
+      margin-bottom: 8px;
+    }
+    .consent-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .consent-body {
+      font-size: 12px;
+      line-height: 1.55;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 12px;
+    }
+    .consent-body strong { color: rgba(255,255,255,0.92); font-weight: 600; }
+    .consent-warning {
+      font-size: 12px;
+      line-height: 1.5;
+      color: #ffb4b4;
+      background: rgba(255, 80, 80, 0.1);
+      border: 1px solid rgba(255, 80, 80, 0.28);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 18px;
+    }
+    .consent-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .consent-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 11px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .consent-btn-primary { background: #ff5050; color: #fff; }
+    .consent-btn-primary:hover { background: #ff6a6a; }
+    .consent-btn-secondary {
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .consent-btn-secondary:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
   </style>
 </head>
 <body>
@@ -1230,6 +1298,25 @@
     let API_URL = 'https://api.brutusai.coach';
     let WS_URL = 'wss://api.brutusai.coach/ws';
     let authToken = null;
+
+    // Identify the desktop client to the backend on every API request so CORS can
+    // constrain on this header instead of permitting all origin-less requests
+    // (security audit BR-14). Scoped to the Brutus backend only — third-party
+    // requests (e.g. analytics) are passed through untouched.
+    const BRUTUS_CLIENT_HEADER = 'X-Brutus-Client';
+    const BRUTUS_CLIENT_VALUE = 'brutus-desktop';
+    (function tagDesktopApiRequests() {
+      const nativeFetch = window.fetch.bind(window);
+      window.fetch = (input, init = {}) => {
+        const url = typeof input === 'string' ? input : (input && input.url) || '';
+        if (!url.startsWith(API_URL)) return nativeFetch(input, init);
+        const headers = new Headers(
+          init.headers || (input instanceof Request ? input.headers : undefined)
+        );
+        headers.set(BRUTUS_CLIENT_HEADER, BRUTUS_CLIENT_VALUE);
+        return nativeFetch(input, { ...init, headers });
+      };
+    })();
     
     let ws = null;
     let isConnected = false;
@@ -1680,6 +1767,13 @@
       // Roleplay sessions skip the source picker (mic-only flow).
       window.brutus.onMonitoringStarted(async () => {
         const earlyMode = await window.brutus.getSessionMode();
+        // Roleplay practices against an AI persona (no third party), so it skips
+        // the recording-consent gate. Live/cold-call sessions record a real
+        // prospect and must confirm consent first (audit BR-03).
+        if (earlyMode !== 'roleplay') {
+          const consented = await showConsentNotice();
+          if (!consented) return; // no consent — monitoring stopped, overlay closing
+        }
         if (isScreenCaptureEnabled && earlyMode !== 'roleplay') {
           await showSourcePicker();
         }
@@ -1700,6 +1794,10 @@
       const isMonitoring = await window.brutus.isMonitoring();
       if (isMonitoring) {
         const earlyMode = await window.brutus.getSessionMode();
+        if (earlyMode !== 'roleplay') {
+          const consented = await showConsentNotice();
+          if (!consented) return; // no consent — monitoring stopped, overlay closing
+        }
         if (isScreenCaptureEnabled && earlyMode !== 'roleplay') {
           await showSourcePicker();
         }
@@ -2529,8 +2627,10 @@
       ws = new WebSocket(WS_URL);
 
       ws.onopen = () => {
-        // Authenticate via first app-level message — token never travels in HTTP headers
-        ws.send(JSON.stringify({ type: 'auth', token: authToken }));
+        // Authenticate via first app-level message — token never travels in HTTP headers.
+        // `client` lets the backend identify the desktop client (WS handshakes cannot
+        // carry the X-Brutus-Client header that HTTP requests use; see audit BR-14).
+        ws.send(JSON.stringify({ type: 'auth', token: authToken, client: BRUTUS_CLIENT_VALUE }));
       };
 
       ws.onmessage = (event) => {
@@ -3254,6 +3354,35 @@
       });
     }
 
+    // Recording-consent disclosure (audit BR-03). Shown before each session for
+    // non-roleplay modes, since those record a real third party (the prospect).
+    // Resolves true to proceed; on decline it stops monitoring (which hides the
+    // overlay) and resolves false so the caller aborts the start flow.
+    function showConsentNotice() {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('consent-notice');
+        const accept = document.getElementById('consent-accept');
+        const decline = document.getElementById('consent-decline');
+
+        const cleanup = () => {
+          modal.classList.remove('active');
+          accept.onclick = null;
+          decline.onclick = null;
+        };
+
+        accept.onclick = () => { cleanup(); resolve(true); };
+        decline.onclick = () => {
+          cleanup();
+          // No consent — stop monitoring. This hides the overlay via the
+          // monitoring-stopped event, and we never start capturing audio.
+          window.brutus.stopMonitoring();
+          resolve(false);
+        };
+
+        modal.classList.add('active');
+      });
+    }
+
     // ==================== START ====================
     init();
   </script>
@@ -3334,6 +3463,23 @@
       drawNeuralNetwork();
     })();
   </script>
+
+  <!-- Recording Consent Notice (shown when the overlay opens, before each session) -->
+  <div class="consent-overlay" id="consent-notice">
+    <div class="consent-label">recording notice</div>
+    <div class="consent-title">get consent before you record</div>
+    <div class="consent-body">
+      brutus records and transcribes <strong>both sides</strong> of this call. at the start of
+      the call, tell the other person they're being recorded and get their consent to continue.
+    </div>
+    <div class="consent-warning">
+      if the prospect does not consent, close brutus and do not record.
+    </div>
+    <div class="consent-actions">
+      <button class="consent-btn consent-btn-primary" id="consent-accept">i have consent — continue</button>
+      <button class="consent-btn consent-btn-secondary" id="consent-decline">no consent — close brutus</button>
+    </div>
+  </div>
 
   <!-- Source Picker Modal -->
   <div class="source-picker-overlay" id="source-picker">

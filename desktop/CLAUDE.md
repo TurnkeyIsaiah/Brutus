@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Brutus.ai Desktop is an Electron-based real-time AI sales coaching application. It captures microphone audio during sales calls, sends it to a backend service for transcription and analysis, and displays live coaching feedback in an always-on-top overlay window.
+Brutus.ai Desktop is an Electron-based real-time AI sales coaching application. It captures the rep's microphone audio (and, optionally, the prospect's system audio via screen-capture loopback) during sales calls, streams it to a backend service for transcription and analysis, and displays live coaching feedback in an always-on-top overlay window.
 
 ## Development Commands
 
@@ -48,29 +48,31 @@ Both windows share the same preload script (`src/preload.js`) which exposes IPC 
 
 ### Audio and Screen Capture Flow
 
-1. **Overlay window requests microphone access** via `getUserMedia()`
+1. **Overlay window requests microphone access** via `getUserMedia()` (rep channel)
    - 16kHz sample rate for efficiency
-   - Echo cancellation and noise suppression enabled
+   - Echo cancellation and noise suppression are **disabled** to preserve both voices
 
-2. **Overlay window captures screen** via `desktopCapturer`
-   - Uses Electron's desktopCapturer API to get screen sources
-   - Creates video stream from primary display
-   - Captures screenshots every 5 seconds (synced with audio chunks)
-   - Screenshots converted to JPEG base64 (80% quality)
-   - Falls back to audio-only mode if screen capture fails
+2. **Overlay window optionally captures system/screen audio** via `getDisplayMedia()` (prospect channel)
+   - User picks a screen/window source; system audio loopback becomes the prospect channel
+   - Falls back to rep-only audio if screen/system audio capture is unavailable
 
-3. **MediaRecorder records in 5-second chunks**
+3. **Overlay window captures screenshots** via the selected screen source
+   - A screenshot is taken on every 4th audio chunk (~2 minutes)
+   - Drawn to a canvas and converted to JPEG base64, downscaled to max 960×540
+   - Screenshot is omitted (null) when screen capture is disabled or fails
+
+4. **Dual MediaRecorders record in 30-second chunks**
    - Format: `audio/webm;codecs=opus`
-   - Each chunk is converted to base64
-   - Combined with screenshot and sent via WebSocket to backend
+   - Rep and prospect channels are recorded separately and base64-encoded
+   - Sent (with an optional screenshot) via WebSocket to the backend as `monitoring_data`
 
-4. **Real-time visualization** using Web Audio API
+5. **Real-time visualization** using Web Audio API
    - `AnalyserNode` with FFT size 64
    - Updates 32 frequency bars at ~60fps
 
 ### Backend Communication
 
-**REST API** (default: `http://localhost:3001`):
+**REST API** (default: `https://api.brutusai.coach`, configurable in settings):
 - `POST /auth/login` - User authentication
 - `POST /auth/signup` - User registration
 - `GET /auth/me` - Verify token validity
@@ -78,16 +80,21 @@ Both windows share the same preload script (`src/preload.js`) which exposes IPC 
 - `POST /live/start` - Start coaching session
 - `POST /live/end` - End coaching session
 
-**WebSocket** (`ws://localhost:3001/ws`):
-- Connection includes auth token as query parameter
-- Sends `monitoring_data` messages with combined audio and screenshot data
-  - Payload structure: `{ type: 'monitoring_data', payload: { sessionId, audioData, screenshot, timestamp, timeIntoCall, mimeType } }`
-  - `audioData`: base64-encoded audio chunk (audio/webm)
-  - `screenshot`: base64-encoded JPEG image (or null if screen capture failed)
+Mode-specific routes also exist for cold-call (`/coldcall/*`), roleplay (`/roleplay/*`), TTS (`/tts`), notes (`/notes`), and research (`/research`).
+
+Every backend request carries an `X-Brutus-Client: brutus-desktop` header so the backend can identify the desktop client by an explicit header rather than by the absence of an `Origin` header (security audit BR-14). In `renderer/main.html` this is added in the central `apiCall` helper; in `renderer/overlay.html` a scoped `window.fetch` wrapper tags only requests bound for `API_URL`. The same identifier is included in the WebSocket auth message as `client: 'brutus-desktop'`, since WS handshakes cannot send custom headers.
+
+**WebSocket** (`/ws`, derived from the API URL with `http`→`ws`):
+- After the socket opens, the client sends an auth message: `{ type: 'auth', token }`
+- Sends `monitoring_data` messages with dual-channel audio and an optional screenshot
+  - Payload structure: `{ type: 'monitoring_data', payload: { sessionId, repAudio, prospectAudio, screenshot, timestamp, timeIntoCall, mimeType, aiNotesEnabled } }`
+  - `repAudio` / `prospectAudio`: base64-encoded audio chunks (audio/webm); either may be null
+  - `screenshot`: base64-encoded JPEG image (or null when not captured this chunk)
   - `timestamp`: Unix timestamp in milliseconds
   - `timeIntoCall`: Seconds elapsed since monitoring started
-- Receives `brutus_feedback` messages with coaching tips
-- Auto-reconnects on disconnect if session is active
+  - `aiNotesEnabled`: whether the AI notes toggle is on
+- Receives `brutus_feedback` (shown only when `payload.coach === true`), `chat_response`, and `OUT_OF_TOKENS` (auto-stops the session)
+- Auto-reconnects on disconnect (exponential backoff capped at 30s) if session is active
 
 ### Data Persistence
 
@@ -95,9 +102,11 @@ Uses `electron-store` for local storage:
 - `authToken` - JWT authentication token
 - `user` - User profile object (name, email)
 - `settings` - App settings object:
-  - `apiUrl` - Backend URL (default: `http://localhost:3001`)
+  - `apiUrl` - Backend URL (default: `https://api.brutusai.coach`)
   - `autoStart` - Launch on system startup (default: `false`)
   - `overlayOpacity` - Overlay transparency (default: `0.95`)
+  - `audioFeedback` / `minFeedbackInterval` / `ttsVoice` - TTS playback preferences
+- `sessionMode` - `'cold-call'` | `'roleplay'` (deleted/absent for standard mode)
 
 ### System Tray Integration
 
@@ -142,11 +151,10 @@ Hardware acceleration is disabled to prevent GPU-related crashes:
 
 ### CORS and Web Security
 
-Web security is disabled (`webSecurity: false`) in both windows:
-- Allows Electron app (running on `file://` protocol) to make requests to localhost backend
-- Backend CORS headers are configured for web apps, not Electron
-- This is safe for desktop apps since they're trusted local environments
-- Without this, fetch requests to the backend will be blocked by CORS
+Web security is **enabled** (the Electron default) in both windows:
+- The backend's CORS configuration allows the null/`file://` origin that the Electron renderer sends
+- Because the backend explicitly permits these requests, there is no need to disable `webSecurity`
+- Keep `webSecurity` enabled; disabling it would weaken the renderer's protections unnecessarily
 
 ### CSS View Switching
 
@@ -167,49 +175,49 @@ The monitoring state (`isMonitoring`) is managed in the main process and synchro
 ### Audio Chunk Timing
 
 Audio is recorded continuously but sent in discrete chunks:
-- 5-second intervals controlled by `setInterval()`
+- 30-second intervals controlled by `setInterval()`
 - Each chunk includes `timeIntoCall` metadata
-- Chunks are sequential (stop current, start new) to avoid gaps
+- Rep and prospect recorders are flushed together via a serialized flush queue (`enqueueFlush`) to avoid races on stop and to keep both channels aligned
+- A final flush runs on session stop so the tail of the call is not dropped
 - MediaRecorder state checked before operations to prevent errors
 
 ### Screen Capture Implementation
 
 Screen capture runs in parallel with audio capture:
-- Uses Electron's `desktopCapturer` API exposed via preload script
-- Captures primary display at up to 1920x1080 resolution
-- Screenshots taken every 5 seconds via separate interval
-- Each screenshot is drawn to canvas and converted to JPEG base64 (80% quality)
-- Last screenshot is stored in `lastScreenshot` variable
-- When audio chunk is sent, current screenshot is included in payload
-- Gracefully degrades to audio-only if screen capture fails
-- All screen streams and intervals are properly cleaned up on session end
+- The user selects a source via `desktopCapturer` (exposed through the preload script); `getDisplayMedia` provides the video/system-audio stream
+- Screenshots are captured on demand on every 4th audio chunk (~2 minutes), not on a separate timer
+- Each screenshot is drawn to a canvas, downscaled to max 960×540, and converted to JPEG base64
+- When that chunk is sent, the screenshot is included in the payload (otherwise `screenshot` is null)
+- Gracefully degrades to audio-only if screen/system audio capture fails
+- All screen streams are properly cleaned up on session end
 
 ### Session Lifecycle
 
 1. User clicks "Start Monitoring" → `startMonitoring()`
 2. Main process shows overlay window
-3. Overlay calls `POST /live/start` → receives `sessionId`
-4. WebSocket connection established
-5. Audio capture begins
-6. Screen capture begins
-7. Every 5 seconds: audio chunk + screenshot sent via WebSocket
-8. User clicks "Stop Monitoring" → `stopMonitoring()`
-9. Audio capture stops, screen capture stops, interval timers cleared
-10. Overlay calls `POST /live/end` with `sessionId`
-11. WebSocket disconnected
-12. Overlay window hidden
+3. For live/cold-call sessions, the overlay shows a recording-consent notice (`showConsentNotice()`, audit BR-03) instructing the user to get the prospect's consent; declining calls `stopMonitoring()` and aborts the start. Roleplay (AI persona, no third party) skips this gate.
+4. Overlay calls `POST /live/start` → receives `sessionId`
+5. WebSocket connection established; client sends `{ type: 'auth', token }`
+6. Audio capture begins (rep mic + optional prospect/system audio)
+7. Screen capture begins (optional)
+8. Every 30 seconds: rep + prospect audio chunks (screenshot every 4th chunk) sent via WebSocket
+9. User clicks "Stop Monitoring" → `stopMonitoring()`
+10. A final audio flush is sent, audio/screen capture stops, interval timers cleared
+11. Overlay calls `POST /live/end` with `sessionId`
+12. WebSocket disconnected
+13. Overlay window hidden
 
 ### Error Handling
 
 - Authentication failures clear stored tokens and show login
-- WebSocket errors trigger auto-reconnect after 3 seconds (if session active)
+- WebSocket errors trigger auto-reconnect with exponential backoff (capped at 30s) if the session is active
 - Microphone access denial shows critical feedback to user
 - API errors display in UI error message components
 
 ## Backend Requirements
 
 This desktop app requires a separate backend service (not included in this repo):
-- Expected at `http://localhost:3001` by default (configurable in settings)
+- Expected at `https://api.brutusai.coach` by default (configurable in settings)
 - Must implement the REST and WebSocket endpoints listed above
 - Handles Whisper transcription and Claude/Brutus AI analysis
 - Returns coaching feedback via WebSocket in real-time
@@ -218,10 +226,10 @@ This desktop app requires a separate backend service (not included in this repo)
 
 The Brutus system has two components:
 1. **Electron Desktop App** (this repo) - Lightweight live monitoring with overlay
-2. **Browser Dashboard** - Full-featured web interface at `http://localhost:3000/brutus-frontend.html`
+2. **Browser Dashboard** - Full-featured web interface at `https://app.brutusai.coach/index.html`
 
 The "open dashboard" button in the footer uses `shell.openExternal()` to launch the browser dashboard:
-- URL is derived from the API URL setting (port 3001 → 3000)
+- Opens the fixed production dashboard URL (`https://app.brutusai.coach/index.html`)
 - Opens in the user's default browser
 - Allows access to full stats, chat, uploads, and draggable panels not available in the desktop app
 
