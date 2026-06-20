@@ -1,0 +1,56 @@
+name: Release Desktop
+
+# Build installers for every OS and publish them to a GitHub Release whenever a
+# version tag is pushed (e.g. v1.3.2). electron-updater consumes the release
+# artifacts and the generated latest*.yml feeds.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+# electron-builder needs write access to create the GitHub Release and upload assets.
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & publish (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: "--win"
+          - os: macos-latest
+            platform: "--mac"
+          - os: ubuntu-latest
+            platform: "--linux"
+
+    defaults:
+      run:
+        working-directory: desktop
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and publish
+        run: npx --no-install electron-builder ${{ matrix.platform }} --publish always
+        env:
+          # electron-builder publishes to the GitHub Releases provider configured
+          # in package.json using this token.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No Apple signing certificates are configured, so skip auto-discovery
+          # to keep the macOS build from failing on a missing identity.
+          CSC_IDENTITY_AUTO_DISCOVERY: false

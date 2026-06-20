@@ -23,6 +23,10 @@ npm run build:linux     # Build Linux AppImage
 
 Build output is placed in the `dist/` directory.
 
+### Releasing (CI)
+
+Pushing a version tag (`vX.Y.Z`) triggers `.github/workflows/release.yml`, which builds the Windows/macOS/Linux installers on their native runners and publishes them — plus the `latest*.yml` feeds that `electron-updater` reads — to a GitHub Release for that tag. Typical flow: bump the version in `package.json` (and the settings "About" label), commit, then `git tag vX.Y.Z && git push origin vX.Y.Z`. The workflow uses the default `GITHUB_TOKEN`; macOS builds are unsigned (no signing certs configured).
+
 ## Architecture
 
 ### Window System (Dual Window Pattern)
