@@ -51,6 +51,11 @@ jobs:
           # electron-builder publishes to the GitHub Releases provider configured
           # in package.json using this token.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # No Apple signing certificates are configured, so skip auto-discovery
-          # to keep the macOS build from failing on a missing identity.
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+          # macOS code signing (Developer ID) + notarization. These are scoped to
+          # the macOS runner so the .p12 is never picked up as a Windows signing
+          # cert on the other runners. CSC_LINK expects the base64-encoded .p12.
+          CSC_LINK: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICATE || '' }}
+          CSC_KEY_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+          APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.APPLE_ID_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ matrix.os == 'macos-latest' && secrets.APPLE_TEAM_ID || '' }}
