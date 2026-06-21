@@ -6,10 +6,10 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder",
-    "build:win": "electron-builder --win",
-    "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux"
+    "build": "electron-builder --config electron-builder.config.js",
+    "build:win": "electron-builder --win --config electron-builder.config.js",
+    "build:mac": "electron-builder --mac --config electron-builder.config.js",
+    "build:linux": "electron-builder --linux --config electron-builder.config.js"
   },
   "build": {
     "appId": "coach.brutusai",
@@ -37,7 +37,7 @@
       "gatekeeperAssess": false,
       "entitlements": "entitlements.mac.plist",
       "entitlementsInherit": "entitlements.mac.plist",
-      "notarize": true
+      "notarize": false
     },
     "linux": {
       "target": "AppImage"

@@ -46,7 +46,7 @@ jobs:
         run: npm ci
 
       - name: Build and publish
-        run: npx --no-install electron-builder ${{ matrix.platform }} --publish always
+        run: npx --no-install electron-builder ${{ matrix.platform }} --config electron-builder.config.js --publish always
         env:
           # electron-builder publishes to the GitHub Releases provider configured
           # in package.json using this token.
