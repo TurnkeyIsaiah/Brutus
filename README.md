@@ -1,28 +1,14 @@
-# Brutus AI Desktop
+# Brutus AI Desktop Releases
 
-Brutus AI Desktop is the Electron app for live sales coaching.
+This public repository is the distribution endpoint for Brutus AI Desktop.
+Installers and auto-update metadata are available on the
+[Releases](https://github.com/TurnkeyIsaiah/Brutus/releases) page.
 
-## Structure
+The canonical source now lives with the rest of the product in a private
+monorepo. This repository intentionally contains no current application source
+or release workflow. New desktop builds are produced in the private repository
+and published here so existing download links and `electron-updater` continue
+to work without authentication.
 
-- `desktop/` - Electron app source, renderer, and packaging config
-- `.gitignore` - repo ignore rules
-
-## Development
-
-```bash
-cd desktop
-npm install
-npm start
-```
-
-## Build
-
-```bash
-cd desktop
-npm run build
-```
-
-## Notes
-
-- The desktop app is the only product surface tracked in this repo.
-- Non-desktop planning docs and web/backend sources are kept outside the repo.
+Historical source remains available in this repository's Git history because
+the desktop app was previously open source.
