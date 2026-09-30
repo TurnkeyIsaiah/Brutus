@@ -1,11 +1,10 @@
 // electron-builder configuration.
 //
-// The base config lives in the package.json "build" field; this wrapper only adds
-// macOS notarization, which needs the Apple Team ID passed explicitly. On this
-// electron-builder version, `notarize: true` does not read APPLE_TEAM_ID from the
-// environment, so notarytool fails with "teamId property is required". Here we read
-// it from the env (CI secrets) and enable notarization only when full Apple
-// credentials are present — local/dev builds without them still succeed unsigned.
+// The base config lives in the package.json "build" field; this wrapper only turns
+// macOS notarization on when the full Apple credential set is in the environment.
+// electron-builder 26 takes `notarize` as a boolean and reads APPLE_ID,
+// APPLE_APP_SPECIFIC_PASSWORD and APPLE_TEAM_ID itself (CI secrets, see
+// .github/workflows/release.yml). Local builds without them still succeed unsigned.
 const { build } = require('./package.json');
 
 const hasAppleCreds = Boolean(
@@ -18,6 +17,6 @@ module.exports = {
   ...build,
   mac: {
     ...build.mac,
-    notarize: hasAppleCreds ? { teamId: process.env.APPLE_TEAM_ID } : false,
+    notarize: hasAppleCreds,
   },
 };

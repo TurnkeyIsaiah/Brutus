@@ -20,6 +20,12 @@ const Store = require('electron-store');
 const { autoUpdater } = require('electron-updater');
 const { clipLilBrutusToMascot } = require('./lil-brutus-shape');
 
+// Dev builds can run beside the installed app (which holds the single-instance
+// lock on the shared userData folder) by pointing at their own profile.
+if (!app.isPackaged && process.env.BRUTUS_USER_DATA) {
+  app.setPath('userData', path.resolve(process.env.BRUTUS_USER_DATA));
+}
+
 const store = new Store();
 
 // Fix GPU crash issues

@@ -15,6 +15,10 @@ Brutus.ai Desktop is an Electron-based real-time AI sales coaching application. 
 npm start                # Launch the Electron app in development mode
 ```
 
+Electron 42+ no longer downloads its binary during `npm install`; the first `npm start` (or `npx electron --version`) downloads it.
+
+The installed app and `npm start` share the `brutus-desktop` userData folder, so a running installed copy holds the single-instance lock and a dev launch just focuses it and exits. To run beside it, give the dev build its own profile: `BRUTUS_USER_DATA=<some folder> npm start` (ignored in packaged builds).
+
 ### Building for Distribution
 ```bash
 npm run build           # Build for current platform
