@@ -96,6 +96,9 @@
       startTimeoutMs: 20000,
       endTimeoutMs: 90000,
       minChunkBytes: 1200,
+      heartbeatMs: 5000,
+      connectTimeoutMs: 10000,
+      reconnectMaxMs: 5000,
       clientId: 'brutus-desktop'
     }, deps.config || {});
 
@@ -127,6 +130,9 @@
     let socketWanted = false;
     let reconnectTimer = null;
     let reconnectAttempts = 0;
+    let heartbeatTimer = null;
+    let connectTimer = null;
+    let lastHeardAt = 0;
 
     const outbox = Outbox.createChunkOutbox({
       send: sendRaw,
@@ -187,13 +193,17 @@
     }
 
     async function endRemote(id, lastSeq) {
-      for (let attempt = 0; attempt < 2; attempt++) {
+      const attempts = 3;
+      for (let attempt = 0; attempt < attempts; attempt++) {
+        // A connection that died mid-call can leave a stale socket behind; pause
+        // so the retry opens a fresh one.
+        if (attempt > 0) await new Promise((resolve) => T.setTimeout(resolve, cfg.endRetryDelayMs || 2000));
         try {
           const res = await api('/live/end', { sessionId: id, lastSeq }, { timeoutMs: cfg.endTimeoutMs });
           if (res.ok) return { ok: true, data: res.data };
           if (res.status < 500) return { ok: false, message: errorFromResponse('save', res) };
         } catch (_) {
-          if (attempt === 1) return { ok: false, message: "couldn't reach Brutus to save the call. it may still appear in your dashboard." };
+          if (attempt === attempts - 1) return { ok: false, message: "couldn't reach Brutus to save the call. it may still appear in your dashboard." };
         }
       }
       return { ok: false, message: "Brutus couldn't save the call. it may still appear in your dashboard." };
@@ -231,9 +241,44 @@
     function scheduleReconnect() {
       clearReconnect();
       reconnectAttempts += 1;
-      const delay = state === 'stopping' ? 1000 : Math.min(1000 * Math.pow(2, reconnectAttempts - 1), 30000);
+      // A live call cannot wait long: retry quickly, with jitter so many clients
+      // reconnecting after a deploy do not arrive at once.
+      const base = state === 'stopping' ? 1000 : Math.min(1000 * Math.pow(2, reconnectAttempts - 1), cfg.reconnectMaxMs);
+      const delay = base + Math.floor(Math.random() * 500);
       reconnectTimer = T.setTimeout(() => { reconnectTimer = null; connectSocket(); }, delay);
       ui.connection('reconnecting', outbox.stats());
+    }
+
+    function stopHeartbeat() {
+      if (heartbeatTimer) { T.clearInterval(heartbeatTimer); heartbeatTimer = null; }
+      if (connectTimer) { T.clearTimeout(connectTimer); connectTimer = null; }
+    }
+
+    // Browsers answer server pings invisibly, so a connection that died without
+    // a close (Wi-Fi drop, sleep, a killed server) would look open for minutes.
+    // The client pings too; if nothing at all comes back for two intervals the
+    // socket is treated as dead and replaced, and unacked chunks are replayed.
+    function startHeartbeat() {
+      stopHeartbeat();
+      lastHeardAt = T.now();
+      heartbeatTimer = T.setInterval(() => {
+        if (T.now() - lastHeardAt > cfg.heartbeatMs * 2) {
+          dropSocket();
+          return;
+        }
+        sendRaw({ type: 'ping' });
+      }, cfg.heartbeatMs);
+    }
+
+    function dropSocket() {
+      const dead = ws;
+      wsId += 1; // ignore anything the dead socket still emits
+      ws = null;
+      wsConnected = false;
+      stopHeartbeat();
+      if (dead) { try { dead.close(); } catch (_) {} }
+      outbox.onDisconnected();
+      if (socketWanted) scheduleReconnect();
     }
 
     function connectSocket() {
@@ -249,6 +294,13 @@
         return;
       }
       ws = sock;
+      // A socket that never gets to 'connected' (lost handshake, hung connect)
+      // is replaced rather than waited on.
+      if (connectTimer) T.clearTimeout(connectTimer);
+      connectTimer = T.setTimeout(() => {
+        connectTimer = null;
+        if (id === wsId && !wsConnected) dropSocket();
+      }, cfg.connectTimeoutMs);
       sock.onopen = () => {
         if (id !== wsId) return;
         try { sock.send(JSON.stringify({ type: 'auth', token: creds.token, client: cfg.clientId })); } catch (_) {}
@@ -262,8 +314,11 @@
         if (id !== wsId) return; // an older socket, already replaced
         ws = null;
         wsConnected = false;
+        stopHeartbeat();
         outbox.onDisconnected();
-        if (event && event.code === 4001) {
+        // 4001 'Auth timeout' only means the handshake was slow: reconnect.
+        // Any other 4001 is a rejected or revoked token.
+        if (event && event.code === 4001 && event.reason !== 'Auth timeout') {
           // Token rejected or revoked: reconnecting with it cannot work.
           socketWanted = false;
           ui.connection('offline', outbox.stats());
@@ -280,6 +335,7 @@
     function closeSocket() {
       socketWanted = false;
       clearReconnect();
+      stopHeartbeat();
       wsId += 1;
       if (ws) {
         try { ws.close(); } catch (_) {}
@@ -291,6 +347,7 @@
     }
 
     function handleMessage(raw) {
+      lastHeardAt = T.now();
       let msg;
       try { msg = JSON.parse(raw); } catch (_) { return; }
       if (!msg || typeof msg !== 'object') return;
@@ -299,6 +356,7 @@
       if (msg.type === 'connected') {
         wsConnected = true;
         reconnectAttempts = 0;
+        startHeartbeat();
         const caps = Array.isArray(payload.capabilities) ? payload.capabilities : [];
         outbox.onConnected({ ackMode: caps.includes('chunk_ack') });
         ui.connection('online', outbox.stats());

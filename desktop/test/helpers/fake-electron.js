@@ -1,13 +1,16 @@
 // Loads desktop/src/main.js against fake `electron`, `electron-store` and
-// `electron-updater` modules so its IPC handlers can be called directly.
+// `electron-updater` modules so its IPC handlers, window hardening and
+// permission policy can be exercised directly.
 'use strict';
 
 const Module = require('module');
 const path = require('path');
+const { pathToFileURL } = require('url');
 
 const MAIN_PATH = path.resolve(__dirname, '../../src/main.js');
 
-function createFakes() {
+function createFakes(options) {
+  const opts = options || {};
   const handlers = new Map();
   const listeners = new Map();
   const appEvents = new Map();
@@ -16,6 +19,7 @@ function createFakes() {
   class FakeWebContents {
     constructor(win) {
       this.win = win;
+      this.url = '';
       this.sent = [];
       this.events = new Map();
       this.session = { setDisplayMediaRequestHandler: (fn) => { fakes.displayHandler = fn; } };
@@ -25,7 +29,7 @@ function createFakes() {
     once(name, fn) { this.events.set(name, fn); }
     setWindowOpenHandler(fn) { this.openHandler = fn; }
     isLoading() { return false; }
-    getURL() { return 'file:///app/index.html'; }
+    getURL() { return this.url; }
     executeJavaScript() { return Promise.resolve(); }
     toggleDevTools() {}
   }
@@ -40,10 +44,14 @@ function createFakes() {
       this.contentProtection = false;
       windows.push(this);
     }
-    loadFile(file) { this.file = file; }
+    loadFile(file) {
+      this.file = file;
+      this.webContents.url = pathToFileURL(file).href;
+    }
     on(name, fn) { this.events.set(name, fn); }
     once(name, fn) { this.events.set(name, fn); }
     show() { this.visible = true; }
+    showInactive() { this.visible = true; }
     hide() { this.visible = false; }
     focus() {}
     isDestroyed() { return this.destroyed; }
@@ -53,10 +61,18 @@ function createFakes() {
     restore() {}
     setContentProtection(v) { this.contentProtection = v; }
     setMinimumSize() {}
+    setMaximumSize() {}
+    setContentSize() {}
+    setResizable() {}
+    setAlwaysOnTop() {}
+    moveTop() {}
     setIgnoreMouseEvents() {}
     setOpacity() {}
+    hookWindowMessage() {}
     getMediaSourceId() { return 'window:overlay:0'; }
     getBounds() { return { x: 0, y: 0, width: 380, height: 620 }; }
+    getContentBounds() { return { x: 0, y: 0, width: 168, height: 95 }; }
+    getContentSize() { return [168, 95]; }
     static getAllWindows() { return windows.filter((w) => !w.destroyed); }
   }
 
@@ -66,14 +82,16 @@ function createFakes() {
     appEvents,
     windows,
     displayHandler: null,
+    permission: {},
     electron: {
       app: {
-        isPackaged: false,
+        isPackaged: !!opts.packaged,
         setPath() {},
         getPath: () => '/tmp',
+        getVersion: () => '1.5.0-test',
         disableHardwareAcceleration() {},
         commandLine: { appendSwitch() {} },
-        whenReady: () => new Promise(() => {}),
+        whenReady: () => Promise.resolve(),
         on: (name, fn) => appEvents.set(name, fn),
         requestSingleInstanceLock: () => true,
         quit() { fakes.quitCalls = (fakes.quitCalls || 0) + 1; },
@@ -93,7 +111,7 @@ function createFakes() {
         getCursorScreenPoint: () => ({ x: 0, y: 0 })
       },
       nativeImage: { createFromPath: () => ({ isEmpty: () => true }), createFromBuffer: () => ({}) },
-      shell: { openExternal: async (url) => { fakes.opened = url; } },
+      shell: { openExternal: async (url) => { (fakes.opened = fakes.opened || []).push(url); } },
       desktopCapturer: {
         getSources: async () => [
           { id: 'screen:0:0', name: 'Screen', display_id: '1', thumbnail: { toDataURL: () => 'data:' } },
@@ -105,7 +123,13 @@ function createFakes() {
         encryptString: (s) => Buffer.from(`enc:${s}`),
         decryptString: (b) => Buffer.from(b).toString().replace(/^enc:/, '')
       },
-      dialog: { showMessageBox: async () => ({ response: 1 }) }
+      dialog: { showMessageBox: async () => ({ response: 1 }) },
+      session: {
+        defaultSession: {
+          setPermissionRequestHandler: (fn) => { fakes.permission.request = fn; },
+          setPermissionCheckHandler: (fn) => { fakes.permission.check = fn; }
+        }
+      }
     },
     storeData: new Map()
   };
@@ -118,8 +142,8 @@ function createFakes() {
   return fakes;
 }
 
-function loadMain() {
-  const fakes = createFakes();
+async function loadMain(options) {
+  const fakes = createFakes(options);
   const originalLoad = Module._load;
   Module._load = function (request, parent, isMain) {
     if (request === 'electron') return fakes.electron;
@@ -137,20 +161,34 @@ function loadMain() {
     require(MAIN_PATH);
   } finally {
     Module._load = originalLoad;
-    console.log = silence;
   }
+  await new Promise((r) => setTimeout(r, 0)); // let app.whenReady() run
+  console.log = silence;
 
-  fakes.invoke = (channel, sender, ...args) => {
+  const find = (page) => () => fakes.windows.find((w) => w.file && w.file.endsWith(page) && !w.destroyed);
+  fakes.mainWin = find(path.join('app', 'index.html'));
+  fakes.overlay = find('overlay.html');
+
+  // Calls a channel as `contents` would. A frame URL can be overridden to
+  // simulate a page that navigated away.
+  const eventFrom = (contents, frameUrl) => ({
+    sender: contents || {},
+    senderFrame: contents ? { url: frameUrl !== undefined ? frameUrl : contents.url } : null
+  });
+  fakes.invoke = (channel, contents, ...args) => {
     const fn = fakes.handlers.get(channel);
     if (!fn) throw new Error(`no handler for ${channel}`);
-    return fn({ sender: sender || {} }, ...args);
+    return fn(eventFrom(contents), ...args);
   };
-  fakes.emit = (channel, sender, ...args) => {
+  fakes.invokeWithFrame = (channel, contents, frameUrl, ...args) => {
+    const fn = fakes.handlers.get(channel);
+    return fn(eventFrom(contents, frameUrl), ...args);
+  };
+  fakes.emit = (channel, contents, ...args) => {
     const fn = fakes.listeners.get(channel);
     if (!fn) throw new Error(`no listener for ${channel}`);
-    return fn({ sender: sender || {} }, ...args);
+    return fn(eventFrom(contents), ...args);
   };
-  fakes.overlay = () => fakes.windows.find((w) => w.file && w.file.endsWith('overlay.html') && !w.destroyed);
   return fakes;
 }
 

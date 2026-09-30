@@ -1397,6 +1397,14 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsNav.classList.remove('hidden');
     }
 
+    // The installed app always talks to the production API; only development
+    // builds can point at another backend.
+    const apiLocked = !!(window.brutus && window.brutus.appInfo && window.brutus.appInfo.packaged);
+    const apiField = document.getElementById('desktop-api-url');
+    if (apiLocked && apiField && apiField.closest('.p-acct-field')) {
+        apiField.closest('.p-acct-field').hidden = true;
+    }
+
     const DESKTOP_VOICES = [
         'UgBBYS2sOqTuMpoF3BR0',
         'c6SfcYrb2t09NHXiT80T',
@@ -1527,17 +1535,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 showDesktopSettingsMsg('Could not load settings.', false);
                 return;
             }
-            const apiUrl = (document.getElementById('desktop-api-url').value || '').trim();
-            try {
-                new URL(apiUrl);
-            } catch (_) {
-                showDesktopSettingsMsg('Invalid API URL format. Please enter a valid URL (e.g., https://api.brutusai.coach)', false);
-                return;
+            const apiUrl = apiLocked
+                ? desktopLoadedApiUrl
+                : (document.getElementById('desktop-api-url').value || '').trim();
+            if (!apiLocked) {
+                try {
+                    new URL(apiUrl);
+                } catch (_) {
+                    showDesktopSettingsMsg('Invalid API URL format. Please enter a valid URL (e.g., https://api.brutusai.coach)', false);
+                    return;
+                }
             }
             const pct = parseInt(document.getElementById('desktop-overlay-opacity').value, 10);
             const whiteBgBtn = document.getElementById('desktop-white-background');
             const settings = {
-                apiUrl: apiUrl,
+                ...(apiLocked ? {} : { apiUrl }),
                 autoStart: document.getElementById('desktop-auto-start').checked,
                 overlayOpacity: (Number.isFinite(pct) ? pct : 95) / 100,
                 audioFeedback: document.getElementById('desktop-audio-feedback').checked,

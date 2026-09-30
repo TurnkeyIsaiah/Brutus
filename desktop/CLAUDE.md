@@ -54,7 +54,7 @@ The application uses two separate Electron windows:
    - Only visible when monitoring is active
    - Draggable and resizable
 
-Both windows share the same preload script (`src/preload.js`) which exposes IPC handlers via `window.brutus.*`.
+Each window has its own preload (`src/preload-main.js`, `src/preload-overlay.js`, `src/preload-mascot.js`) exposing only the `window.brutus.*` functions that window uses. A third window, Lil Brutus (`renderer/lil-brutus.html`), is the always-on-top mascot.
 
 ### Audio and Screen Capture Flow
 
@@ -165,12 +165,16 @@ Hardware acceleration is disabled to prevent GPU-related crashes:
 - This fixes "GPU state invalid after WaitForGetOffsetInRange" errors
 - No visual performance impact for this application
 
-### CORS and Web Security
+### Security model
 
-Web security is **enabled** (the Electron default) in both windows:
-- The backend's CORS configuration allows the null/`file://` origin that the Electron renderer sends
-- Because the backend explicitly permits these requests, there is no need to disable `webSecurity`
-- Keep `webSecurity` enabled; disabling it would weaken the renderer's protections unnecessarily
+- **Windows**: every BrowserWindow uses  in : sandbox on, contextIsolation on, nodeIntegration off, webSecurity on, DevTools only in unpackaged builds (F12 / Ctrl+Shift+I likewise). The backend's CORS allows the null origin the file:// renderer sends, so webSecurity stays on.
+- **Navigation**:  keeps every window on our own  pages, denies popups and webviews; the main window hands https links to the system browser.
+- **IPC**: every channel is registered through  / , which refuse any sender that is not one of the named windows showing one of our own pages (). There is no unguarded  registration.
+- **Permissions**:  allows the microphone for the main window (roleplay) and overlay, screen capture for the overlay only, and denies everything else.
+- **Content-Security-Policy**  on every page: scripts only from local files (no inline scripts or handlers anywhere), connections only to the API (plus localhost for dev) and PostHog ingest/config in the main window, fonts from Google Fonts. Remote images used by the Paper design are shipped locally (, ).
+- **Analytics**: PostHog runs in the main window only, from the local  bundle with ; autocapture and session replay mask all text and inputs; events are tagged ; dev builds are marked internal. The overlay has no analytics.
+- **Settings**:  allow-lists the keys  accepts. The installed app only ever uses  (the API URL field is hidden); dev builds may also use .
+- **Overlay**:  keeps it out of screen shares and Brutus's own screenshots.
 
 ### CSS View Switching
 

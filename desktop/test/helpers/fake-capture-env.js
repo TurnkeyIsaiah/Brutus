@@ -78,10 +78,10 @@ class FakeSocket {
     if (this.onopen) this.onopen();
   }
   serverSend(msg) { if (this.onmessage) this.onmessage({ data: JSON.stringify(msg) }); }
-  serverClose(code) {
+  serverClose(code, reason) {
     if (this.readyState === 3) return;
     this.readyState = 3;
-    if (this.onclose) this.onclose({ code: code || 1006 });
+    if (this.onclose) this.onclose({ code: code || 1006, reason: reason || '' });
   }
 }
 
@@ -119,6 +119,11 @@ function createEnv(overrides) {
   };
 
   env.onSocketMessage = (sock, msg) => {
+    if (env.silent || sock.silent) return; // half-open connection: nothing ever comes back
+    if (msg.type === 'ping') {
+      setTimeout(() => sock.serverSend({ type: 'pong' }), 0);
+      return;
+    }
     if (msg.type === 'auth' && env.autoOpen !== 'no-connected') {
       setTimeout(() => sock.serverSend({
         type: 'connected',
@@ -226,6 +231,7 @@ function createEnv(overrides) {
       drainMs: 200,
       legacyGraceMs: 20,
       endTimeoutMs: 1000,
+      endRetryDelayMs: 10,
       startTimeoutMs: 1000
     }, config || {})
   });

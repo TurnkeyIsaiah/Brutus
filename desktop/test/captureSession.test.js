@@ -246,7 +246,7 @@ test('a failed /live/end is reported as a failure', async () => {
   const session = await startLive(env);
   const result = await session.stop({});
   assert.equal(result.ok, false);
-  assert.equal(env.requestsTo('/live/end').length, 2, 'retried once');
+  assert.equal(env.requestsTo('/live/end').length, 3, 'retried twice');
   assert.equal(env.stoppedResults.at(-1).ok, false);
 });
 
@@ -267,4 +267,45 @@ test('stop is idempotent while a stop is running', async () => {
   assert.equal(a, b);
   await a;
   assert.equal(env.requestsTo('/live/end').length, 1);
+});
+
+test('a connection that silently stops answering is replaced and unacked audio is replayed', async () => {
+  const env = createEnv();
+  const session = await startLive(env, { config: { heartbeatMs: 40, drainMs: 3000 } });
+  env.sockets[0].silent = true; // still looks open, but nothing reaches the server any more
+  const stopping = session.stop({});
+  await waitFor(() => env.sockets.length >= 2, 'heartbeat replaced the dead socket', 3000);
+  await stopping;
+  const replayed = env.sockets.slice(1).flatMap((s) => s.sent.filter((m) => m.type === 'monitoring_data'));
+  assert.ok(replayed.some((m) => m.payload.seq === 1 && m.payload.replay === true), 'final chunk replayed on the new socket');
+  assert.equal(env.requestsTo('/live/end')[0].body.lastSeq, 1);
+  assert.ok(!env.feedback.some(([, text]) => /could not be sent/.test(text)), 'nothing lost');
+});
+
+test('the client pings while connected and a live socket is kept', async () => {
+  const env = createEnv();
+  const session = await startLive(env, { config: { heartbeatMs: 30 } });
+  await tick(200);
+  assert.equal(env.sockets.length, 1, 'healthy socket not replaced');
+  assert.ok(env.sockets[0].sent.filter((m) => m.type === 'ping').length >= 3, 'pings sent');
+  await session.stop({});
+});
+
+test('a slow handshake (4001 Auth timeout) reconnects instead of ending the call', async () => {
+  const env = createEnv();
+  const session = await startLive(env);
+  env.sockets[0].serverClose(4001, 'Auth timeout');
+  await waitFor(() => env.sockets.length === 2, 'reconnect', 3000);
+  assert.equal(session.state, 'live');
+  assert.ok(!env.ipcCalls.some(([name]) => name === 'stopMonitoring'));
+  await session.stop({});
+});
+
+test('a socket that never finishes its handshake is replaced', async () => {
+  const env = createEnv();
+  const session = await startLive(env, { config: { connectTimeoutMs: 60, reconnectMaxMs: 50 } });
+  env.autoOpen = 'no-connected'; // next sockets open but the server never says connected
+  env.sockets[0].serverClose(1006);
+  await waitFor(() => env.sockets.length >= 3, 'hung handshake replaced', 3000);
+  await session.stop({ mode: 'cancel' });
 });

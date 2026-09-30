@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; worker-src 'self' blob:; connect-src 'self' https://api.brutusai.coach wss://api.brutusai.coach https://us.i.posthog.com https://us-assets.i.posthog.com http://localhost:* ws://localhost:*; object-src 'none'; base-uri 'none'; form-action 'self'; frame-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Brutus</title>
 <link rel="icon" href="favicon.png" type="image/png">
 <style>html,body{margin:0;background:#000;color:#FFF8EF}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gideon+Roman&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link href="https://fonts.googleapis.com/css2?family=Gideon+Roman&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="paper.css">
 </head>
 <body>
@@ -1911,6 +1912,7 @@
 
 <script src="../../node_modules/animejs/dist/bundles/anime.umd.min.js"></script>
 <script src="config.js"></script>
+<script src="../../node_modules/posthog-js/dist/array.full.no-external.js"></script>
 <script src="posthog.js"></script>
 <script src="app.js"></script>
 <script src="paper-ui.js"></script>

@@ -1,32 +1,38 @@
-// PostHog product analytics for the Brutus web app (app.brutusai.coach).
-// Project API key is a public, client-side key by design — safe to ship in the browser.
-// US Cloud: ingestion at us.i.posthog.com, static assets at us-assets.i.posthog.com.
-// NOTE: vercel.json's CSP must allow these hosts (script-src + connect-src).
+// PostHog product analytics for the Brutus desktop app (bundled main window).
+// Project API key is a public, client-side key by design.
 //
-// The cookie is written to .brutusai.coach (posthog-js's default for this
-// domain), so a visitor arriving from www.brutusai.coach keeps the same distinct
-// ID here. Calling brutusIdentify() after auth then attaches that whole
-// pre-account history — marketing pageviews included — to the real user.
-!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug getPageViewId captureTraceFeedback captureTraceMetric".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-
+// The SDK is the local bundle array.full.no-external.js (loaded by the page
+// before this file), and external dependency loading is off, so no analytics
+// code is ever downloaded into this window. Only events go to us.i.posthog.com.
+//
+// Session replay and autocapture stay on, but every piece of on-screen text and
+// every input is masked: call transcripts, notes and prospect names never leave
+// the app through analytics.
 (function () {
   'use strict';
 
-  var host = window.location.hostname;
-  var isInternal = host === 'localhost' || host === '127.0.0.1' || host === '' ||
-    window.location.protocol === 'file:' || /\.vercel\.app$/.test(host);
+  if (!window.posthog || typeof window.posthog.init !== 'function') return;
+  var posthog = window.posthog;
+
+  // Dev builds (npm start) are internal; installed builds are real users.
+  var appInfo = (window.brutus && window.brutus.appInfo) || {};
+  var isInternal = !appInfo.packaged;
 
   posthog.init('phc_s84jHnTbwgcoLE3udWZdziuqvMe2SCxDqAB2zKHCzckw', {
     api_host: 'https://us.i.posthog.com',
     defaults: '2025-05-24',
-    // Matches the marketing site. Visitors browse /login.html and /signup.html
-    // before they have an account, and those visits are the top of the funnel,
-    // so they need person profiles to be analysable.
-    person_profiles: 'always'
+    person_profiles: 'always',
+    disable_external_dependency_loading: true,
+    mask_all_text: true,
+    mask_all_element_attributes: true,
+    session_recording: {
+      maskAllInputs: true,
+      maskTextSelector: '*'
+    }
   });
 
   // Tag every event with the surface so web vs desktop vs marketing can be split.
-  posthog.register({ app: 'web', surface: 'web' });
+  posthog.register({ app: 'desktop', surface: 'desktop', app_version: appInfo.version || null });
   if (isInternal) {
     posthog.register({ $internal_or_test_user: true });
     posthog.setPersonProperties({ $internal_or_test_user: true });

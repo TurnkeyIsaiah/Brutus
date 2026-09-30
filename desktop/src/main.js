@@ -13,7 +13,7 @@ ignoreBrokenPipe(process.stderr);
 
 console.log('Starting Brutus Desktop...');
 console.log('App is ready, creating window...');
-const { app, BrowserWindow, Tray, Menu, ipcMain, screen, nativeImage, shell, desktopCapturer, safeStorage, dialog } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, screen, nativeImage, shell, desktopCapturer, safeStorage, dialog, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const Store = require('electron-store');
@@ -21,6 +21,8 @@ const { autoUpdater } = require('electron-updater');
 const { clipLilBrutusToMascot } = require('./lil-brutus-shape');
 const { createIntentStore, resolveDisplayMedia } = require('./displayMediaIntent');
 const { createMonitoringController } = require('./monitoringController');
+const { guardHandle, guardOn, isOwnPage } = require('./ipcGuard');
+const { validateSettingsPatch, isAllowedApiUrl, PRODUCTION_API_URL } = require('./settingsPolicy');
 
 // Dev builds can run beside the installed app (which holds the single-instance
 // lock on the shared userData folder) by pointing at their own profile.
@@ -54,6 +56,87 @@ const captureIntents = createIntentStore();
 // Paper chat decal (09/16/11): 168×95. The floating window matches that box.
 const LIL_BRUTUS_W = 168;
 const LIL_BRUTUS_H = 95;
+
+// ==================== WINDOW HARDENING ====================
+
+const MAIN = () => mainWindow;
+const OVERLAY = () => overlayWindow;
+const MASCOT = () => mascotWindow;
+
+// Every IPC channel states which of our windows may use it (see ipcGuard.js).
+function handle(channel, windows, handler) {
+  ipcMain.handle(channel, guardHandle(windows, handler));
+}
+function listen(channel, windows, handler) {
+  ipcMain.on(channel, guardOn(windows, handler));
+}
+
+// Same locked-down web preferences for every window; only the preload differs.
+function secureWebPreferences(preloadFile, extra) {
+  return Object.assign({
+    nodeIntegration: false,
+    contextIsolation: true,
+    sandbox: true,
+    webSecurity: true, // backend CORS allows the null origin Electron sends
+    devTools: !app.isPackaged,
+    preload: path.join(__dirname, preloadFile)
+  }, extra || {});
+}
+
+// The main window's preload reads this to know whether it is a packaged build.
+function appInfoArgument() {
+  return `--brutus-app-info=${JSON.stringify({ packaged: app.isPackaged, version: app.getVersion() })}`;
+}
+
+// No window may leave our own local pages, open popups or embed webviews. The
+// main window hands https links to the system browser instead.
+function lockNavigation(win, options) {
+  const openExternalLinks = !!(options && options.openExternalLinks);
+  const external = (url) => {
+    if (openExternalLinks && typeof url === 'string' && url.startsWith('https://')) shell.openExternal(url);
+  };
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    external(url);
+    return { action: 'deny' };
+  });
+  win.webContents.on('will-navigate', (event, url) => {
+    if (isOwnPage(url)) return;
+    event.preventDefault();
+    external(url);
+  });
+  win.webContents.on('will-attach-webview', (event) => event.preventDefault());
+}
+
+// F12 / Ctrl+Shift+I open DevTools in development only.
+function allowDevToolsShortcut(win) {
+  if (app.isPackaged) return;
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F12' || (input.control && input.shift && input.key === 'I')) {
+      win.webContents.toggleDevTools();
+    }
+  });
+}
+
+// Pages get the microphone (main: roleplay, overlay: calls) and screen capture
+// (overlay only). Every other permission is denied, for every page.
+function permissionAllowed(contents, permission, url) {
+  if (!contents || !isOwnPage(url || contents.getURL())) return false;
+  const isMain = mainWindow && !mainWindow.isDestroyed() && contents === mainWindow.webContents;
+  const isOverlay = overlayWindow && !overlayWindow.isDestroyed() && contents === overlayWindow.webContents;
+  if (permission === 'media') return isMain || isOverlay;
+  if (permission === 'display-capture') return isOverlay;
+  return false;
+}
+
+function installPermissionPolicy() {
+  const ses = session.defaultSession;
+  ses.setPermissionRequestHandler((contents, permission, callback, details) => {
+    callback(permissionAllowed(contents, permission, details && details.requestingUrl));
+  });
+  ses.setPermissionCheckHandler((contents, permission, requestingOrigin, details) => {
+    return permissionAllowed(contents, permission, details && details.requestingUrl);
+  });
+}
 
 // Helper to get icon path (returns null if doesn't exist)
 function getIconPath(filename) {
@@ -89,39 +172,19 @@ function createMainWindow() {
     frame: true,
     backgroundColor: '#000000',
     icon: path.join(__dirname, '../assets/icon.png'),
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
-      // webSecurity enabled (default) — backend CORS allows null origin from Electron
-    }
+    webPreferences: secureWebPreferences('preload-main.js', {
+      additionalArguments: [appInfoArgument()]
+    })
   });
 
   // The desktop window is the app itself: the same screens as the web app,
   // shipped in renderer/app. It does not open the public website.
   mainWindow.loadFile(path.join(__dirname, '../renderer/app/index.html'));
 
-  // https links (Stripe, downloads, target=_blank) leave the bundled UI.
-  // Opening them in the system browser keeps this window on the local app.
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (typeof url === 'string' && url.startsWith('https://')) {
-      shell.openExternal(url);
-    }
-    return { action: 'deny' };
-  });
-  mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (typeof url !== 'string' || url.startsWith('file:')) return;
-    event.preventDefault();
-    if (url.startsWith('https://')) shell.openExternal(url);
-  });
-
-  // DevTools keyboard shortcuts (F12 and Ctrl+Shift+I)
-  mainWindow.webContents.on('before-input-event', (event, input) => {
-    if (input.key === 'F12' ||
-        (input.control && input.shift && input.key === 'I')) {
-      mainWindow.webContents.toggleDevTools();
-    }
-  });
+  // https links (Stripe, downloads, target=_blank) open in the system browser;
+  // the window itself never leaves the bundled pages.
+  lockNavigation(mainWindow, { openExternalLinks: true });
+  allowDevToolsShortcut(mainWindow);
 
   mainWindow.on('closed', () => {
     destroyLilBrutus();
@@ -183,14 +246,9 @@ function createOverlayWindow() {
     movable: true,
     minimizable: false,
     maximizable: false,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      backgroundThrottling: false,
-      preload: path.join(__dirname, 'preload.js')
-      // webSecurity enabled (default) — backend CORS allows null origin from Electron
-    }
+    webPreferences: secureWebPreferences('preload-overlay.js', { backgroundThrottling: false })
   });
+  lockNavigation(overlayWindow);
 
   // Keeps the coaching panel out of screen shares and out of the screenshots
   // Brutus takes itself.
@@ -239,13 +297,7 @@ function createOverlayWindow() {
     });
   }, { useSystemPicker: false });
 
-  // DevTools keyboard shortcuts (F12 and Ctrl+Shift+I)
-  overlayWindow.webContents.on('before-input-event', (event, input) => {
-    if (input.key === 'F12' ||
-        (input.control && input.shift && input.key === 'I')) {
-      overlayWindow.webContents.toggleDevTools();
-    }
-  });
+  allowDevToolsShortcut(overlayWindow);
 
   overlayWindow.on('minimize', () => {
     // Prevent minimizing — restore immediately
@@ -458,14 +510,14 @@ function decryptToken(stored) {
 
 // ==================== IPC HANDLERS ====================
 
-ipcMain.handle('get-auth', () => {
+handle('get-auth', [MAIN, OVERLAY], () => {
   return {
     token: readAuthToken(),
     user: store.get('user')
   };
 });
 
-ipcMain.handle('set-auth', (event, { token, user }) => {
+handle('set-auth', [MAIN], (event, { token, user }) => {
   const encrypted = encryptToken(token);
   if (encrypted === null) {
     // Secure storage unavailable — hold token in memory for this session only
@@ -479,7 +531,7 @@ ipcMain.handle('set-auth', (event, { token, user }) => {
   return true;
 });
 
-ipcMain.handle('clear-auth', async () => {
+handle('clear-auth', [MAIN], async () => {
   // Normally the renderer already ended monitoring (end-monitoring) before
   // revoking its token; this covers any path that did not.
   if (monitoring.needsStop()) await monitoring.requestStop({ reason: 'signed-out' });
@@ -490,81 +542,54 @@ ipcMain.handle('clear-auth', async () => {
   return true;
 });
 
-ipcMain.handle('minimize-window', () => {
-  if (mainWindow) mainWindow.minimize();
-});
-
-ipcMain.handle('close-window', () => {
-  if (mainWindow) mainWindow.hide();
-});
-
-ipcMain.handle('quit-app', () => {
-  app.quit();
-});
-
-ipcMain.handle('start-monitoring', () => {
+handle('start-monitoring', [MAIN], () => {
   return startMonitoring();
 });
 
 // Returns as soon as the stop is requested. The overlay calls this for stops
 // it starts itself, so it must never wait on its own completion.
-ipcMain.handle('stop-monitoring', () => {
+handle('stop-monitoring', [MAIN, OVERLAY], () => {
   stopMonitoring();
   return true;
 });
 
 // Ends monitoring and waits until the overlay has closed the session (or the
 // timeout passes). Logout and account deletion call this before touching auth.
-ipcMain.handle('end-monitoring', async (event, options) => {
+handle('end-monitoring', [MAIN], async (event, options) => {
   const opts = options && typeof options === 'object' ? options : {};
   const reason = typeof opts.reason === 'string' ? opts.reason : 'user';
   await monitoring.requestStop({ reason, mode: opts.mode === 'cancel' ? 'cancel' : 'end' });
   return true;
 });
 
-ipcMain.handle('is-monitoring', () => {
+handle('is-monitoring', [MAIN], () => {
   return monitoring.isActive();
 });
 
-ipcMain.handle('get-monitoring-state', () => {
+handle('get-monitoring-state', [MAIN], () => {
   return monitoring.state();
 });
 
 // Overlay handshake: its listeners exist, so a pending start can be delivered.
-ipcMain.on('overlay-ready', (event) => {
+listen('overlay-ready', [OVERLAY], (event) => {
   if (!overlaySender(event)) return;
   overlayReady = true;
   monitoring.overlayReady();
 });
 
-ipcMain.on('capture-state', (event, state) => {
+listen('capture-state', [OVERLAY], (event, state) => {
   if (!overlaySender(event)) return;
   monitoring.onCaptureState(state);
 });
 
-ipcMain.on('overlay-stopped', (event, info) => {
+listen('overlay-stopped', [OVERLAY], (event, info) => {
   if (!overlaySender(event)) return;
   monitoring.onOverlayStopped(info && typeof info === 'object' ? info : {});
 });
 
-ipcMain.handle('set-capture-intent', (event, intent) => {
+handle('set-capture-intent', [OVERLAY], (event, intent) => {
   if (!overlaySender(event)) return false;
   return captureIntents.set(intent);
-});
-
-ipcMain.handle('show-overlay', () => {
-  if (overlayWindow) {
-    overlayWindow.show();
-    overlayWindow.focus();
-  }
-});
-
-ipcMain.handle('get-overlay-bounds', () => {
-  if (overlayWindow) {
-    const bounds = overlayWindow.getBounds();
-    return bounds;
-  }
-  return { x: 0, y: 0, width: 380, height: 620 };
 });
 
 const OVERLAY_MIN_W = 280;
@@ -690,32 +715,14 @@ function startOverlayGesture(mode, edge) {
   overlayGesture = session;
 }
 
-ipcMain.handle('move-overlay', (event, { x, y }) => {
-  if (!overlayWindow || overlayWindow.isDestroyed()) return;
-  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-  overlayWindow.setPosition(Math.round(x), Math.round(y), false);
-});
-
-ipcMain.handle('hide-overlay', () => {
+handle('hide-overlay', [OVERLAY], () => {
   hideOverlay();
-});
-
-ipcMain.handle('resize-overlay', (event, { width, height, x, y }) => {
-  if (!overlayWindow || overlayWindow.isDestroyed()) return;
-  const bounds = overlayWindow.getBounds();
-  const size = clampOverlaySize(width, height);
-  overlayWindow.setBounds({
-    x: Number.isFinite(x) ? Math.round(x) : bounds.x,
-    y: Number.isFinite(y) ? Math.round(y) : bounds.y,
-    width: size.width,
-    height: size.height
-  }, false);
 });
 
 // Hardware acceleration is disabled, so -webkit-app-region drag never moves
 // this frameless window. The overlay header/edges start a cursor follow that
 // uses the same setPosition / setBounds path as move-overlay and resize-overlay.
-ipcMain.on('overlay-gesture-begin', (event, payload) => {
+listen('overlay-gesture-begin', [OVERLAY], (event, payload) => {
   if (!overlaySender(event)) return;
   const mode = payload && payload.mode === 'resize' ? 'resize' : 'move';
   const requested = payload && typeof payload.edge === 'string' ? payload.edge : 'se';
@@ -723,7 +730,7 @@ ipcMain.on('overlay-gesture-begin', (event, payload) => {
   startOverlayGesture(mode, edge);
 });
 
-ipcMain.on('overlay-gesture-end', (event) => {
+listen('overlay-gesture-end', [OVERLAY], (event) => {
   if (!overlaySender(event)) return;
   endOverlayGesture();
 });
@@ -961,12 +968,9 @@ function createLilBrutusWindow() {
       show: false,
       acceptFirstMouse: true,
       title: 'Lil Brutus',
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js')
-      }
+      webPreferences: secureWebPreferences('preload-mascot.js')
     });
+    lockNavigation(mascotWindow);
   } catch (err) {
     console.error('[lil-brutus] create failed', err?.message || err);
     mascotWindow = null;
@@ -1051,7 +1055,7 @@ function destroyLilBrutus() {
   mascotWindow = null;
 }
 
-ipcMain.handle('set-lil-brutus-visible', (event, shown) => {
+handle('set-lil-brutus-visible', [MAIN], (event, shown) => {
   const fromMain = mainWindowSender(event);
   console.log('[lil-brutus] toggle', !!shown, 'fromMain', fromMain);
   if (!fromMain) return false;
@@ -1062,17 +1066,17 @@ ipcMain.handle('set-lil-brutus-visible', (event, shown) => {
   return true;
 });
 
-ipcMain.on('lil-brutus-gesture-begin', (event) => {
+listen('lil-brutus-gesture-begin', [MASCOT], (event) => {
   if (!mascotSender(event)) return;
   startLilBrutusGesture();
 });
 
-ipcMain.on('lil-brutus-gesture-end', (event) => {
+listen('lil-brutus-gesture-end', [MASCOT], (event) => {
   if (!mascotSender(event)) return;
   endLilBrutusGesture(true);
 });
 
-ipcMain.on('lil-brutus-session', (event, session) => {
+listen('lil-brutus-session', [MAIN], (event, session) => {
   if (!mainWindowSender(event) || !session) return;
   if (session.kind === 'roleplay') lilRoleplay = !!session.on;
   else if (session.kind === 'monitoring') lilMonitoring = !!session.on;
@@ -1080,7 +1084,7 @@ ipcMain.on('lil-brutus-session', (event, session) => {
   sendLilSession(session.kind);
 });
 
-ipcMain.on('lil-brutus-clip', (event, file) => {
+listen('lil-brutus-clip', [MASCOT], (event, file) => {
   if (!mascotSender(event)) return;
   const name = LIL_FRAMES.has(file) ? file : 'bust.png';
   lilBrutusFrameFile = name;
@@ -1112,16 +1116,25 @@ function readSettings() {
   if (!stored || typeof stored !== 'object') return { ...SETTINGS_DEFAULTS };
   // appUrl was saved by 1.4.0 and earlier. Nothing reads it now.
   const { appUrl, ...rest } = stored;
-  return { ...SETTINGS_DEFAULTS, ...rest };
+  const settings = { ...SETTINGS_DEFAULTS, ...rest };
+  // An API URL saved by an older build that this build would refuse (e.g. plain
+  // http, or a non-Brutus host in an installed app) falls back to production.
+  if (!isAllowedApiUrl(settings.apiUrl, { packaged: app.isPackaged })) settings.apiUrl = PRODUCTION_API_URL;
+  return settings;
 }
 
-ipcMain.handle('get-settings', () => {
+handle('get-settings', [MAIN, OVERLAY], () => {
   return readSettings();
 });
 
-ipcMain.handle('set-settings', async (event, settings) => {
+handle('set-settings', [MAIN], async (event, settings) => {
   const existing = readSettings();
-  const patch = (settings && typeof settings === 'object') ? settings : {};
+  const { patch, rejected } = validateSettingsPatch(settings, { packaged: app.isPackaged });
+  if (rejected.includes('apiUrl')) {
+    throw new Error(app.isPackaged
+      ? 'The API URL cannot be changed in the installed app.'
+      : 'API URL must be https://api.brutusai.coach or a localhost address.');
+  }
   const next = { ...existing, ...patch };
   if (Object.prototype.hasOwnProperty.call(patch, 'overlayOpacity')) {
     next.overlayOpacity = clampOverlayOpacity(patch.overlayOpacity);
@@ -1129,7 +1142,7 @@ ipcMain.handle('set-settings', async (event, settings) => {
   if (Object.prototype.hasOwnProperty.call(patch, 'whiteBackground')) {
     next.whiteBackground = !!patch.whiteBackground;
   }
-  if (typeof patch.apiUrl === 'string' && patch.apiUrl !== existing.apiUrl) {
+  if (patch.apiUrl && patch.apiUrl !== existing.apiUrl) {
     // Backend origin changed. End any live call against the old backend first
     // (it still holds the old token), then drop the token everywhere.
     if (monitoring.needsStop()) await monitoring.requestStop({ reason: 'api-url-changed' });
@@ -1149,12 +1162,7 @@ ipcMain.handle('set-settings', async (event, settings) => {
   return true;
 });
 
-ipcMain.handle('open-dashboard', async () => {
-  await shell.openExternal('https://app.brutusai.coach/index.html');
-  return true;
-});
-
-ipcMain.handle('open-external', async (event, url) => {
+handle('open-external', [MAIN], async (event, url) => {
   if (typeof url !== 'string' || !url.startsWith('https://')) {
     throw new Error('Only https:// URLs may be opened externally');
   }
@@ -1162,7 +1170,7 @@ ipcMain.handle('open-external', async (event, url) => {
   return true;
 });
 
-ipcMain.handle('get-screen-sources', async () => {
+handle('get-screen-sources', [OVERLAY], async () => {
   try {
     const sources = await desktopCapturer.getSources({
       types: ['screen', 'window'],
@@ -1251,6 +1259,7 @@ function setupAutoUpdate() {
 // ==================== APP LIFECYCLE ====================
 
 app.whenReady().then(() => {
+  installPermissionPolicy();
   // Left behind by 1.4.0 and earlier (cold-call/roleplay overlay modes).
   store.delete('sessionMode');
   applyAutoStart(readSettings().autoStart);

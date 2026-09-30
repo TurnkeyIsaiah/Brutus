@@ -68,7 +68,8 @@
     "animejs": "4.5.0",
     "electron-store": "^8.2.0",
     "electron-updater": "^6.8.9",
-    "koffi": "^2.16.3"
+    "koffi": "^2.16.3",
+    "posthog-js": "^1.435.4"
   },
   "devDependencies": {
     "electron": "^44.5.1",

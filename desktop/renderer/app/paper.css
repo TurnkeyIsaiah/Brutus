@@ -212,7 +212,7 @@ a {
 }
 
 .p-logo-img {
-  background-image: url("https://app.paper.design/file-assets/01M2XF3A1BE41V81RAMNB66AX2/3W5W9EBY2BHV8M8NRT1Q096DKS.png");
+  background-image: url("logo.png");
 }
 
 .p-wordmark {
@@ -1039,7 +1039,7 @@ a {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-image: url("https://app.paper.design/file-assets/01M2XF3A1BE41V81RAMNB66AX2/68T5V8FZ7NDB5P1J8E7ZT8TGQ3.jpg");
+  background-image: url("auth-photo.jpg");
   background-position: 50%;
   background-size: cover;
 }
