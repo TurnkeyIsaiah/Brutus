@@ -22,10 +22,6 @@ const { clipLilBrutusToMascot } = require('./lil-brutus-shape');
 
 const store = new Store();
 
-// Web UI the main window hosts. Overridable via the `appUrl` settings key so a
-// developer can point it at a local frontend (e.g. http://localhost:3001/frontend/index.html).
-const APP_URL = 'https://app.brutusai.coach/index.html';
-
 // Fix GPU crash issues
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-gpu');
@@ -37,7 +33,6 @@ app.commandLine.appendSwitch('disable-direct-composition');
 
 let mainWindow = null;
 let overlayWindow = null;
-let settingsWindow = null;
 let mascotWindow = null;
 let overlayGesture = null;
 let mascotGesture = null;
@@ -137,38 +132,7 @@ function createMainWindow() {
   });
 }
 
-// ==================== SETTINGS WINDOW (Desktop-only settings) ====================
-
-function showSettingsWindow() {
-  if (settingsWindow && !settingsWindow.isDestroyed()) {
-    if (settingsWindow.isMinimized()) settingsWindow.restore();
-    settingsWindow.show();
-    settingsWindow.focus();
-    return;
-  }
-
-  settingsWindow = new BrowserWindow({
-    width: 520,
-    height: 720,
-    frame: true,
-    backgroundColor: '#000000',
-    icon: path.join(__dirname, '../assets/icon.png'),
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
-      // webSecurity enabled (default) — backend CORS allows null origin from Electron
-    }
-  });
-
-  settingsWindow.loadFile(path.join(__dirname, '../renderer/main.html'));
-
-  settingsWindow.on('closed', () => {
-    settingsWindow = null;
-  });
-}
-
-// Tray Settings opens the page in the main window. It does not open the popup.
+// Tray Settings opens the Settings page in the main window.
 function openInAppSettings() {
   if (!mainWindow || mainWindow.isDestroyed()) createMainWindow();
   const win = mainWindow;
@@ -219,6 +183,9 @@ function createOverlayWindow() {
     }
   });
 
+  // Keeps the coaching panel out of screen shares and out of the screenshots
+  // Brutus takes itself.
+  overlayWindow.setContentProtection(true);
   overlayWindow.setMinimumSize(OVERLAY_MIN_W, OVERLAY_MIN_H);
   // Re-apply after the window is actually on screen. setOpacity before the
   // first show is ignored on Windows, which left every session fully opaque.
@@ -426,10 +393,6 @@ function updateTrayMenu() {
 // ==================== MONITORING CONTROL ====================
 
 function startMonitoring() {
-  // The Paper UI's Start Monitoring control is live coaching. Roleplay runs
-  // inside the main window. A leftover cold-call/roleplay flag would send the
-  // overlay down the wrong session.
-  store.delete('sessionMode');
   isMonitoring = true;
   showOverlay();
   updateTrayMenu();
@@ -523,11 +486,6 @@ ipcMain.handle('close-window', () => {
 
 ipcMain.handle('quit-app', () => {
   app.quit();
-});
-
-ipcMain.handle('show-settings', () => {
-  showSettingsWindow();
-  return true;
 });
 
 ipcMain.handle('start-monitoring', () => {
@@ -1086,7 +1044,6 @@ ipcMain.on('lil-brutus-clip', (event, file) => {
 
 const SETTINGS_DEFAULTS = {
   apiUrl: 'https://api.brutusai.coach',
-  appUrl: APP_URL,
   autoStart: false,
   overlayOpacity: 0.95,
   whiteBackground: false
@@ -1103,13 +1060,9 @@ function applyAutoStart(enabled) {
 function readSettings() {
   const stored = store.get('settings');
   if (!stored || typeof stored !== 'object') return { ...SETTINGS_DEFAULTS };
-  // Older installs saved settings before appUrl existed. Fill it so the main
-  // window and the settings field both keep the production app URL.
-  return {
-    ...SETTINGS_DEFAULTS,
-    ...stored,
-    appUrl: (typeof stored.appUrl === 'string' && stored.appUrl.trim()) ? stored.appUrl : APP_URL
-  };
+  // appUrl was saved by 1.4.0 and earlier. Nothing reads it now.
+  const { appUrl, ...rest } = stored;
+  return { ...SETTINGS_DEFAULTS, ...rest };
 }
 
 ipcMain.handle('get-settings', () => {
@@ -1119,13 +1072,7 @@ ipcMain.handle('get-settings', () => {
 ipcMain.handle('set-settings', (event, settings) => {
   const existing = readSettings();
   const patch = (settings && typeof settings === 'object') ? settings : {};
-  const next = {
-    ...existing,
-    ...patch,
-    appUrl: (typeof patch.appUrl === 'string' && patch.appUrl.trim())
-      ? patch.appUrl.trim()
-      : (existing.appUrl || APP_URL)
-  };
+  const next = { ...existing, ...patch };
   if (Object.prototype.hasOwnProperty.call(patch, 'overlayOpacity')) {
     next.overlayOpacity = clampOverlayOpacity(patch.overlayOpacity);
   }
@@ -1155,29 +1102,6 @@ ipcMain.handle('set-settings', (event, settings) => {
 ipcMain.handle('open-dashboard', async () => {
   await shell.openExternal('https://app.brutusai.coach/index.html');
   return true;
-});
-
-// ==================== SESSION MODE ====================
-// Persisted across launches via electron-store. Valid values:
-//   null = standard | 'cold-call' | 'roleplay'
-
-const VALID_SESSION_MODES = new Set(['cold-call', 'roleplay']);
-
-ipcMain.handle('get-session-mode', () => {
-  const stored = store.get('sessionMode', null);
-  return VALID_SESSION_MODES.has(stored) ? stored : null;
-});
-
-ipcMain.handle('set-session-mode', (event, mode) => {
-  if (mode === null || mode === 'standard') {
-    store.delete('sessionMode');
-    return null;
-  }
-  if (!VALID_SESSION_MODES.has(mode)) {
-    throw new Error(`unsupported session mode: ${mode}`);
-  }
-  store.set('sessionMode', mode);
-  return mode;
 });
 
 ipcMain.handle('open-external', async (event, url) => {
@@ -1255,6 +1179,8 @@ function setupAutoUpdate() {
 // ==================== APP LIFECYCLE ====================
 
 app.whenReady().then(() => {
+  // Left behind by 1.4.0 and earlier (cold-call/roleplay overlay modes).
+  store.delete('sessionMode');
   applyAutoStart(readSettings().autoStart);
   createMainWindow();
   createTray();

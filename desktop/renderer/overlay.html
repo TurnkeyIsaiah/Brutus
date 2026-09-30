@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gideon+Roman&display=swap" rel="stylesheet">
-  <script src="posthog.js"></script>
   <style>
     /* ======================================================================
        Paper design transcription — docs/paper-extract/desktop-overlay.jsx
@@ -106,22 +105,6 @@
       white-space: nowrap;
     }
 
-    /* Mode badge takes the title's slot (title hidden) in cold-call/roleplay. */
-    .mode-badge {
-      display: none;
-      color: #FF6550;
-      font-size: 13px;
-      line-height: 16px;
-    }
-    body.cold-call .mode-badge { display: inline-block; }
-    body.cold-call .header-title { display: none; }
-    body.roleplay .mode-badge { display: inline-block; }
-    body.roleplay .header-title { display: none; }
-    /* Hide cold-call-only chrome when in roleplay (and vice-versa via existing rules). */
-    body.roleplay .cold-call-controls { display: none !important; }
-    /* Roleplay does not use system audio capture — hide the screen toggle to avoid confusion. */
-    body.roleplay .header-toggle { display: none; }
-
     .close-btn {
       background: none;
       border: 0;
@@ -198,134 +181,8 @@
     .feedback-flash.flash-good .flash-text     { color: #A9A09A; }
     .feedback-flash.flash-brutus .flash-text   { color: #FF6550; }
 
-    /* Cold-call controls (visible only during a cold-call session) */
-    .cold-call-controls {
-      display: none;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      flex-shrink: 0;
-      border: 1px solid #2A2320;
-      border-radius: 8px;
-      padding: 8px 12px;
-    }
-    body.cold-call .cold-call-controls.session-active { display: flex; }
-    /* In cold-call mode the duration metric becomes session-total; talk ratio and
-       interrupts still reflect the rolling session so they stay useful on connects. */
-
-    .cc-attempt-counter {
-      font-size: 13px;
-      line-height: 16px;
-      color: #A9A09A;
-    }
-    .cc-attempt-counter strong {
-      color: #FF6550;
-      font-weight: 400;
-    }
-    .cc-attempt-timer {
-      font-size: 16px;
-      line-height: 20px;
-      color: #FFF8EF;
-      min-width: 56px;
-      text-align: center;
-    }
-    .cc-next-btn {
-      margin-left: auto;
-      display: inline-flex;
-      align-items: center;
-      height: 32px;
-      padding-inline: 16px;
-      border: 0;
-      border-radius: 999px;
-      background-color: #FF6550;
-      color: #000000;
-      font-size: 13px;
-      line-height: 16px;
-      cursor: pointer;
-    }
-    .cc-next-btn[disabled] {
-      background-color: #171414;
-      color: #655A55;
-      cursor: not-allowed;
-    }
-
-    /* Roleplay controls (visible only during a roleplay session) */
-    .roleplay-controls {
-      display: none;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      flex-shrink: 0;
-      border: 1px solid #2A2320;
-      border-radius: 8px;
-      padding: 8px 12px;
-    }
-    body.roleplay .roleplay-controls.session-active { display: flex; }
-    .rp-phase-chip {
-      padding: 2px 10px;
-      border-radius: 999px;
-      background-color: #FF6550;
-      color: #000000;
-      font-size: 11px;
-      line-height: 16px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-    .rp-persona {
-      font-size: 13px;
-      line-height: 16px;
-      color: #A9A09A;
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .rp-pause-btn {
-      margin-left: auto;
-      display: inline-flex;
-      align-items: center;
-      height: 32px;
-      padding-inline: 16px;
-      background: none;
-      border: 1px solid #4A3A35;
-      border-radius: 999px;
-      color: #FFF8EF;
-      font-size: 13px;
-      line-height: 16px;
-      cursor: pointer;
-    }
-    .rp-pause-btn:hover { border-color: #FF6550; }
-    .rp-pause-btn[disabled] { color: #655A55; border-color: #2A2320; cursor: not-allowed; }
-    .rp-pause-btn.hidden { display: none; }
-
-    /* Audio Visualizer(s) — single bar group in standard/cold-call, two in roleplay */
-    .audio-viz-wrap { display: block; flex-shrink: 0; }
-    .viz-col { display: contents; }
-    .viz-label { display: none; }
-    #brutus-visualizer { display: none; }
-    body.roleplay .audio-viz-wrap {
-      display: flex;
-      gap: 24px;
-      align-items: flex-end;
-      justify-content: center;
-    }
-    body.roleplay .viz-col {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      flex: 1;
-      max-width: 45%;
-    }
-    body.roleplay .viz-label { display: block; }
-    body.roleplay #brutus-visualizer { display: flex; }
-    .viz-label {
-      font-size: 11px;
-      line-height: 14px;
-      color: #766B65;
-    }
-
     .audio-visualizer {
+      flex-shrink: 0;
       height: 40px;
       display: flex;
       align-items: flex-end;
@@ -340,7 +197,6 @@
       border-radius: 2px;
       transition: height 0.05s ease;
     }
-    #brutus-visualizer .audio-bar { background-color: #FF8A78; }
 
     /* Feedback / chat list (JSX chat area: column, grow, gap 14) */
     .feedback-container {
@@ -625,92 +481,10 @@
       border-bottom: 2px solid #3A302C;
     }
 
-    /* Cold-call summary card rendered in feedback list on session end */
-    .cc-summary-card,
-    .rp-summary-card {
-      background-color: #141414;
-      border: 1px solid #2A2320;
-      border-radius: 14px;
-      padding: 12px 14px;
-      margin: 0 0 14px;
-    }
-    .cc-summary-title,
-    .rp-summary-title {
-      font-size: 11px;
-      line-height: 14px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: #FF6550;
-      margin-bottom: 12px;
-    }
-    .rp-summary-persona {
-      font-size: 13px;
-      line-height: 16px;
-      color: #FFF8EF;
-      margin-bottom: 10px;
-      padding: 6px 10px;
-      border: 1px solid #2A2320;
-      border-radius: 8px;
-    }
-    .cc-summary-grid,
-    .rp-summary-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px 16px;
-      margin-bottom: 12px;
-      font-size: 13px;
-      line-height: 16px;
-      color: #A9A09A;
-    }
-    .cc-summary-grid strong,
-    .rp-summary-grid strong {
-      color: #FFF8EF;
-      font-weight: 400;
-      margin-left: 6px;
-    }
-    .cc-summary-top {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid #2A2320;
-    }
-    .cc-summary-top-label {
-      font-size: 11px;
-      line-height: 14px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: #766B65;
-      margin-bottom: 6px;
-    }
-    .cc-summary-top-item {
-      font-size: 13px;
-      line-height: 16px;
-      color: #A9A09A;
-      margin-bottom: 4px;
-      display: flex;
-      justify-content: space-between;
-    }
-    .cc-summary-top-item span:last-child { color: #FF6550; }
-    .cc-summary-done,
-    .rp-done-btn {
-      display: block;
-      width: 100%;
-      margin-top: 12px;
-      height: 32px;
-      border: 0;
-      border-radius: 999px;
-      background-color: #FF6550;
-      color: #000000;
-      font-size: 13px;
-      line-height: 16px;
-      cursor: pointer;
-      text-align: center;
-    }
-
     /* ==================== MODAL OVERLAYS ==================== */
-    /* Consent / source picker / outcome picker share the panel surface. */
+    /* Consent and source picker share the panel surface. */
     .consent-overlay,
-    .source-picker-overlay,
-    .outcome-picker-overlay {
+    .source-picker-overlay {
       display: none;
       position: fixed;
       inset: 0;
@@ -722,7 +496,6 @@
       overflow: hidden;
     }
     .source-picker-overlay { z-index: 1000; }
-    .outcome-picker-overlay { z-index: 1100; }
     .consent-overlay {
       z-index: 1100;
       justify-content: center;
@@ -730,10 +503,9 @@
       overflow-y: auto;
     }
     .consent-overlay.active,
-    .source-picker-overlay.active,
-    .outcome-picker-overlay.active { display: flex; }
+    .source-picker-overlay.active { display: flex; }
 
-    /* Recording-consent notice (shown before each non-roleplay session) */
+    /* Recording-consent notice (shown before each session) */
     .consent-label {
       font-size: 14px;
       line-height: 18px;
@@ -791,15 +563,13 @@
     .consent-btn-secondary:hover { border-color: #FF6550; }
 
     /* Source picker */
-    .source-picker-title,
-    .outcome-picker-title {
+    .source-picker-title {
       font-size: 16px;
       line-height: 20px;
       color: #FFF8EF;
       margin-bottom: 4px;
     }
-    .source-picker-subtitle,
-    .outcome-picker-subtitle {
+    .source-picker-subtitle {
       font-size: 13px;
       line-height: 16px;
       color: #8E837D;
@@ -838,8 +608,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .source-picker-skip,
-    .outcome-picker-cancel {
+    .source-picker-skip {
       margin-top: 12px;
       background: none;
       border: 0;
@@ -850,32 +619,7 @@
       cursor: pointer;
       padding: 6px;
     }
-    .source-picker-skip:hover,
-    .outcome-picker-cancel:hover { color: #A9A09A; }
-
-    /* Outcome picker (cold-call mode) */
-    .outcome-picker-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      flex: 1;
-      overflow-y: auto;
-      align-content: start;
-    }
-    .outcome-item {
-      border: 1px solid #3A302C;
-      border-radius: 8px;
-      padding: 16px 12px;
-      cursor: pointer;
-      text-align: center;
-      font-size: 13px;
-      line-height: 16px;
-      color: #FFF8EF;
-    }
-    .outcome-item:hover {
-      border-color: #FF6550;
-      color: #FF6550;
-    }
+    .source-picker-skip:hover { color: #A9A09A; }
   </style>
 </head>
 <body>
@@ -885,7 +629,6 @@
       <div class="header-left">
         <div class="header-logo" aria-hidden="true"></div>
         <div class="header-title">Brutus live coaching</div>
-        <div class="mode-badge" id="mode-badge">cold call</div>
       </div>
       <button class="close-btn" id="close-btn" title="End session and close overlay" aria-label="End session and close overlay">x</button>
     </div>
@@ -893,20 +636,6 @@
     <!-- Feedback Flash -->
     <div class="feedback-flash" id="feedback-flash">
       <div class="flash-text" id="flash-text"></div>
-    </div>
-
-    <!-- Cold-call controls (hidden unless cold-call session active) -->
-    <div class="cold-call-controls" id="cold-call-controls">
-      <div class="cc-attempt-counter">call <strong id="cc-attempt-num">1</strong></div>
-      <div class="cc-attempt-timer" id="cc-attempt-timer">0:00</div>
-      <button class="cc-next-btn" id="cc-next-btn">next call</button>
-    </div>
-
-    <!-- Roleplay controls (hidden unless roleplay session active) -->
-    <div class="roleplay-controls" id="roleplay-controls">
-      <div class="rp-phase-chip" id="rp-phase">setup</div>
-      <div class="rp-persona" id="rp-persona">pick a scenario with Brutus</div>
-      <button class="rp-pause-btn hidden" id="rp-pause-btn">pause + coach me</button>
     </div>
 
     <!-- Capture row: screen-capture toggle + Brutus speech (TTS) toggle -->
@@ -919,21 +648,7 @@
       <button class="tts-btn locked" id="tts-btn">Enable Brutus speech</button>
     </div>
 
-    <!-- Audio Visualizer(s) — single bar group in standard/cold-call, two in roleplay -->
-    <div class="audio-viz-wrap">
-      <div class="viz-col">
-        <div class="audio-visualizer" id="audio-visualizer">
-          <!-- Bars generated by JS -->
-        </div>
-        <div class="viz-label">you</div>
-      </div>
-      <div class="viz-col">
-        <div class="audio-visualizer" id="brutus-visualizer">
-          <!-- Bars generated by JS when roleplay TTS plays -->
-        </div>
-        <div class="viz-label">brutus</div>
-      </div>
-    </div>
+    <div class="audio-visualizer" id="audio-visualizer"></div>
 
     <!-- Feedback List -->
     <div class="feedback-container" id="feedback-container" aria-live="polite">
@@ -1027,42 +742,11 @@
     let ws = null;
     let isConnected = false;
     let sessionId = null;
-    let sessionMode = null; // null = standard | 'cold-call' | 'roleplay'
     let wsReconnectAttempts = 0;
     let startTime = null;
-
-    // Cold-call mode state
-    let currentAttemptId = null;
-    let attemptCount = 0;
-    let attemptStartTime = null;
-    let attemptTimerInterval = null;
-    let coldCallOutcomes = []; // populated from GET /coldcall/outcomes
-    let isAdvancingAttempt = false; // guard against double-click on "next call"
     let isStopping = false; // guard against double-click on close / re-entry of stopSession
     let hideOverlayAfterStop = false; // X ends the session; hide button only hides the window
     let durationInterval = null;
-
-    // Roleplay mode state
-    let currentPhase = 'setup';      // 'setup' | 'drill'
-    let currentPersona = null;
-    let roleplayMicStream = null;    // mic-only stream tee for the VAD recorder
-    let roleplayRecorder = null;
-    let roleplayChunks = [];
-    let isRepSpeaking = false;
-    let speechStartedAt = null;
-    let vadSilenceStartedAt = null;
-    let vadEnabled = false;
-    let isPaused = false;
-    let isAwaitingBrutusReply = false;
-    let ttsAudioCtx = null;
-    let ttsAnalyser = null;
-    let ttsAnimFrame = null;
-    let brutusBars = null;
-    let ttsQueue = Promise.resolve(); // serialize multi-chunk TTS playback
-    const VAD_SPEECH_THRESHOLD = 22;
-    const VAD_SILENCE_MS = 1200;
-    const VAD_MIN_SPEECH_MS = 350;
-    const DEFAULT_BRUTUS_VOICE = 'UgBBYS2sOqTuMpoF3BR0'; // Mark; backend default
     let audioContext = null;
     let analyser = null;
     let mediaStream = null;
@@ -1292,7 +976,7 @@
       noteSendBtn.disabled = true;
 
       try {
-        await fetch(`${API_URL}/notes`, {
+        const res = await fetch(`${API_URL}/notes`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1305,6 +989,7 @@
             timestamp: Date.now()
           })
         });
+        if (!res.ok) throw new Error(`notes failed (${res.status})`);
 
         // Clear input and hide
         noteInput.value = '';
@@ -1334,7 +1019,7 @@
       researchSendBtn.disabled = true;
 
       try {
-        await fetch(`${API_URL}/research`, {
+        const res = await fetch(`${API_URL}/research`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1346,6 +1031,7 @@
             requestedAt: Date.now()
           })
         });
+        if (!res.ok) throw new Error(`research failed (${res.status})`);
 
         // Clear input and hide
         researchInput.value = '';
@@ -1380,18 +1066,6 @@
       const userMessage = message;
       chatInput.value = '';
 
-      // Roleplay mode: the chat box is the typed-turn input. Skip the WS coaching
-      // path entirely and POST to /roleplay/respond instead.
-      if (sessionMode === 'roleplay') {
-        try {
-          await submitRoleplayText(userMessage);
-        } finally {
-          chatSendBtn.disabled = false;
-        }
-        return;
-      }
-
-      // Standard mode: chat with Brutus the coach via WS.
       addChatMessage('user', userMessage);
       if (ws && isConnected) {
         sendToBackend('chat_message', { message: userMessage });
@@ -1445,10 +1119,6 @@
       WS_URL = API_URL.replace('http', 'ws') + '/ws';
       savedTtsVoice = settings.ttsVoice || '';
 
-      // Read session mode (set on the dashboard before the session starts)
-      sessionMode = await window.brutus.getSessionMode();
-      applyModeUI();
-
       // Check headphone status on init
       await checkHeadphonesConnected();
 
@@ -1462,25 +1132,13 @@
       
       // Init audio visualizer bars
       initAudioBars();
-      
-      // Wire roleplay pause+coach button (only fires in drill phase).
-      const pauseBtn = document.getElementById('rp-pause-btn');
-      if (pauseBtn) {
-        pauseBtn.addEventListener('click', () => { requestRoleplayCoachHint(); });
-      }
 
-      // Listen for monitoring events — show source picker first if screen capture is on.
-      // Roleplay sessions skip the source picker (mic-only flow).
+      // Live sessions record a real prospect and must confirm consent first
+      // (audit BR-03). Then the source picker if screen capture is on.
       window.brutus.onMonitoringStarted(async () => {
-        const earlyMode = await window.brutus.getSessionMode();
-        // Roleplay practices against an AI persona (no third party), so it skips
-        // the recording-consent gate. Live/cold-call sessions record a real
-        // prospect and must confirm consent first (audit BR-03).
-        if (earlyMode !== 'roleplay') {
-          const consented = await showConsentNotice();
-          if (!consented) return; // no consent — monitoring stopped, overlay closing
-        }
-        if (isScreenCaptureEnabled && earlyMode !== 'roleplay') {
+        const consented = await showConsentNotice();
+        if (!consented) return; // no consent — monitoring stopped, overlay closing
+        if (isScreenCaptureEnabled) {
           await showSourcePicker();
         }
         startSession();
@@ -1499,12 +1157,9 @@
       // Start immediately if monitoring is active
       const isMonitoring = await window.brutus.isMonitoring();
       if (isMonitoring) {
-        const earlyMode = await window.brutus.getSessionMode();
-        if (earlyMode !== 'roleplay') {
-          const consented = await showConsentNotice();
-          if (!consented) return; // no consent — monitoring stopped, overlay closing
-        }
-        if (isScreenCaptureEnabled && earlyMode !== 'roleplay') {
+        const consented = await showConsentNotice();
+        if (!consented) return; // no consent — monitoring stopped, overlay closing
+        if (isScreenCaptureEnabled) {
           await showSourcePicker();
         }
         startSession();
@@ -1532,562 +1187,6 @@
     }
     
     // ==================== SESSION MANAGEMENT ====================
-    function applyModeUI() {
-      document.body.classList.toggle('cold-call', sessionMode === 'cold-call');
-      document.body.classList.toggle('roleplay', sessionMode === 'roleplay');
-
-      // Update mode badge text to match current mode.
-      const badge = document.getElementById('mode-badge');
-      if (badge) {
-        if (sessionMode === 'cold-call') badge.textContent = 'cold call';
-        else if (sessionMode === 'roleplay') badge.textContent = 'roleplay';
-      }
-
-      // Chat input placeholder: in roleplay mode it doubles as the typed-turn input.
-      const chatI = document.getElementById('chat-input');
-      if (chatI) {
-        if (sessionMode === 'roleplay') {
-          chatI.placeholder = currentPhase === 'drill'
-            ? 'type your response, or just speak...'
-            : 'ask Brutus anything — type or speak...';
-        } else {
-          chatI.placeholder = 'Ask Brutus anything...';
-        }
-      }
-    }
-
-    // ==================== COLD-CALL ATTEMPT LIFECYCLE ====================
-
-    function showColdCallControls(show) {
-      const el = document.getElementById('cold-call-controls');
-      el.classList.toggle('session-active', !!show);
-    }
-
-    async function fetchColdCallOutcomes() {
-      try {
-        const res = await fetch(`${API_URL}/coldcall/outcomes`, {
-          headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        const data = await res.json();
-        coldCallOutcomes = Array.isArray(data && data.outcomes) ? data.outcomes : [];
-      } catch (e) {
-        console.error('[ColdCall] failed to fetch outcomes:', e);
-        // Fallback so the dropdown still works if the network blip; matches backend VALID_OUTCOMES.
-        coldCallOutcomes = ['voicemail', 'no-answer', 'connect', 'wrong-number', 'abandoned', 'other'];
-      }
-    }
-
-    function setAttemptCounter(n) {
-      attemptCount = n;
-      document.getElementById('cc-attempt-num').textContent = n;
-    }
-
-    function startAttemptTimer() {
-      attemptStartTime = Date.now();
-      if (attemptTimerInterval) clearInterval(attemptTimerInterval);
-      updateAttemptTimer();
-      attemptTimerInterval = setInterval(updateAttemptTimer, 1000);
-    }
-
-    function stopAttemptTimer() {
-      if (attemptTimerInterval) {
-        clearInterval(attemptTimerInterval);
-        attemptTimerInterval = null;
-      }
-      attemptStartTime = null;
-      document.getElementById('cc-attempt-timer').textContent = '0:00';
-    }
-
-    function updateAttemptTimer() {
-      if (!attemptStartTime) return;
-      const elapsed = Math.floor((Date.now() - attemptStartTime) / 1000);
-      const m = Math.floor(elapsed / 60);
-      const s = elapsed % 60;
-      document.getElementById('cc-attempt-timer').textContent = `${m}:${s.toString().padStart(2, '0')}`;
-    }
-
-    async function startColdCallAttempt() {
-      try {
-        const res = await fetch(`${API_URL}/coldcall/attempt/start`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
-          },
-          body: JSON.stringify({ sessionId })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.attempt) {
-          throw new Error((data && data.error && data.error.message) || `attempt/start failed (${res.status})`);
-        }
-        currentAttemptId = data.attempt.id;
-        setAttemptCounter(data.attempt.ordinal);
-        startAttemptTimer();
-      } catch (e) {
-        console.error('[ColdCall] startAttempt failed:', e);
-        addFeedback('warning', 'could not open next attempt. brutus will keep coaching, but call counts may be off.');
-      }
-    }
-
-    async function endColdCallAttempt(outcome) {
-      if (!currentAttemptId) return;
-      const attemptId = currentAttemptId;
-      currentAttemptId = null;
-      stopAttemptTimer();
-      try {
-        const res = await fetch(`${API_URL}/coldcall/attempt/${attemptId}/end`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
-          },
-          body: JSON.stringify({ outcome })
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error((data.error && data.error.message) || `attempt/end failed (${res.status})`);
-        }
-      } catch (e) {
-        console.error('[ColdCall] endAttempt failed:', e);
-        addFeedback('warning', `failed to log outcome "${outcome}". session continues.`);
-      }
-    }
-
-    // "Next call" flow: pick outcome, close current, open next.
-    async function advanceColdCallAttempt() {
-      if (isAdvancingAttempt || sessionMode !== 'cold-call') return;
-      const outcome = await showOutcomePicker();
-      if (!outcome) return; // user cancelled
-      isAdvancingAttempt = true;
-      try {
-        await endColdCallAttempt(outcome);
-        await startColdCallAttempt();
-      } finally {
-        isAdvancingAttempt = false;
-      }
-    }
-
-    // Promise-based outcome picker; resolves with outcome string or null on cancel.
-    function showOutcomePicker() {
-      return new Promise((resolve) => {
-        const modal = document.getElementById('outcome-picker');
-        const grid = document.getElementById('outcome-picker-grid');
-        const cancel = document.getElementById('outcome-picker-cancel');
-        grid.innerHTML = '';
-        coldCallOutcomes.forEach((outcome) => {
-          const item = document.createElement('div');
-          item.className = 'outcome-item';
-          item.textContent = outcome;
-          item.addEventListener('click', () => {
-            modal.classList.remove('active');
-            resolve(outcome);
-          });
-          grid.appendChild(item);
-        });
-        cancel.onclick = () => {
-          modal.classList.remove('active');
-          resolve(null);
-        };
-        modal.classList.add('active');
-      });
-    }
-
-    function showColdCallSummary(summary) {
-      if (!summary) return;
-      const c = summary.counts || {};
-      const total = summary.totalDials || 0;
-      const connectPct = Math.round((summary.connectRate || 0) * 100);
-      const totalMin = Math.floor((summary.totalDurationSec || 0) / 60);
-      const avgConnect = summary.avgConnectSec || 0;
-      const avgMin = Math.floor(avgConnect / 60);
-      const avgSec = avgConnect % 60;
-      const top = Array.isArray(summary.topFeedback) ? summary.topFeedback : [];
-
-      const card = document.createElement('div');
-      card.className = 'cc-summary-card';
-      const topHtml = top.length
-        ? `<div class="cc-summary-top">
-             <div class="cc-summary-top-label">most-heard coaching</div>
-             ${top.map((t) => `<div class="cc-summary-top-item"><span>${escapeHtml(t.msg)}</span><span>×${t.count}</span></div>`).join('')}
-           </div>`
-        : '';
-      card.innerHTML = `
-        <div class="cc-summary-title">session summary</div>
-        <div class="cc-summary-grid">
-          <div>dials<strong>${total}</strong></div>
-          <div>connects<strong>${c.connect || 0}</strong></div>
-          <div>voicemails<strong>${c.voicemail || 0}</strong></div>
-          <div>no-answer<strong>${c['no-answer'] || 0}</strong></div>
-          <div>connect rate<strong>${connectPct}%</strong></div>
-          <div>avg connect<strong>${avgMin}:${avgSec.toString().padStart(2, '0')}</strong></div>
-          <div>session time<strong>${totalMin} min</strong></div>
-          <div>other outcomes<strong>${(c['wrong-number'] || 0) + (c.abandoned || 0) + (c.other || 0)}</strong></div>
-        </div>
-        ${topHtml}
-        <button class="cc-summary-done" type="button">done</button>
-      `;
-
-      card.querySelector('.cc-summary-done').addEventListener('click', () => {
-        window.brutus.hideOverlay();
-      });
-
-      const container = document.getElementById('feedback-container');
-      const emptyState = document.getElementById('empty-state');
-      if (emptyState) emptyState.style.display = 'none';
-      container.appendChild(card);
-      container.scrollTop = container.scrollHeight;
-    }
-
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-    }
-
-    // ==================== ROLEPLAY MODE ====================
-
-    function showRoleplayControls(show) {
-      const el = document.getElementById('roleplay-controls');
-      if (el) el.classList.toggle('session-active', !!show);
-    }
-
-    function updatePhaseChip() {
-      const chip = document.getElementById('rp-phase');
-      const persona = document.getElementById('rp-persona');
-      if (chip) chip.textContent = currentPhase;
-      if (persona) persona.textContent = currentPersona || (currentPhase === 'setup' ? 'pick a scenario with Brutus' : '—');
-      applyModeUI();
-    }
-
-    // ---- Brutus waveform driven by TTS playback ----
-
-    function initBrutusBars() {
-      const viz = document.getElementById('brutus-visualizer');
-      if (!viz) return null;
-      if (viz.children.length === 0) {
-        for (let i = 0; i < 32; i++) {
-          const bar = document.createElement('div');
-          bar.className = 'audio-bar';
-          viz.appendChild(bar);
-        }
-      }
-      return viz.querySelectorAll('.audio-bar');
-    }
-
-    function zeroBrutusBars() {
-      if (!brutusBars) brutusBars = initBrutusBars();
-      if (!brutusBars) return;
-      brutusBars.forEach(b => { b.style.height = '4px'; });
-    }
-
-    function updateBrutusBars(dataArray) {
-      if (!brutusBars) brutusBars = initBrutusBars();
-      if (!brutusBars) return;
-      brutusBars.forEach((bar, i) => {
-        const v = dataArray[i] || 0;
-        bar.style.height = Math.max(4, (v / 255) * 35) + 'px';
-      });
-    }
-
-    // Split Brutus's text into ≤180-char chunks so each fits the /tts route's 200-char cap.
-    function splitForTts(text, limit = 180) {
-      const sentences = String(text).split(/(?<=[.!?])\s+/);
-      const out = [];
-      let cur = '';
-      for (const s of sentences) {
-        const candidate = cur ? `${cur} ${s}` : s;
-        if (candidate.length <= limit) { cur = candidate; continue; }
-        if (cur) { out.push(cur); cur = ''; }
-        if (s.length <= limit) { cur = s; }
-        else {
-          for (let i = 0; i < s.length; i += limit) out.push(s.slice(i, i + limit));
-        }
-      }
-      if (cur) out.push(cur);
-      return out.filter(Boolean);
-    }
-
-    async function playRoleplayTts(text, voiceId) {
-      if (!text || !text.trim()) return;
-      const chunks = splitForTts(text);
-      // Serialize across calls so two replies don't overlap.
-      ttsQueue = ttsQueue.then(async () => {
-        for (const c of chunks) {
-          try {
-            await playTtsChunk(c, voiceId || DEFAULT_BRUTUS_VOICE);
-          } catch (err) {
-            console.error('[Roleplay] TTS chunk failed:', err.message);
-          }
-        }
-      });
-      return ttsQueue;
-    }
-
-    async function playTtsChunk(text, voiceId) {
-      const res = await fetch(`${API_URL}/tts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-        body: JSON.stringify({ text, voiceId })
-      });
-      if (!res.ok) throw new Error(`tts ${res.status}`);
-      const buf = await res.arrayBuffer();
-      if (!ttsAudioCtx || ttsAudioCtx.state === 'closed') {
-        ttsAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (ttsAudioCtx.state === 'suspended') {
-        try { await ttsAudioCtx.resume(); } catch (_) {}
-      }
-      const audioBuf = await ttsAudioCtx.decodeAudioData(buf);
-      const source = ttsAudioCtx.createBufferSource();
-      source.buffer = audioBuf;
-      const analyserLocal = ttsAudioCtx.createAnalyser();
-      analyserLocal.fftSize = 64;
-      source.connect(analyserLocal);
-      analyserLocal.connect(ttsAudioCtx.destination);
-      ttsAnalyser = analyserLocal;
-      const dataArray = new Uint8Array(analyserLocal.frequencyBinCount);
-      function tick() {
-        if (!ttsAnalyser) return;
-        ttsAnalyser.getByteFrequencyData(dataArray);
-        updateBrutusBars(dataArray);
-        ttsAnimFrame = requestAnimationFrame(tick);
-      }
-      tick();
-      await new Promise((resolve) => {
-        source.onended = () => {
-          if (ttsAnimFrame) { cancelAnimationFrame(ttsAnimFrame); ttsAnimFrame = null; }
-          ttsAnalyser = null;
-          zeroBrutusBars();
-          resolve();
-        };
-        source.start();
-      });
-    }
-
-    // ---- Roleplay turn submission ----
-
-    async function submitRoleplayText(text) {
-      if (!text || !sessionId) return;
-      isAwaitingBrutusReply = true;
-      addChatMessage('user', text);
-      try {
-        const res = await fetch(`${API_URL}/roleplay/respond`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ text, phase: currentPhase, sessionId })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error((data && data.error && data.error.message) || `roleplay failed (${res.status})`);
-        handleRoleplayReply(data);
-      } catch (err) {
-        console.error('[Roleplay] submit text failed:', err);
-        addFeedback('warning', 'failed to reach Brutus.');
-      } finally {
-        isAwaitingBrutusReply = false;
-      }
-    }
-
-    function submitRoleplayAudio(blob) {
-      if (!blob || !sessionId) return;
-      isAwaitingBrutusReply = true;
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64 = (reader.result || '').split(',')[1];
-        if (!base64) { isAwaitingBrutusReply = false; return; }
-        try {
-          const res = await fetch(`${API_URL}/roleplay/respond`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-            body: JSON.stringify({ audio: base64, mimeType: 'audio/webm', phase: currentPhase, sessionId })
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            // 400 from the route = no transcribable speech detected — silently drop.
-            if (res.status === 400) return;
-            throw new Error((data && data.error && data.error.message) || `roleplay failed (${res.status})`);
-          }
-          // The route doesn't echo the transcribed rep text; show a quiet placeholder
-          // for the chat-style transcript view so timing stays right.
-          addChatMessage('user', '(spoken)');
-          handleRoleplayReply(data);
-        } catch (err) {
-          console.error('[Roleplay] submit audio failed:', err);
-        } finally {
-          isAwaitingBrutusReply = false;
-        }
-      };
-      reader.readAsDataURL(blob);
-    }
-
-    function handleRoleplayReply(data) {
-      if (!data || !data.text) return;
-      addChatMessage('brutus', data.text);
-      if (data.suggestedPhaseChange === 'drill' && data.personaLabel) {
-        transitionToDrill(data.personaLabel);
-      }
-      // Fire-and-forget; serialized internally by ttsQueue.
-      playRoleplayTts(data.text, data.voiceId);
-    }
-
-    async function transitionToDrill(personaLabel) {
-      currentPhase = 'drill';
-      currentPersona = personaLabel;
-      updatePhaseChip();
-      const btn = document.getElementById('rp-pause-btn');
-      if (btn) btn.classList.remove('hidden');
-      try {
-        await fetch(`${API_URL}/roleplay/start-drill`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ personaLabel, sessionId })
-        });
-      } catch (err) {
-        console.error('[Roleplay] start-drill failed:', err);
-      }
-    }
-
-    async function requestRoleplayCoachHint() {
-      if (!sessionId || currentPhase !== 'drill') return;
-      isPaused = true;
-      vadEnabled = false;
-      stopRoleplayRecorder();
-      const btn = document.getElementById('rp-pause-btn');
-      if (btn) { btn.disabled = true; btn.textContent = 'coaching...'; }
-      try {
-        const res = await fetch(`${API_URL}/roleplay/coach-hint`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-          body: JSON.stringify({ sessionId })
-        });
-        const data = await res.json();
-        if (res.ok && data && data.text) {
-          addChatMessage('brutus', `coach: ${data.text}`);
-          await playRoleplayTts(data.text, data.voiceId);
-        } else {
-          addFeedback('warning', 'coach hint failed.');
-        }
-      } catch (err) {
-        console.error('[Roleplay] coach-hint failed:', err);
-      } finally {
-        if (btn) { btn.disabled = false; btn.textContent = 'pause + coach me'; }
-        vadEnabled = true;
-        isPaused = false;
-      }
-    }
-
-    // ---- VAD + per-turn recorder ----
-
-    function startRoleplayRecorder() {
-      if (!roleplayMicStream) return;
-      if (roleplayRecorder && roleplayRecorder.state === 'recording') return;
-      try {
-        roleplayChunks = [];
-        roleplayRecorder = new MediaRecorder(roleplayMicStream, { mimeType: 'audio/webm;codecs=opus' });
-        roleplayRecorder.ondataavailable = (e) => {
-          if (e.data && e.data.size > 0) roleplayChunks.push(e.data);
-        };
-        roleplayRecorder.onstop = () => {
-          const blob = new Blob(roleplayChunks, { type: 'audio/webm' });
-          roleplayChunks = [];
-          // Drop tiny blobs that are likely silence captured before VAD caught up.
-          if (blob.size > 3000) submitRoleplayAudio(blob);
-        };
-        roleplayRecorder.start();
-      } catch (err) {
-        console.error('[Roleplay] recorder start failed:', err);
-      }
-    }
-
-    function stopRoleplayRecorder() {
-      try {
-        if (roleplayRecorder && roleplayRecorder.state === 'recording') {
-          roleplayRecorder.stop();
-        }
-      } catch (_) {}
-    }
-
-    function stopVAD() {
-      vadEnabled = false;
-      stopRoleplayRecorder();
-      isRepSpeaking = false;
-      vadSilenceStartedAt = null;
-      speechStartedAt = null;
-    }
-
-    function vadTick(dataArray) {
-      if (!vadEnabled || isAwaitingBrutusReply || isPaused) return;
-      const avg = dataArray.reduce((s, v) => s + v, 0) / dataArray.length;
-      const now = performance.now();
-      const speaking = avg > VAD_SPEECH_THRESHOLD;
-
-      if (speaking) {
-        if (!isRepSpeaking) {
-          isRepSpeaking = true;
-          speechStartedAt = now;
-          startRoleplayRecorder();
-        }
-        vadSilenceStartedAt = null;
-      } else if (isRepSpeaking) {
-        if (vadSilenceStartedAt === null) vadSilenceStartedAt = now;
-        if (now - vadSilenceStartedAt >= VAD_SILENCE_MS) {
-          const totalSpeechMs = now - speechStartedAt;
-          isRepSpeaking = false;
-          vadSilenceStartedAt = null;
-          speechStartedAt = null;
-          if (totalSpeechMs >= VAD_MIN_SPEECH_MS) {
-            stopRoleplayRecorder(); // onstop → submitRoleplayAudio
-          } else {
-            // Speech too short to be a turn — discard.
-            roleplayChunks = [];
-            try {
-              if (roleplayRecorder && roleplayRecorder.state === 'recording') {
-                const r = roleplayRecorder;
-                r.onstop = () => { roleplayChunks = []; };
-                r.stop();
-              }
-            } catch (_) {}
-          }
-        }
-      }
-    }
-
-    // ---- Roleplay session summary card ----
-
-    function formatRpDuration(sec) {
-      const s = Math.max(0, Math.floor(sec));
-      const m = Math.floor(s / 60);
-      const r = s % 60;
-      return `${m}:${r.toString().padStart(2, '0')}`;
-    }
-
-    function showRoleplaySummary(summary) {
-      if (!summary) summary = {};
-      const card = document.createElement('div');
-      card.className = 'rp-summary-card';
-      const personaHtml = summary.persona
-        ? `<div class="rp-summary-persona">persona: ${escapeHtml(summary.persona)}</div>`
-        : '';
-      card.innerHTML = `
-        <div class="rp-summary-title">roleplay session ended</div>
-        ${personaHtml}
-        <div class="rp-summary-grid">
-          <div>total turns<strong>${summary.totalTurns || 0}</strong></div>
-          <div>drill turns<strong>${summary.drillTurns || 0}</strong></div>
-          <div>setup turns<strong>${summary.setupTurns || 0}</strong></div>
-          <div>coach pauses<strong>${summary.coachPauseTurns || 0}</strong></div>
-          <div>drill duration<strong>${formatRpDuration(summary.drillDurationSec || 0)}</strong></div>
-          <div>your turns<strong>${summary.repTurns || 0}</strong></div>
-        </div>
-        <button class="rp-done-btn" type="button">done</button>
-      `;
-      card.querySelector('.rp-done-btn').addEventListener('click', () => {
-        window.brutus.hideOverlay();
-      });
-      const container = document.getElementById('feedback-container');
-      const emptyState = document.getElementById('empty-state');
-      if (emptyState) emptyState.style.display = 'none';
-      container.appendChild(card);
-      container.scrollTop = container.scrollHeight;
-    }
-
     async function startSession() {
       // Clear previous session messages and state
       feedbackItems = [];
@@ -2107,19 +1206,13 @@
       isStopping = false;
 
       try {
-        // Re-read mode in case the user toggled it on the dashboard right before clicking start.
-        sessionMode = await window.brutus.getSessionMode();
-        applyModeUI();
-
-        // Start session on backend
-        const startBody = sessionMode === 'cold-call' ? { mode: 'cold-call' } : {};
         const response = await fetch(`${API_URL}/live/start`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`
           },
-          body: JSON.stringify(startBody)
+          body: JSON.stringify({})
         });
 
         const data = await response.json();
@@ -2130,62 +1223,20 @@
           throw new Error('Invalid session response from backend');
         }
         sessionId = data.session.id;
-        // Trust the backend on the active mode (handles race where dashboard toggle changed mid-start).
-        sessionMode = data.session.sessionMode || null;
-        applyModeUI();
 
-        // Cold-call mode: fetch outcomes (for dropdown) and open the first attempt.
-        // Both are best-effort — failures degrade gracefully (see helper functions).
-        if (sessionMode === 'cold-call') {
-          showColdCallControls(true);
-          await fetchColdCallOutcomes();
-          await startColdCallAttempt();
-        }
-
-        // Roleplay mode: enter setup phase, show controls, prep visualizers.
-        if (sessionMode === 'roleplay') {
-          currentPhase = 'setup';
-          currentPersona = null;
-          updatePhaseChip();
-          showRoleplayControls(true);
-          initBrutusBars();
-          zeroBrutusBars();
-          const pauseBtn = document.getElementById('rp-pause-btn');
-          if (pauseBtn) pauseBtn.classList.add('hidden');
-        }
-
-        // Connect WebSocket
         connectWebSocket();
-
-        // Start audio capture
         await startAudioCapture();
 
-        // Roleplay uses HTTP /roleplay/respond, not the WS coaching path. Enable
-        // VAD only after the mic stream is up so the recorder has something to attach to.
-        if (sessionMode === 'roleplay') {
-          vadEnabled = true;
-        }
-
-        // Start duration timer
         startTime = Date.now();
         durationInterval = setInterval(updateDuration, 1000);
 
-        // Clear empty state
         document.getElementById('empty-state').style.display = 'none';
+        addFeedback('insight', 'monitoring started. let\'s see what you\'ve got.');
 
-        // Add initial feedback
-        const introMsg = sessionMode === 'cold-call'
-          ? 'cold call mode active. dial the first prospect.'
-          : sessionMode === 'roleplay'
-            ? 'roleplay active. ask Brutus to recommend a drill, or describe a scenario.'
-            : 'monitoring started. let\'s see what you\'ve got.';
-        addFeedback('insight', introMsg);
-
-        // Start screen capture (only if enabled, and never in roleplay mode).
-        if (isScreenCaptureEnabled && sessionMode !== 'roleplay') {
+        if (isScreenCaptureEnabled) {
           startScreenCapture();
         } else {
-          console.log('[Session] Screen capture skipped (disabled or roleplay mode)');
+          console.log('[Session] Screen capture skipped (disabled)');
         }
 
       } catch (error) {
@@ -2193,12 +1244,11 @@
         addFeedback('critical', 'failed to connect. check your backend.');
       }
     }
-    
+
     async function stopSession({ closeOverlay = false } = {}) {
-      // Re-entry guard: cold-call /live/end can take 5-15s while the
-      // backend analyzer runs, and the user may click the X (or fire
-      // the monitoring-stopped event) multiple times during that
-      // window. Bail on subsequent calls.
+      // Re-entry guard: /live/end can take several seconds while the backend
+      // analyzer runs, and the user may click the X (or fire the
+      // monitoring-stopped event) multiple times during that window.
       if (isStopping) {
         if (closeOverlay) hideOverlayAfterStop = true;
         return;
@@ -2206,8 +1256,7 @@
       hideOverlayAfterStop = hideOverlayAfterStop || closeOverlay;
       isStopping = true;
 
-      // Surface that the click registered. The backend may take several
-      // seconds to return, especially in cold-call mode.
+      // Surface that the click registered.
       const closeBtn = document.getElementById('close-btn');
       const hideBtn = document.getElementById('hide-overlay-btn');
       if (closeBtn) {
@@ -2216,39 +1265,19 @@
         closeBtn.style.cursor = 'not-allowed';
       }
       if (hideBtn) hideBtn.disabled = true;
-      if (sessionMode === 'cold-call') {
-        addFeedback('insight', 'ending cold call session...');
-      } else if (sessionMode === 'roleplay') {
-        addFeedback('insight', 'ending roleplay...');
-      } else if (sessionId) {
-        addFeedback('insight', 'ending session...');
-      }
-
-      // Roleplay mode: stop VAD + recorder + TTS playback before tearing down audio.
-      if (sessionMode === 'roleplay') {
-        stopVAD();
-        try {
-          if (ttsAnimFrame) { cancelAnimationFrame(ttsAnimFrame); ttsAnimFrame = null; }
-          if (ttsAudioCtx) { ttsAudioCtx.close().catch(() => {}); }
-        } catch (_) {}
-        ttsAudioCtx = null;
-        ttsAnalyser = null;
-      }
+      if (sessionId) addFeedback('insight', 'ending session...');
 
       // Stop audio capture — awaited so the final/short-call audio chunk is sent
       // BEFORE we tear down the prospect tracks and call /live/end below.
       await stopAudioCapture();
 
-      // Stop screen capture
       stopScreenCapture();
 
-      // Stop duration timer
       if (durationInterval) {
         clearInterval(durationInterval);
         durationInterval = null;
       }
 
-      // End session on backend
       if (sessionId) {
         try {
           const endRes = await fetch(`${API_URL}/live/end`, {
@@ -2260,16 +1289,7 @@
             body: JSON.stringify({ sessionId })
           });
           const endData = await endRes.json();
-          // Cold-call sessions return { sessionMode:'cold-call', summary, ... } instead
-          // of the standard { analysis, ... } shape. Roleplay returns the same shape
-          // with a roleplay-specific summary.
-          if (endData && endData.sessionMode === 'cold-call') {
-            addFeedback('insight', 'cold call session ended.');
-            showColdCallSummary(endData.summary);
-          } else if (endData && endData.sessionMode === 'roleplay') {
-            addFeedback('insight', 'roleplay ended.');
-            showRoleplaySummary(endData.summary);
-          } else if (endData && endData.analysis) {
+          if (endData && endData.analysis) {
             showPostCallSummary(endData.analysis);
             updateTalkRatio(endData.analysis.talkRatio);
             interruptCount = endData.analysis.interruptionCount || 0;
@@ -2285,38 +1305,15 @@
         }
       }
 
-      // Disconnect WebSocket
       if (ws) {
         ws.close();
         ws = null;
       }
 
-      // Clean up cold-call state. attempt id is cleared in endColdCallAttempt; this
-      // catches the case where the user hit "end session" mid-attempt (server-side
-      // endSession auto-closes any open attempt for us).
-      stopAttemptTimer();
-      currentAttemptId = null;
-      setAttemptCounter(0);
-      showColdCallControls(false);
-
-      // Roleplay teardown: hide controls + reset phase. The summary card stays.
-      showRoleplayControls(false);
-      const pauseBtn = document.getElementById('rp-pause-btn');
-      if (pauseBtn) { pauseBtn.classList.add('hidden'); pauseBtn.disabled = false; pauseBtn.textContent = 'pause + coach me'; }
-
-      const wasModalSession = sessionMode === 'cold-call' || sessionMode === 'roleplay';
       sessionId = null;
       startTime = null;
-      currentPhase = 'setup';
-      currentPersona = null;
-
-      // Standard sessions auto-hide on normal stop. The X button sets an explicit
-      // end-and-hide intent, so modal summaries do not keep the overlay stuck open.
-      const shouldHideOverlay = hideOverlayAfterStop || !wasModalSession;
       hideOverlayAfterStop = false;
-      if (shouldHideOverlay) {
-        await window.brutus.hideOverlay();
-      }
+      await window.brutus.hideOverlay();
 
       // Re-enable the header controls so a future session can be started cleanly.
       if (closeBtn) {
@@ -2327,7 +1324,7 @@
       if (hideBtn) hideBtn.disabled = false;
       isStopping = false;
     }
-    
+
     // ==================== WEBSOCKET ====================
     function connectWebSocket() {
       ws = new WebSocket(WS_URL);
@@ -2600,10 +1597,8 @@
           }
         });
         console.log('[Audio Capture] Microphone access granted');
-        // Expose mic-only stream to roleplay so its per-turn MediaRecorder can attach.
-        roleplayMicStream = micStream;
 
-        // Audio context is for visualization + roleplay VAD only. We deliberately do
+        // Audio context is for visualization only. We deliberately do
         // NOT mix mic and system audio anymore — they're recorded as separate channels
         // (rep mic / prospect system audio) so the backend can attribute speakers.
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -2627,10 +1622,6 @@
 
           analyser.getByteFrequencyData(dataArray);
           updateAudioBars(dataArray);
-
-          // Roleplay VAD piggybacks on the same analyser tick — no extra audio graph
-          // overhead, the rep waveform and VAD state machine share one read per frame.
-          if (sessionMode === 'roleplay') vadTick(dataArray);
 
           // Measure rep talk ratio from mic level
           const avgLevel = dataArray.reduce((sum, v) => sum + v, 0) / dataArray.length;
@@ -2900,9 +1891,12 @@
     }
     
     // ==================== AUDIO PING ====================
+    // One context for the whole window; a new one per ping leaks audio resources.
+    let pingCtx = null;
     function playFeedbackPing() {
       try {
-        const pingCtx = new AudioContext();
+        if (!pingCtx || pingCtx.state === 'closed') pingCtx = new AudioContext();
+        if (pingCtx.state === 'suspended') pingCtx.resume().catch(() => {});
         const osc = pingCtx.createOscillator();
         const gain = pingCtx.createGain();
         osc.connect(gain);
@@ -2979,11 +1973,6 @@
         hideOverlayAfterStop = false;
         await window.brutus.hideOverlay();
       }
-    });
-
-    // ==================== COLD CALL CONTROLS ====================
-    document.getElementById('cc-next-btn').addEventListener('click', () => {
-      advanceColdCallAttempt();
     });
 
     // Frameless window with GPU acceleration off: -webkit-app-region drag does
@@ -3108,8 +2097,8 @@
       });
     }
 
-    // Recording-consent disclosure (audit BR-03). Shown before each session for
-    // non-roleplay modes, since those record a real third party (the prospect).
+    // Recording-consent disclosure (audit BR-03). Shown before each session,
+    // since it records a real third party (the prospect).
     // Resolves true to proceed; on decline it stops monitoring (which hides the
     // overlay) and resolves false so the caller aborts the start flow.
     function showConsentNotice() {
@@ -3166,12 +2155,5 @@
     <button class="source-picker-skip" id="source-picker-skip">skip — audio only</button>
   </div>
 
-  <!-- Outcome Picker Modal (cold-call mode) -->
-  <div class="outcome-picker-overlay" id="outcome-picker" role="dialog" aria-modal="true" aria-label="How did that call end?">
-    <div class="outcome-picker-title">how did that call end?</div>
-    <div class="outcome-picker-subtitle">tag the outcome to log it. brutus uses this to roll up the session.</div>
-    <div class="outcome-picker-grid" id="outcome-picker-grid"></div>
-    <button class="outcome-picker-cancel" id="outcome-picker-cancel">cancel</button>
-  </div>
 </body>
 </html>

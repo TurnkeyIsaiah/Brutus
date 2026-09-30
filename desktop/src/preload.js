@@ -60,13 +60,8 @@ contextBridge.exposeInMainWorld('brutus', {
   clipLilBrutus: (file) => ipcRenderer.send('lil-brutus-clip', String(file || 'bust.png')),
 
   // Settings
-  showSettings: () => ipcRenderer.invoke('show-settings'),
   getSettings: () => ipcRenderer.invoke('get-settings'),
   setSettings: (settings) => ipcRenderer.invoke('set-settings', settings),
-
-  // Session mode (null = standard | 'cold-call')
-  getSessionMode: () => ipcRenderer.invoke('get-session-mode'),
-  setSessionMode: (mode) => ipcRenderer.invoke('set-session-mode', mode),
 
   // Dashboard
   openDashboard: () => ipcRenderer.invoke('open-dashboard'),

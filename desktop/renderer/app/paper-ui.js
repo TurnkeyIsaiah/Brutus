@@ -1365,10 +1365,7 @@ document.addEventListener('DOMContentLoaded', () => {
         monitorBtn.addEventListener('click', async () => {
             const on = await window.brutus.isMonitoring();
             if (on) await window.brutus.stopMonitoring();
-            else {
-                if (window.brutus.setSessionMode) await window.brutus.setSessionMode(null);
-                await window.brutus.startMonitoring();
-            }
+            else await window.brutus.startMonitoring();
             syncMonitor();
         });
         window.brutus.onMonitoringStarted(syncMonitor);

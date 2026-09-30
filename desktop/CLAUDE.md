@@ -35,15 +35,15 @@ Pushing a version tag (`vX.Y.Z`) triggers `.github/workflows/release.yml`, which
 
 The application uses two separate Electron windows:
 
-1. **Main Window** (`renderer/main.html`)
-   - Login/signup authentication
-   - Dashboard with user stats and monitoring controls
-   - Settings and logout
+1. **Main Window** (`renderer/app/index.html`, the bundled Paper UI)
+   - Login/signup, dashboard, calls, roleplay, in-app Settings, logout
+   - Start/Stop monitoring button (desktop only)
    - Can be hidden to system tray (doesn't close on minimize)
-   - Frameless with custom title bar
 
 2. **Overlay Window** (`renderer/overlay.html`)
-   - Always-on-top floating panel for live coaching
+   - Always-on-top floating panel for live coaching (standard live calls only;
+     cold-call mode is archived server-side and roleplay runs in the main window)
+   - Excluded from screen capture (`setContentProtection(true)`)
    - Displays real-time Brutus feedback during calls
    - Shows metrics: talk ratio, interrupts, duration
    - Audio visualizer bars (32 bars, FFT visualization)
@@ -88,7 +88,7 @@ Both windows share the same preload script (`src/preload.js`) which exposes IPC 
 
 Mode-specific routes also exist for cold-call (`/coldcall/*`), roleplay (`/roleplay/*`), TTS (`/tts`), notes (`/notes`), and research (`/research`).
 
-Every backend request carries an `X-Brutus-Client: brutus-desktop` header so the backend can identify the desktop client by an explicit header rather than by the absence of an `Origin` header (security audit BR-14). In `renderer/main.html` this is added in the central `apiCall` helper; in `renderer/overlay.html` a scoped `window.fetch` wrapper tags only requests bound for `API_URL`. The same identifier is included in the WebSocket auth message as `client: 'brutus-desktop'`, since WS handshakes cannot send custom headers.
+Every backend request carries an `X-Brutus-Client: brutus-desktop` header so the backend can identify the desktop client by an explicit header rather than by the absence of an `Origin` header (security audit BR-14). In `renderer/app/app.js` this is added in `authFetch`; in `renderer/overlay.html` a scoped `window.fetch` wrapper tags only requests bound for `API_URL`. The same identifier is included in the WebSocket auth message as `client: 'brutus-desktop'`, since WS handshakes cannot send custom headers.
 
 **WebSocket** (`/ws`, derived from the API URL with `http`→`ws`):
 - After the socket opens, the client sends an auth message: `{ type: 'auth', token }`
@@ -112,7 +112,8 @@ Uses `electron-store` for local storage:
   - `autoStart` - Launch on system startup (default: `false`)
   - `overlayOpacity` - Overlay transparency (default: `0.95`)
   - `audioFeedback` / `minFeedbackInterval` / `ttsVoice` - TTS playback preferences
-- `sessionMode` - `'cold-call'` | `'roleplay'` (deleted/absent for standard mode)
+  - `whiteBackground`, `lilBrutusPos`, `lilBrutusVisible` - Paper UI preferences
+- `sessionMode` is removed on startup (left by 1.4.0 and earlier; no longer used)
 
 ### System Tray Integration
 
