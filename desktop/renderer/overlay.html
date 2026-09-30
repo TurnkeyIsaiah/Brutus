@@ -6,149 +6,275 @@
   <title>Brutus Live Coaching</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Gideon+Roman&display=swap" rel="stylesheet">
   <script src="posthog.js"></script>
   <style>
+    /* ======================================================================
+       Paper design transcription — docs/paper-extract/desktop-overlay.jsx
+       (Paper file: Noble lemon, 01M2XF3A1BE41V81RAMNB66AX2).
+       Panel in the JSX: 380x620, bg #000000, 1px #2A2320 border, radius 16,
+       padding 14, column gap 10. Gideon Roman is the only typeface.
+       Elements the JSX does not show (mode controls, visualizer, pickers)
+       are styled strictly from the same palette/vocabulary (see paper.css).
+       ====================================================================== */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    
+
     body {
-      font-family: 'Outfit', -apple-system, sans-serif;
+      font-family: "Gideon Roman", system-ui, sans-serif;
       background: transparent;
-      color: #fff;
+      color: #FFF8EF;
       overflow: hidden;
       user-select: none;
+      font-synthesis: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    
+
+    button,
+    input {
+      font-family: inherit;
+      color: inherit;
+      margin: 0;
+    }
+
+    /* Scrollbars stay inside the palette (paper.css vocabulary). */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #3A302C transparent;
+    }
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: #3A302C; border-radius: 999px; }
+
+    /* Panel (JSX overlay panel) */
     .overlay-container {
       width: 100%;
       height: 100vh;
-      background: linear-gradient(135deg, rgba(10, 10, 18, 0.94) 0%, rgba(18, 18, 31, 0.94) 30%, rgba(13, 26, 45, 0.94) 70%, rgba(10, 10, 18, 0.94) 100%);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      border: 1px solid rgba(255, 80, 80, 0.3);
+      background-color: #000000;
+      border: 1px solid #2A2320;
+      border-radius: 16px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
+      gap: 10px;
       overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
       position: relative;
-      isolation: isolate;
     }
 
-    #overlay-neural-canvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 0;
-      border-radius: 20px;
-      opacity: 0.8;
-    }
-
-    .overlay-container > :not(#overlay-neural-canvas) {
-      position: relative;
-      z-index: 1;
-    }
-    
-    /* Header */
+    /* Header (JSX row 1: logo 22px + "Brutus live coaching" #FF6550 13/16, "x" #FFF8EF 16/20) */
     .overlay-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 16px 20px;
-      background: rgba(0, 0, 0, 0.3);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      -webkit-app-region: drag;
+      justify-content: space-between;
+      flex-shrink: 0;
+      cursor: grab;
+      background-color: #000000;
     }
-    
+
+    .overlay-header:active {
+      cursor: grabbing;
+    }
+
     .header-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       min-width: 0;
       flex: 1;
     }
-    
-    .brutus-avatar {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, #ff5050, #ff7850);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Space Mono', monospace;
-      font-weight: 700;
-      font-size: 16px;
+
+    .header-logo {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      background-image: url(https://app.paper.design/file-assets/01M2XF3A1BE41V81RAMNB66AX2/3W5W9EBY2BHV8M8NRT1Q096DKS.png);
+      background-position: 50%;
+      background-repeat: no-repeat;
+      background-size: contain;
     }
-    
+
     .header-title {
-      font-family: 'Space Mono', monospace;
+      color: #FF6550;
       font-size: 13px;
-      color: rgba(255, 80, 80, 0.9);
-      letter-spacing: 1px;
+      line-height: 16px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    /* Cold-call mode badge (shown only when sessionMode === 'cold-call') */
+    /* Mode badge takes the title's slot (title hidden) in cold-call/roleplay. */
     .mode-badge {
       display: none;
-      font-family: 'Space Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 1px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #ff5050, #ff7850);
-      color: #fff;
-      text-transform: uppercase;
-      box-shadow: 0 2px 8px rgba(255, 80, 80, 0.3);
+      color: #FF6550;
+      font-size: 13px;
+      line-height: 16px;
     }
-
     body.cold-call .mode-badge { display: inline-block; }
     body.cold-call .header-title { display: none; }
-
-    /* Roleplay mode badge (purple to match chat-send + distinguish from cold-call red) */
-    body.roleplay .mode-badge {
-      display: inline-block;
-      background: linear-gradient(135deg, #ff5050, #ff7850);
-      box-shadow: 0 2px 8px rgba(255, 80, 80, 0.35);
-    }
+    body.roleplay .mode-badge { display: inline-block; }
     body.roleplay .header-title { display: none; }
     /* Hide cold-call-only chrome when in roleplay (and vice-versa via existing rules). */
     body.roleplay .cold-call-controls { display: none !important; }
     /* Roleplay does not use system audio capture — hide the screen toggle to avoid confusion. */
     body.roleplay .header-toggle { display: none; }
 
+    .close-btn {
+      background: none;
+      border: 0;
+      cursor: pointer;
+      color: #FFF8EF;
+      font-size: 16px;
+      line-height: 20px;
+      -webkit-app-region: no-drag;
+    }
+    .close-btn:hover { color: #FF6550; }
+
+    /* Capture row (JSX row 2: 8px #FF6550 dot + "Screen" #FFF8EF 13/16,
+       "Enable Brutus speech" #8E837D 13/16 on the right) */
+    .capture-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .dot-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+    }
+    .dot-toggle input[type="checkbox"] { display: none; }
+    .toggle-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 4px;
+      background-color: #3A302C;
+      flex-shrink: 0;
+    }
+    .dot-toggle input:checked + .toggle-dot { background-color: #FF6550; }
+    .toggle-name {
+      color: #FFF8EF;
+      font-size: 13px;
+      line-height: 16px;
+    }
+
+    .tts-btn {
+      background: none;
+      border: 0;
+      cursor: pointer;
+      color: #8E837D;
+      font-size: 13px;
+      line-height: 16px;
+      -webkit-app-region: no-drag;
+    }
+    .tts-btn:hover:not(.locked) { color: #FFF8EF; }
+    .tts-btn.locked { color: #766B65; cursor: not-allowed; }
+    .tts-btn.active { color: #FF6550; }
+
+    /* Feedback Flash Zone */
+    .feedback-flash {
+      display: none;
+      flex-shrink: 0;
+      background-color: #171414;
+      border: 1px solid #2A2320;
+      border-radius: 8px;
+    }
+    .feedback-flash.show { display: block; }
+    .flash-text {
+      padding: 10px 14px;
+      font-size: 15px;
+      line-height: 22px;
+      color: #FFF8EF;
+    }
+    .feedback-flash.flash-critical .flash-text { color: #FF6550; }
+    .feedback-flash.flash-warning .flash-text  { color: #FF8A78; }
+    .feedback-flash.flash-insight .flash-text  { color: #FFF8EF; }
+    .feedback-flash.flash-good .flash-text     { color: #A9A09A; }
+    .feedback-flash.flash-brutus .flash-text   { color: #FF6550; }
+
+    /* Cold-call controls (visible only during a cold-call session) */
+    .cold-call-controls {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+      border: 1px solid #2A2320;
+      border-radius: 8px;
+      padding: 8px 12px;
+    }
+    body.cold-call .cold-call-controls.session-active { display: flex; }
+    /* In cold-call mode the duration metric becomes session-total; talk ratio and
+       interrupts still reflect the rolling session so they stay useful on connects. */
+
+    .cc-attempt-counter {
+      font-size: 13px;
+      line-height: 16px;
+      color: #A9A09A;
+    }
+    .cc-attempt-counter strong {
+      color: #FF6550;
+      font-weight: 400;
+    }
+    .cc-attempt-timer {
+      font-size: 16px;
+      line-height: 20px;
+      color: #FFF8EF;
+      min-width: 56px;
+      text-align: center;
+    }
+    .cc-next-btn {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      height: 32px;
+      padding-inline: 16px;
+      border: 0;
+      border-radius: 999px;
+      background-color: #FF6550;
+      color: #000000;
+      font-size: 13px;
+      line-height: 16px;
+      cursor: pointer;
+    }
+    .cc-next-btn[disabled] {
+      background-color: #171414;
+      color: #655A55;
+      cursor: not-allowed;
+    }
+
     /* Roleplay controls (visible only during a roleplay session) */
     .roleplay-controls {
       display: none;
-      padding: 10px 20px;
-      background: rgba(255, 80, 80, 0.06);
-      border-bottom: 1px solid rgba(255, 80, 80, 0.18);
-      gap: 12px;
       align-items: center;
+      gap: 12px;
       flex-wrap: wrap;
+      flex-shrink: 0;
+      border: 1px solid #2A2320;
+      border-radius: 8px;
+      padding: 8px 12px;
     }
     body.roleplay .roleplay-controls.session-active { display: flex; }
     .rp-phase-chip {
-      font-family: 'Space Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 1px;
-      color: #fff;
-      padding: 4px 10px;
+      padding: 2px 10px;
       border-radius: 999px;
-      background: rgba(255, 80, 80, 0.3);
+      background-color: #FF6550;
+      color: #000000;
+      font-size: 11px;
+      line-height: 16px;
+      letter-spacing: 1px;
       text-transform: uppercase;
     }
     .rp-persona {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      line-height: 16px;
+      color: #A9A09A;
       flex: 1;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -156,32 +282,30 @@
     }
     .rp-pause-btn {
       margin-left: auto;
-      padding: 8px 14px;
-      border: none;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #ffb050, #ff7850);
-      color: #1a0808;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      height: 32px;
+      padding-inline: 16px;
+      background: none;
+      border: 1px solid #4A3A35;
+      border-radius: 999px;
+      color: #FFF8EF;
+      font-size: 13px;
+      line-height: 16px;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(255, 176, 80, 0.3);
-      transition: transform 0.1s, box-shadow 0.2s;
     }
-    .rp-pause-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255, 176, 80, 0.45); }
-    .rp-pause-btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .rp-pause-btn:hover { border-color: #FF6550; }
+    .rp-pause-btn[disabled] { color: #655A55; border-color: #2A2320; cursor: not-allowed; }
     .rp-pause-btn.hidden { display: none; }
 
-    /* Two-waveform layout in roleplay mode */
-    .audio-viz-wrap { display: block; }
+    /* Audio Visualizer(s) — single bar group in standard/cold-call, two in roleplay */
+    .audio-viz-wrap { display: block; flex-shrink: 0; }
     .viz-col { display: contents; }
     .viz-label { display: none; }
     #brutus-visualizer { display: none; }
     body.roleplay .audio-viz-wrap {
       display: flex;
       gap: 24px;
-      padding: 0 20px 8px;
       align-items: flex-end;
       justify-content: center;
     }
@@ -194,583 +318,176 @@
       max-width: 45%;
     }
     body.roleplay .viz-label { display: block; }
-    body.roleplay #brutus-visualizer { display: flex; padding: 0; height: 40px; }
-    body.roleplay #audio-visualizer { padding: 0; height: 40px; }
+    body.roleplay #brutus-visualizer { display: flex; }
     .viz-label {
-      font-family: 'Space Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 1.5px;
-      color: rgba(255, 255, 255, 0.4);
-      text-transform: uppercase;
-    }
-    #brutus-visualizer .audio-bar { background: linear-gradient(to top, #ff3030, #ff5050); }
-
-    /* Roleplay summary card */
-    .rp-summary-card {
-      margin: 12px;
-      padding: 16px;
-      border-radius: 14px;
-      background: rgba(255, 80, 80, 0.08);
-      border: 1px solid rgba(255, 80, 80, 0.3);
-    }
-    .rp-summary-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-    .rp-summary-persona {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.85);
-      margin-bottom: 10px;
-      padding: 6px 10px;
-      background: rgba(255, 80, 80, 0.15);
-      border-radius: 8px;
-    }
-    .rp-summary-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px 16px;
-      margin-bottom: 12px;
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.7);
-    }
-    .rp-summary-grid strong { color: #fff; margin-left: 6px; font-weight: 600; }
-    .rp-done-btn {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #ff5050, #ff7850);
-      color: #fff;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      cursor: pointer;
-      font-size: 12px;
-    }
-
-    /* Cold-call controls (visible only during a cold-call session) */
-    .cold-call-controls {
-      display: none;
-      padding: 12px 20px;
-      background: rgba(255, 80, 80, 0.05);
-      border-bottom: 1px solid rgba(255, 80, 80, 0.15);
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    body.cold-call .cold-call-controls.session-active { display: flex; }
-    /* In cold-call mode the duration metric becomes session-total; talk ratio and
-       interrupts still reflect the rolling session so they stay useful on connects. */
-
-    .cc-attempt-counter {
-      font-family: 'Space Mono', monospace;
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.7);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-    .cc-attempt-counter strong {
-      color: #ff7850;
-      font-weight: 700;
-    }
-    .cc-attempt-timer {
-      font-family: 'Space Mono', monospace;
-      font-size: 18px;
-      font-weight: 700;
-      color: #fff;
-      min-width: 56px;
-      text-align: center;
-    }
-    .cc-next-btn {
-      margin-left: auto;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #ff5050, #ff7850);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: transform 0.1s, box-shadow 0.2s;
-      box-shadow: 0 4px 12px rgba(255, 80, 80, 0.3);
-    }
-    .cc-next-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(255, 80, 80, 0.45);
-    }
-    .cc-next-btn:active { transform: translateY(0); }
-    .cc-next-btn[disabled] { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
-
-    /* Outcome picker modal — same pattern as source picker */
-    .outcome-picker-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(10, 10, 18, 0.98);
-      z-index: 1100;
-      border-radius: 20px;
-      flex-direction: column;
-      padding: 20px;
-    }
-    .outcome-picker-overlay.active { display: flex; }
-    .outcome-picker-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-    .outcome-picker-subtitle {
       font-size: 11px;
-      color: rgba(255, 255, 255, 0.4);
-      margin-bottom: 14px;
+      line-height: 14px;
+      color: #766B65;
     }
-    .outcome-picker-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      flex: 1;
-      overflow-y: auto;
-    }
-    .outcome-item {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      padding: 16px 12px;
-      cursor: pointer;
-      transition: all 0.15s;
-      text-align: center;
-      font-family: 'Space Mono', monospace;
-      font-size: 12px;
-      letter-spacing: 0.5px;
-      color: rgba(255, 255, 255, 0.85);
-      text-transform: lowercase;
-    }
-    .outcome-item:hover {
-      border-color: rgba(255, 80, 80, 0.6);
-      background: rgba(255, 80, 80, 0.08);
-      color: #fff;
-    }
-    .outcome-picker-cancel {
-      margin-top: 12px;
-      text-align: center;
-      font-size: 11px;
-      color: rgba(255, 255, 255, 0.3);
-      cursor: pointer;
-      padding: 6px;
-      border-radius: 6px;
-      transition: color 0.15s;
-    }
-    .outcome-picker-cancel:hover { color: rgba(255, 255, 255, 0.6); }
 
-    /* Cold-call summary card rendered in feedback list on session end */
-    .cc-summary-card {
-      background: rgba(255, 80, 80, 0.05);
-      border: 1px solid rgba(255, 80, 80, 0.2);
-      border-radius: 12px;
-      padding: 16px;
-      margin: 8px 0;
-      font-family: 'Inter', sans-serif;
-    }
-    .cc-summary-title {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: #ff7850;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-    .cc-summary-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px 16px;
-      font-size: 12px;
-    }
-    .cc-summary-grid div { color: rgba(255, 255, 255, 0.7); }
-    .cc-summary-grid strong {
-      color: #fff;
-      font-family: 'Space Mono', monospace;
-      font-size: 14px;
-      font-weight: 700;
-      margin-left: 6px;
-    }
-    .cc-summary-top {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(255, 80, 80, 0.15);
-    }
-    .cc-summary-top-label {
-      font-size: 10px;
-      letter-spacing: 1px;
-      color: rgba(255, 255, 255, 0.4);
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-    .cc-summary-top-item {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.85);
-      margin-bottom: 4px;
+    .audio-visualizer {
+      height: 40px;
       display: flex;
-      justify-content: space-between;
-    }
-    .cc-summary-top-item span:last-child {
-      font-family: 'Space Mono', monospace;
-      color: rgba(255, 80, 80, 0.9);
-    }
-    .cc-summary-done {
-      display: block;
-      width: 100%;
-      margin-top: 14px;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #ff5050, #ff7850);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: transform 0.1s, box-shadow 0.2s;
-      box-shadow: 0 4px 12px rgba(255, 80, 80, 0.3);
-    }
-    .cc-summary-done:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(255, 80, 80, 0.45);
-    }
-    .cc-summary-done:active { transform: translateY(0); }
-
-    .header-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
-      -webkit-app-region: no-drag;
-    }
-    
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #50ff80;
-      box-shadow: 0 0 10px #50ff80;
-      animation: pulse 2s ease-in-out infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    
-    .close-btn {
-      width: 24px;
-      height: 24px;
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      border-radius: 6px;
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
-      -webkit-app-region: no-drag;
-    }
-    
-    .close-btn:hover {
-      background: rgba(255, 80, 80, 0.3);
-      color: #fff;
+      gap: 3px;
     }
 
-    /* Header screen capture toggle */
-    .header-toggle {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-      -webkit-app-region: no-drag;
+    .audio-bar {
+      width: 4px;
+      height: 4px;
+      background-color: #FF6550;
+      border-radius: 2px;
+      transition: height 0.05s ease;
     }
-    .header-toggle input[type="checkbox"] { display: none; }
-    .header-toggle-slider {
-      width: 28px;
-      height: 16px;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
-      position: relative;
-      transition: background 0.2s;
-    }
-    .header-toggle-slider::after {
-      content: '';
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      background: rgba(255, 255, 255, 0.5);
-      border-radius: 50%;
-      top: 3px;
-      left: 3px;
-      transition: all 0.2s;
-    }
-    .header-toggle input:checked + .header-toggle-slider {
-      background: rgba(255, 80, 80, 0.6);
-    }
-    .header-toggle input:checked + .header-toggle-slider::after {
-      left: 15px;
-      background: #fff;
-    }
-    .header-toggle-text {
-      font-size: 12px;
-      opacity: 0.7;
-    }
+    #brutus-visualizer .audio-bar { background-color: #FF8A78; }
 
-    /* Feedback Flash Zone */
-    .feedback-flash {
-      overflow: hidden;
-      max-height: 0;
-      opacity: 0;
-      transition: max-height 0.2s ease, opacity 0.3s ease;
-      border-bottom: 1px solid transparent;
-    }
-    .feedback-flash.show {
-      max-height: 64px;
-      opacity: 1;
-    }
-    .flash-text {
-      padding: 10px 16px;
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-      color: #fff;
-    }
-    .feedback-flash.flash-critical { background: rgba(255, 80, 80, 0.18); border-bottom-color: rgba(255, 80, 80, 0.3); }
-    .feedback-flash.flash-warning  { background: rgba(255, 176, 80, 0.18); border-bottom-color: rgba(255, 176, 80, 0.3); }
-    .feedback-flash.flash-insight  { background: rgba(80, 150, 255, 0.18); border-bottom-color: rgba(80, 150, 255, 0.3); }
-    .feedback-flash.flash-good     { background: rgba(80, 255, 128, 0.18); border-bottom-color: rgba(80, 255, 128, 0.3); }
-    .feedback-flash.flash-brutus   { background: rgba(255, 80, 80, 0.18); border-bottom-color: rgba(255, 80, 80, 0.3); }
-
-    /* TTS Button */
-    .tts-btn {
-      background: none;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 6px;
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 10px;
-      font-weight: 600;
-      padding: 3px 7px;
-      cursor: pointer;
-      text-transform: lowercase;
-      transition: all 0.2s;
-      -webkit-app-region: no-drag;
-    }
-    .tts-btn:hover:not(.locked) { border-color: rgba(255, 255, 255, 0.4); color: rgba(255, 255, 255, 0.9); }
-    .tts-btn.locked { opacity: 0.35; cursor: not-allowed; }
-    .tts-btn.active { border-color: rgba(80, 255, 128, 0.6); color: #50ff80; }
-
-    /* Feedback List */
+    /* Feedback / chat list (JSX chat area: column, grow, gap 14) */
     .feedback-container {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
-      padding: 16px;
     }
-    
-    .feedback-container::-webkit-scrollbar {
-      width: 4px;
-    }
-    
-    .feedback-container::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 2px;
-    }
-    
-    .feedback-container::-webkit-scrollbar-thumb {
-      background: rgba(255, 80, 80, 0.3);
-      border-radius: 2px;
-    }
-    
+
     .feedback-item {
-      background: rgba(255, 80, 80, 0.08);
-      border: 1px solid rgba(255, 80, 80, 0.15);
+      background-color: #141414;
+      border: 1px solid #2A2320;
       border-radius: 14px;
-      padding: 14px 16px;
-      margin-bottom: 12px;
-      animation: slideIn 0.3s ease;
+      padding: 12px 14px;
+      margin-bottom: 14px;
     }
-    
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateX(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-    
+
     .feedback-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
     }
-    
+
     .feedback-type {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 10px;
+      font-size: 11px;
+      line-height: 14px;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-    
-    .type-warning {
-      background: rgba(255, 176, 80, 0.2);
-      color: #ffb050;
-    }
-    
-    .type-critical {
-      background: rgba(255, 80, 80, 0.2);
-      color: #ff5050;
-    }
-    
-    .type-insight {
-      background: rgba(80, 150, 255, 0.2);
-      color: #5096ff;
-    }
-    
-    .type-good {
-      background: rgba(80, 255, 128, 0.2);
-      color: #50ff80;
     }
 
-    .type-suggestion {
-      background: rgba(255, 80, 80, 0.2);
-      color: #ff7850;
-      border-left: 3px solid #ff7850;
-    }
-
-    .type-brutus {
-      background: rgba(255, 80, 80, 0.15);
-      color: #ff6060;
-    }
+    .type-critical   { color: #FF6550; }
+    .type-warning    { color: #FF8A78; }
+    .type-insight    { color: #FFF8EF; }
+    .type-good       { color: #A9A09A; }
+    .type-brutus     { color: #FF6550; }
+    .type-suggestion { color: #FF8A78; }
 
     .feedback-time {
       font-size: 11px;
-      color: rgba(255, 255, 255, 0.4);
-      font-family: 'Space Mono', monospace;
+      line-height: 14px;
+      color: #766B65;
     }
-    
+
     .feedback-text {
-      font-size: 14px;
-      line-height: 1.5;
-      color: rgba(255, 255, 255, 0.9);
+      font-size: 15px;
+      line-height: 22px;
+      color: #FFF8EF;
     }
-    
+
+    /* Chat bubbles (JSX: user bg #1A1412; Brutus bg #141414 + 1px #2A2320;
+       both radius 14, padding 12/14, text #FFF8EF 15/22) */
+    .chat-message {
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      font-size: 15px;
+      line-height: 22px;
+      color: #FFF8EF;
+      width: fit-content;
+    }
+
+    .chat-message.user {
+      background-color: #1A1412;
+      max-width: 230px;
+      margin-left: auto;
+    }
+
+    .chat-message.brutus {
+      background-color: #141414;
+      border: 1px solid #2A2320;
+      max-width: 270px;
+      margin-right: auto;
+    }
+
+    .chat-label {
+      font-size: 11px;
+      line-height: 14px;
+      color: #8E837D;
+      margin-bottom: 4px;
+    }
+
     .empty-state {
       text-align: center;
       padding: 40px 20px;
-      color: rgba(255, 255, 255, 0.4);
+      color: #8E837D;
     }
-    
-    .empty-state-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-    
+
     .empty-state-text {
       font-size: 14px;
+      line-height: 18px;
     }
-    
-    /* Metrics Bar */
-    .metrics-bar {
-      padding: 16px 20px;
-      background: rgba(0, 0, 0, 0.3);
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-    
-    .metric-item {
-      text-align: center;
-    }
-    
-    .metric-label {
-      font-size: 10px;
-      color: rgba(255, 255, 255, 0.4);
-      text-transform: lowercase;
-      margin-bottom: 4px;
-    }
-    
-    .metric-value {
-      font-family: 'Space Mono', monospace;
-      font-size: 16px;
-      font-weight: 700;
-    }
-    
-    .metric-value.good { color: #50ff80; }
-    .metric-value.warning { color: #ffb050; }
-    .metric-value.bad { color: #ff5050; }
 
-    /* Quick Actions */
+    /* Quick Actions (paper.css ghost-button vocabulary) */
     .quick-actions {
-      padding: 12px 16px;
       display: flex;
       gap: 8px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      flex-shrink: 0;
     }
 
     .action-btn {
       flex: 1;
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      text-transform: lowercase;
-      font-family: inherit;
-    }
-
-    .action-btn span {
-      font-size: 14px;
+      height: 38px;
+      padding-inline: 14px;
+      background: none;
+      border: 1px solid #3A302C;
+      border-radius: 8px;
+      color: #D8CEC6;
+      font-size: 13px;
+      line-height: 16px;
+      cursor: pointer;
     }
 
     .action-btn:hover {
-      background: rgba(255, 80, 80, 0.1);
-      border-color: rgba(255, 80, 80, 0.3);
-      color: #fff;
+      border-color: #4A3A35;
+      color: #FFF8EF;
     }
 
     .action-btn:disabled {
-      opacity: 0.45;
+      background-color: #171414;
+      border-color: transparent;
+      color: #655A55;
       cursor: not-allowed;
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.1);
-      color: rgba(255, 255, 255, 0.45);
     }
 
     .action-btn.active {
-      background: rgba(255, 80, 80, 0.15);
-      border-color: rgba(255, 80, 80, 0.4);
-      color: #ff5050;
+      border-color: #FF6550;
+      color: #FF6550;
     }
 
-    /* Note/Research Input */
+    /* AI Notes toggle row (same dot-toggle vocabulary as the Screen row) */
+    .notes-row {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    /* Note / Research / Chat input rows (JSX composer: bg #000000, 1px #3A302C,
+       radius 8, height 40, padding-inline 12, text 14/18, placeholder #8E837D) */
     .note-input-container,
-    .research-input-container {
-      padding: 12px 16px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    .research-input-container,
+    .chat-container {
       display: flex;
       gap: 8px;
-      animation: slideDown 0.2s ease;
+      flex-shrink: 0;
     }
 
     .note-input-container.hidden,
@@ -778,161 +495,125 @@
       display: none;
     }
 
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
     .note-input,
-    .research-input {
+    .research-input,
+    .chat-input {
       flex: 1;
-      padding: 10px 14px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      color: #fff;
-      font-size: 13px;
-      font-family: inherit;
+      min-width: 0;
+      height: 40px;
+      padding-inline: 12px;
+      background-color: #000000;
+      border: 1px solid #3A302C;
+      border-radius: 8px;
+      color: #FFF8EF;
+      font-size: 14px;
+      line-height: 18px;
       outline: none;
-      transition: all 0.2s;
-    }
-
-    .note-input:focus,
-    .research-input:focus {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 80, 80, 0.4);
     }
 
     .note-input::placeholder,
-    .research-input::placeholder {
-      color: rgba(255, 255, 255, 0.3);
+    .research-input::placeholder,
+    .chat-input::placeholder {
+      color: #8E837D;
+    }
+
+    .note-input:focus,
+    .research-input:focus,
+    .chat-input:focus {
+      border-color: #FF6550;
     }
 
     .note-send-btn,
-    .research-send-btn {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, #ff5050, #ff7850);
-      border: none;
-      border-radius: 10px;
-      color: #fff;
-      font-size: 18px;
-      cursor: pointer;
-      transition: all 0.2s;
+    .research-send-btn,
+    .chat-send-btn {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      border: 0;
+      border-radius: 8px;
+      background-color: #FF6550;
+      color: #000000;
+      font-size: 16px;
+      line-height: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-
-    .note-send-btn:hover,
-    .research-send-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(255, 80, 80, 0.3);
+      cursor: pointer;
     }
 
     .note-send-btn:disabled,
-    .research-send-btn:disabled {
-      opacity: 0.5;
+    .research-send-btn:disabled,
+    .chat-send-btn:disabled {
+      background-color: #171414;
+      color: #655A55;
       cursor: not-allowed;
-      transform: none;
     }
 
-    /* Screen Capture Toggle */
-    .screen-capture-toggle {
-      padding: 12px 16px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    /* Metrics (JSX: label #8E837D 11/14, value #FFF8EF 16/20, columns gap 2) */
+    .metrics-bar {
       display: flex;
-      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
     }
 
-    .toggle-label {
+    .metric-item {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      width: 100%;
+      flex-direction: column;
+      gap: 2px;
     }
 
-    .toggle-label input[type="checkbox"] {
-      display: none;
+    .metric-label {
+      font-size: 11px;
+      line-height: 14px;
+      color: #8E837D;
     }
 
-    .toggle-slider {
-      width: 40px;
-      height: 22px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 11px;
-      position: relative;
-      transition: background 0.3s;
+    .metric-value {
+      font-size: 16px;
+      line-height: 20px;
+      color: #FFF8EF;
     }
 
-    .toggle-slider::before {
-      content: '';
+    .metric-value.good { color: #FFF8EF; }
+    .metric-value.warning { color: #FF8A78; }
+    .metric-value.bad { color: #FF6550; }
+
+    /* Thin resize edges in the panel padding. The corner grip is the only mark. */
+    .resize-edge {
       position: absolute;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.6);
-      top: 3px;
-      left: 3px;
-      transition: all 0.3s;
+      z-index: 5;
+      touch-action: none;
     }
+    .resize-n,
+    .resize-s {
+      left: 14px;
+      right: 14px;
+      height: 8px;
+    }
+    .resize-n { top: 0; cursor: ns-resize; }
+    .resize-s { bottom: 0; cursor: ns-resize; }
+    .resize-e,
+    .resize-w {
+      top: 14px;
+      bottom: 14px;
+      width: 8px;
+    }
+    .resize-e { right: 0; cursor: ew-resize; }
+    .resize-w { left: 0; cursor: ew-resize; }
 
-    .toggle-label input[type="checkbox"]:checked + .toggle-slider {
-      background: linear-gradient(135deg, #50ff80, #50ffa0);
-    }
-
-    .toggle-label input[type="checkbox"]:checked + .toggle-slider::before {
-      transform: translateX(18px);
-      background: #fff;
-    }
-
-    .toggle-text {
-      flex: 1;
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.7);
-      font-weight: 500;
-    }
-
-    .toggle-label input[type="checkbox"]:checked ~ .toggle-text {
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    /* Audio Visualizer */
-    .audio-visualizer {
-      height: 40px;
-      padding: 0 20px 16px;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      gap: 3px;
-    }
-    
-    .audio-bar {
-      width: 4px;
-      height: 4px;
-      background: linear-gradient(to top, #ff5050, #ff7850);
-      border-radius: 2px;
-      transition: height 0.05s ease;
-    }
-    
     /* Resize Handle */
     .resize-handle {
       position: absolute;
+      z-index: 6;
       bottom: 0;
       right: 0;
       width: 20px;
       height: 20px;
       cursor: se-resize;
+      touch-action: none;
       -webkit-app-region: no-drag;
     }
-    
+
     .resize-handle::after {
       content: '';
       position: absolute;
@@ -940,123 +621,188 @@
       right: 6px;
       width: 8px;
       height: 8px;
-      border-right: 2px solid rgba(255, 255, 255, 0.2);
-      border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+      border-right: 2px solid #3A302C;
+      border-bottom: 2px solid #3A302C;
     }
 
-    /* Chat Interface */
-    .chat-container {
-      padding: 12px 16px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      display: flex;
-      gap: 8px;
-      align-items: center;
+    /* Cold-call summary card rendered in feedback list on session end */
+    .cc-summary-card,
+    .rp-summary-card {
+      background-color: #141414;
+      border: 1px solid #2A2320;
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin: 0 0 14px;
     }
-
-    .chat-input {
-      flex: 1;
-      padding: 10px 14px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      color: #fff;
-      font-size: 13px;
-      font-family: inherit;
-      outline: none;
-      transition: all 0.2s;
-    }
-
-    .chat-input:focus {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 80, 80, 0.4);
-    }
-
-    .chat-input::placeholder {
-      color: rgba(255, 255, 255, 0.3);
-    }
-
-    .chat-send-btn {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, #ff5050, #ff7850);
-      border: none;
-      border-radius: 10px;
-      color: #fff;
-      font-size: 18px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .chat-send-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(255, 80, 80, 0.3);
-    }
-
-    .chat-send-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .chat-message {
-      padding: 10px 14px;
-      border-radius: 12px;
-      margin-bottom: 8px;
-      font-size: 13px;
-      line-height: 1.4;
-      animation: slideIn 0.3s ease;
-    }
-
-    .chat-message.user {
-      background: rgba(255, 80, 80, 0.15);
-      border: 1px solid rgba(255, 80, 80, 0.3);
-      color: rgba(255, 255, 255, 0.9);
-      margin-left: 20px;
-      text-align: right;
-    }
-
-    .chat-message.brutus {
-      background: rgba(255, 80, 80, 0.1);
-      border: 1px solid rgba(255, 80, 80, 0.2);
-      color: rgba(255, 255, 255, 0.9);
-      margin-right: 20px;
-    }
-
-    .chat-label {
-      font-size: 10px;
+    .cc-summary-title,
+    .rp-summary-title {
+      font-size: 11px;
+      line-height: 14px;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.5px;
+      color: #FF6550;
+      margin-bottom: 12px;
+    }
+    .rp-summary-persona {
+      font-size: 13px;
+      line-height: 16px;
+      color: #FFF8EF;
+      margin-bottom: 10px;
+      padding: 6px 10px;
+      border: 1px solid #2A2320;
+      border-radius: 8px;
+    }
+    .cc-summary-grid,
+    .rp-summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 16px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      line-height: 16px;
+      color: #A9A09A;
+    }
+    .cc-summary-grid strong,
+    .rp-summary-grid strong {
+      color: #FFF8EF;
+      font-weight: 400;
+      margin-left: 6px;
+    }
+    .cc-summary-top {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #2A2320;
+    }
+    .cc-summary-top-label {
+      font-size: 11px;
+      line-height: 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #766B65;
+      margin-bottom: 6px;
+    }
+    .cc-summary-top-item {
+      font-size: 13px;
+      line-height: 16px;
+      color: #A9A09A;
       margin-bottom: 4px;
-      opacity: 0.6;
+      display: flex;
+      justify-content: space-between;
+    }
+    .cc-summary-top-item span:last-child { color: #FF6550; }
+    .cc-summary-done,
+    .rp-done-btn {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      height: 32px;
+      border: 0;
+      border-radius: 999px;
+      background-color: #FF6550;
+      color: #000000;
+      font-size: 13px;
+      line-height: 16px;
+      cursor: pointer;
+      text-align: center;
     }
 
-
-    /* ==================== SOURCE PICKER ==================== */
-    .source-picker-overlay {
+    /* ==================== MODAL OVERLAYS ==================== */
+    /* Consent / source picker / outcome picker share the panel surface. */
+    .consent-overlay,
+    .source-picker-overlay,
+    .outcome-picker-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(10, 10, 18, 0.98);
-      z-index: 1000;
-      border-radius: 20px;
+      background-color: #000000;
+      border: 1px solid #2A2320;
+      border-radius: 16px;
       flex-direction: column;
       padding: 20px;
       overflow: hidden;
     }
-    .source-picker-overlay.active { display: flex; }
-    .source-picker-title {
+    .source-picker-overlay { z-index: 1000; }
+    .outcome-picker-overlay { z-index: 1100; }
+    .consent-overlay {
+      z-index: 1100;
+      justify-content: center;
+      padding: 26px 22px;
+      overflow-y: auto;
+    }
+    .consent-overlay.active,
+    .source-picker-overlay.active,
+    .outcome-picker-overlay.active { display: flex; }
+
+    /* Recording-consent notice (shown before each non-roleplay session) */
+    .consent-label {
       font-size: 14px;
-      font-weight: 600;
-      color: #fff;
+      line-height: 18px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #FF6550;
+      margin-bottom: 8px;
+    }
+    .consent-title {
+      font-size: 16px;
+      line-height: 20px;
+      color: #FFF8EF;
+      margin-bottom: 10px;
+    }
+    .consent-body {
+      font-size: 13px;
+      line-height: 18px;
+      color: #A9A09A;
+      margin-bottom: 12px;
+    }
+    .consent-body strong { color: #FFF8EF; font-weight: 400; }
+    .consent-warning {
+      font-size: 13px;
+      line-height: 18px;
+      color: #FF8A78;
+      border: 1px solid #4A3A35;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 18px;
+    }
+    .consent-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .consent-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      padding-inline: 16px;
+      border: 0;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 16px;
+      cursor: pointer;
+    }
+    .consent-btn-primary { background-color: #FF6550; color: #000000; }
+    .consent-btn-primary:hover { background-color: #FF8A78; }
+    .consent-btn-secondary {
+      background: none;
+      color: #FFF8EF;
+      border: 1px solid #4A3A35;
+    }
+    .consent-btn-secondary:hover { border-color: #FF6550; }
+
+    /* Source picker */
+    .source-picker-title,
+    .outcome-picker-title {
+      font-size: 16px;
+      line-height: 20px;
+      color: #FFF8EF;
       margin-bottom: 4px;
     }
-    .source-picker-subtitle {
-      font-size: 11px;
-      color: rgba(255,255,255,0.4);
+    .source-picker-subtitle,
+    .outcome-picker-subtitle {
+      font-size: 13px;
+      line-height: 16px;
+      color: #8E837D;
       margin-bottom: 14px;
     }
     .source-picker-grid {
@@ -1067,135 +813,81 @@
       flex: 1;
     }
     .source-item {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 10px;
+      background-color: #141414;
+      border: 1px solid #2A2320;
+      border-radius: 8px;
       padding: 8px;
       cursor: pointer;
-      transition: all 0.15s;
       display: flex;
       flex-direction: column;
       gap: 5px;
     }
-    .source-item:hover {
-      border-color: rgba(255,80,80,0.6);
-      background: rgba(255,80,80,0.08);
-    }
+    .source-item:hover { border-color: #FF6550; }
     .source-item img {
       width: 100%;
       aspect-ratio: 16/9;
       object-fit: cover;
       border-radius: 5px;
-      background: #111;
+      background-color: #171414;
     }
     .source-item-name {
-      font-size: 10px;
-      color: rgba(255,255,255,0.65);
+      font-size: 11px;
+      line-height: 14px;
+      color: #A9A09A;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .source-picker-skip {
+    .source-picker-skip,
+    .outcome-picker-cancel {
       margin-top: 12px;
+      background: none;
+      border: 0;
       text-align: center;
-      font-size: 11px;
-      color: rgba(255,255,255,0.3);
+      font-size: 13px;
+      line-height: 16px;
+      color: #766B65;
       cursor: pointer;
       padding: 6px;
-      border-radius: 6px;
-      transition: color 0.15s;
     }
-    .source-picker-skip:hover { color: rgba(255,255,255,0.6); }
+    .source-picker-skip:hover,
+    .outcome-picker-cancel:hover { color: #A9A09A; }
 
-    /* Recording-consent notice (shown before each non-roleplay session) */
-    .consent-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(10, 10, 18, 0.98);
-      z-index: 1100;
-      border-radius: 20px;
-      flex-direction: column;
-      justify-content: center;
-      padding: 26px 22px;
-      overflow-y: auto;
-    }
-    .consent-overlay.active { display: flex; }
-    .consent-label {
-      font-size: 9px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: rgba(255,80,80,0.8);
-      margin-bottom: 8px;
-    }
-    .consent-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 10px;
-    }
-    .consent-body {
-      font-size: 12px;
-      line-height: 1.55;
-      color: rgba(255,255,255,0.6);
-      margin-bottom: 12px;
-    }
-    .consent-body strong { color: rgba(255,255,255,0.92); font-weight: 600; }
-    .consent-warning {
-      font-size: 12px;
-      line-height: 1.5;
-      color: #ffb4b4;
-      background: rgba(255, 80, 80, 0.1);
-      border: 1px solid rgba(255, 80, 80, 0.28);
-      border-radius: 10px;
-      padding: 10px 12px;
-      margin-bottom: 18px;
-    }
-    .consent-actions {
-      display: flex;
-      flex-direction: column;
+    /* Outcome picker (cold-call mode) */
+    .outcome-picker-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 8px;
+      flex: 1;
+      overflow-y: auto;
+      align-content: start;
     }
-    .consent-btn {
-      border: none;
-      border-radius: 10px;
-      padding: 11px;
-      font-size: 12px;
-      font-weight: 600;
+    .outcome-item {
+      border: 1px solid #3A302C;
+      border-radius: 8px;
+      padding: 16px 12px;
       cursor: pointer;
-      font-family: inherit;
-      transition: all 0.15s;
+      text-align: center;
+      font-size: 13px;
+      line-height: 16px;
+      color: #FFF8EF;
     }
-    .consent-btn-primary { background: #ff5050; color: #fff; }
-    .consent-btn-primary:hover { background: #ff6a6a; }
-    .consent-btn-secondary {
-      background: transparent;
-      color: rgba(255,255,255,0.5);
-      border: 1px solid rgba(255,255,255,0.15);
+    .outcome-item:hover {
+      border-color: #FF6550;
+      color: #FF6550;
     }
-    .consent-btn-secondary:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
   </style>
 </head>
 <body>
   <div class="overlay-container">
-    <canvas id="overlay-neural-canvas"></canvas>
     <!-- Header -->
-    <div class="overlay-header">
+    <div class="overlay-header" title="Drag to move">
       <div class="header-left">
-        <div class="brutus-avatar">B</div>
-        <div class="header-title">Brutus AI live coaching</div>
+        <div class="header-logo" aria-hidden="true"></div>
+        <div class="header-title">Brutus live coaching</div>
         <div class="mode-badge" id="mode-badge">cold call</div>
       </div>
-      <div class="header-status">
-        <div class="status-dot"></div>
-        <label class="header-toggle" title="toggle screen capture">
-          <input type="checkbox" id="screen-capture-toggle" checked>
-          <span class="header-toggle-slider"></span>
-          <span class="header-toggle-text">screen</span>
-        </label>
-        <button class="tts-btn locked" id="tts-btn">audio off</button>
-        <button class="close-btn" id="close-btn" title="End session and close overlay" aria-label="End session and close overlay">×</button>
-      </div>
+      <button class="close-btn" id="close-btn" title="End session and close overlay" aria-label="End session and close overlay">x</button>
     </div>
 
     <!-- Feedback Flash -->
@@ -1217,6 +909,16 @@
       <button class="rp-pause-btn hidden" id="rp-pause-btn">pause + coach me</button>
     </div>
 
+    <!-- Capture row: screen-capture toggle + Brutus speech (TTS) toggle -->
+    <div class="capture-row">
+      <label class="dot-toggle header-toggle" title="toggle screen capture">
+        <input type="checkbox" id="screen-capture-toggle" checked>
+        <span class="toggle-dot" aria-hidden="true"></span>
+        <span class="toggle-name">Screen</span>
+      </label>
+      <button class="tts-btn locked" id="tts-btn">Enable Brutus speech</button>
+    </div>
+
     <!-- Audio Visualizer(s) — single bar group in standard/cold-call, two in roleplay -->
     <div class="audio-viz-wrap">
       <div class="viz-col">
@@ -1232,14 +934,14 @@
         <div class="viz-label">brutus</div>
       </div>
     </div>
-    
+
     <!-- Feedback List -->
-    <div class="feedback-container" id="feedback-container">
+    <div class="feedback-container" id="feedback-container" aria-live="polite">
       <div class="empty-state" id="empty-state">
         <div class="empty-state-text">listening for your sales call...</div>
       </div>
     </div>
-    
+
     <!-- Quick Actions -->
     <div class="quick-actions">
       <button class="action-btn note-btn" id="note-btn" title="Take a quick note">note</button>
@@ -1248,51 +950,55 @@
     </div>
 
     <!-- AI Notes Toggle -->
-    <div class="screen-capture-toggle">
-      <label class="toggle-label">
+    <div class="notes-row">
+      <label class="dot-toggle">
         <input type="checkbox" id="ai-notes-toggle">
-        <span class="toggle-slider"></span>
-        <span class="toggle-text">ai notes</span>
+        <span class="toggle-dot" aria-hidden="true"></span>
+        <span class="toggle-name">ai notes</span>
       </label>
     </div>
 
     <!-- Note Input (Hidden by default) -->
     <div class="note-input-container hidden" id="note-input-container">
       <input type="text" class="note-input" id="note-input" placeholder="quick note...">
-      <button class="note-send-btn" id="note-send-btn">→</button>
+      <button class="note-send-btn" id="note-send-btn" aria-label="Save note">→</button>
     </div>
 
     <!-- Research Input (Hidden by default) -->
     <div class="research-input-container hidden" id="research-input-container">
       <input type="text" class="research-input" id="research-input" placeholder="company or prospect name...">
-      <button class="research-send-btn" id="research-send-btn">→</button>
-    </div>
-
-    <!-- Chat with Brutus -->
-    <div class="chat-container">
-      <input type="text" class="chat-input" id="chat-input" placeholder="ask Brutus anything...">
-      <button class="chat-send-btn" id="chat-send-btn">→</button>
+      <button class="research-send-btn" id="research-send-btn" aria-label="Request research">→</button>
     </div>
 
     <!-- Metrics Bar -->
     <div class="metrics-bar">
       <div class="metric-item">
-        <div class="metric-label">talk ratio</div>
+        <div class="metric-label">Talk ratio</div>
         <div class="metric-value" id="talk-ratio">--%</div>
       </div>
       <div class="metric-item">
-        <div class="metric-label">interrupts</div>
+        <div class="metric-label">Interrupts</div>
         <div class="metric-value good" id="interrupt-count">0</div>
       </div>
       <div class="metric-item">
-        <div class="metric-label">duration</div>
+        <div class="metric-label">Duration</div>
         <div class="metric-value" id="duration">00:00</div>
       </div>
     </div>
 
-    <div class="resize-handle" id="resize-handle"></div>
+    <!-- Chat with Brutus -->
+    <div class="chat-container">
+      <input type="text" class="chat-input" id="chat-input" placeholder="Ask Brutus anything...">
+      <button class="chat-send-btn" id="chat-send-btn" aria-label="Send message">→</button>
+    </div>
+
+    <div class="resize-edge resize-n" data-edge="n" aria-hidden="true"></div>
+    <div class="resize-edge resize-s" data-edge="s" aria-hidden="true"></div>
+    <div class="resize-edge resize-e" data-edge="e" aria-hidden="true"></div>
+    <div class="resize-edge resize-w" data-edge="w" aria-hidden="true"></div>
+    <div class="resize-handle" id="resize-handle" data-edge="se" title="Drag to resize"></div>
   </div>
-  
+
   <script>
     // ==================== CONFIG ====================
     let API_URL = 'https://api.brutusai.coach';
@@ -1421,7 +1127,7 @@
     function updateTtsBtn() {
       ttsBtn.classList.toggle('locked', !headphonesConnected);
       ttsBtn.classList.toggle('active', ttsEnabled && headphonesConnected);
-      ttsBtn.textContent = (ttsEnabled && headphonesConnected) ? 'audio on' : 'audio off';
+      ttsBtn.textContent = 'Enable Brutus speech';
     }
 
     ttsBtn.addEventListener('click', () => {
@@ -1845,7 +1551,7 @@
             ? 'type your response, or just speak...'
             : 'ask Brutus anything — type or speak...';
         } else {
-          chatI.placeholder = 'ask Brutus anything...';
+          chatI.placeholder = 'Ask Brutus anything...';
         }
       }
     }
@@ -2645,8 +2351,10 @@
             return;
           }
 
-          if (message.type === 'brutus_feedback' && message.payload.code === 'OUT_OF_TOKENS') {
-            addFeedback('critical', "you're out of tokens. add credits at app.brutusai.coach to continue.");
+          const billingPayload = (message.type === 'brutus_feedback' || message.type === 'error') ? message.payload : null;
+          if (billingPayload && (billingPayload.code === 'OUT_OF_TOKENS' || billingPayload.code === 'SUBSCRIPTION_REQUIRED')) {
+            const billingText = billingPayload.text || billingPayload.message;
+            if (billingText) addFeedback('critical', billingText);
             stopSession();
             return;
           }
@@ -3278,30 +2986,76 @@
       advanceColdCallAttempt();
     });
 
-    // Drag to move is handled by native OS via `-webkit-app-region: drag` on
-    // `.overlay-header`. Interactive header elements have `no-drag` to remain clickable.
+    // Frameless window with GPU acceleration off: -webkit-app-region drag does
+    // not move the window. The header and the thin edges start a main-process
+    // follow that calls setPosition / setBounds until the button is released.
+    const overlayHeader = document.querySelector('.overlay-header');
+    let overlayGesturing = false;
+    let overlayGestureMoved = false;
+    let overlayGestureOrigin = null;
 
-    // ==================== RESIZE HANDLE ====================
-    const resizeHandle = document.getElementById('resize-handle');
-    let resizeState = null;
+    function beginOverlayGesture(mode, edge) {
+      if (!window.brutus || !window.brutus.beginOverlayGesture) return;
+      overlayGesturing = true;
+      overlayGestureMoved = false;
+      window.brutus.beginOverlayGesture(mode, edge || '');
+    }
 
-    resizeHandle.addEventListener('mousedown', (e) => {
-      resizeState = { startX: e.screenX, startY: e.screenY };
-      e.preventDefault();
+    function endOverlayGesture() {
+      if (!overlayGesturing) return;
+      overlayGesturing = false;
+      if (window.brutus && window.brutus.endOverlayGesture) window.brutus.endOverlayGesture();
+    }
+
+    if (overlayHeader) {
+      overlayHeader.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        if (event.target.closest('button, a, input, label, select, textarea')) return;
+        event.preventDefault();
+        overlayGestureOrigin = { x: event.screenX, y: event.screenY };
+        beginOverlayGesture('move');
+      });
+    }
+
+    document.querySelectorAll('[data-edge]').forEach((el) => {
+      el.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        overlayGestureOrigin = { x: event.screenX, y: event.screenY };
+        beginOverlayGesture('resize', el.getAttribute('data-edge'));
+      });
     });
 
-    document.addEventListener('mousemove', async (e) => {
-      if (!resizeState) return;
-      const dx = e.screenX - resizeState.startX;
-      const dy = e.screenY - resizeState.startY;
-      resizeState.startX = e.screenX;
-      resizeState.startY = e.screenY;
-      const bounds = await window.brutus.getOverlayBounds();
-      await window.brutus.resizeOverlay(Math.max(280, bounds.width + dx), Math.max(200, bounds.height + dy));
+    document.addEventListener('pointermove', (event) => {
+      if (!overlayGesturing || !overlayGestureOrigin) return;
+      const dx = event.screenX - overlayGestureOrigin.x;
+      const dy = event.screenY - overlayGestureOrigin.y;
+      if ((dx * dx) + (dy * dy) > 9) overlayGestureMoved = true;
     });
 
-    document.addEventListener('mouseup', () => {
-      resizeState = null;
+    document.addEventListener('pointerup', (event) => {
+      if (event.button !== 0) return;
+      const moved = overlayGestureMoved;
+      endOverlayGesture();
+      overlayGestureOrigin = null;
+      if (!moved) return;
+      const blockClick = (clickEvent) => {
+        clickEvent.preventDefault();
+        clickEvent.stopPropagation();
+        document.removeEventListener('click', blockClick, true);
+      };
+      document.addEventListener('click', blockClick, true);
+      setTimeout(() => {
+        overlayGestureMoved = false;
+        document.removeEventListener('click', blockClick, true);
+      }, 0);
+    });
+
+    document.addEventListener('mouseup', (event) => {
+      if (event.button !== 0) return;
+      endOverlayGesture();
+      overlayGestureOrigin = null;
     });
 
     // ==================== SOURCE PICKER ====================
@@ -3387,85 +3141,8 @@
     init();
   </script>
 
-  <script>
-    (function () {
-      const canvas = document.getElementById('overlay-neural-canvas');
-      if (!canvas) return;
-      const container = canvas.parentElement;
-      const ctx = canvas.getContext('2d');
-      let nodes = [];
-
-      function resizeCanvas() {
-        const rect = container.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
-        initNodes();
-      }
-
-      function initNodes() {
-        nodes = [];
-        const numNodes = Math.max(18, Math.floor((canvas.width * canvas.height) / 40000));
-        for (let i = 0; i < numNodes; i++) {
-          nodes.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            vx: (Math.random() - 0.5) * 0.3,
-            vy: (Math.random() - 0.5) * 0.3,
-            radius: Math.random() * 2 + 1,
-            pulse: Math.random() * Math.PI * 2,
-            type: Math.random() > 0.85 ? 'active' : 'normal'
-          });
-        }
-      }
-
-      function drawNeuralNetwork() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        for (let i = 0; i < nodes.length; i++) {
-          for (let j = i + 1; j < nodes.length; j++) {
-            const dx = nodes[i].x - nodes[j].x;
-            const dy = nodes[i].y - nodes[j].y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist < 180) {
-              const opacity = (1 - dist / 180) * 0.12;
-              ctx.beginPath();
-              ctx.moveTo(nodes[i].x, nodes[i].y);
-              ctx.lineTo(nodes[j].x, nodes[j].y);
-              ctx.strokeStyle = `rgba(255, 80, 80, ${opacity})`;
-              ctx.lineWidth = 1;
-              ctx.stroke();
-            }
-          }
-        }
-
-        nodes.forEach((node) => {
-          node.pulse += 0.02;
-          const pulseSize = Math.sin(node.pulse) * 0.5 + 1;
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, node.radius * pulseSize, 0, Math.PI * 2);
-          ctx.fillStyle = node.type === 'active'
-            ? 'rgba(255, 80, 80, 0.6)'
-            : 'rgba(100, 150, 255, 0.4)';
-          ctx.fill();
-
-          node.x += node.vx;
-          node.y += node.vy;
-          if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
-          if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
-        });
-
-        requestAnimationFrame(drawNeuralNetwork);
-      }
-
-      window.addEventListener('resize', resizeCanvas);
-      resizeCanvas();
-      drawNeuralNetwork();
-    })();
-  </script>
-
   <!-- Recording Consent Notice (shown when the overlay opens, before each session) -->
-  <div class="consent-overlay" id="consent-notice">
+  <div class="consent-overlay" id="consent-notice" role="dialog" aria-modal="true" aria-label="Recording notice">
     <div class="consent-label">recording notice</div>
     <div class="consent-title">get consent before you record</div>
     <div class="consent-body">
@@ -3482,19 +3159,19 @@
   </div>
 
   <!-- Source Picker Modal -->
-  <div class="source-picker-overlay" id="source-picker">
+  <div class="source-picker-overlay" id="source-picker" role="dialog" aria-modal="true" aria-label="Choose your call window">
     <div class="source-picker-title">choose your call window</div>
     <div class="source-picker-subtitle">Brutus will only watch this — nothing else on your screen.</div>
     <div class="source-picker-grid" id="source-picker-grid"></div>
-    <div class="source-picker-skip" id="source-picker-skip">skip — audio only</div>
+    <button class="source-picker-skip" id="source-picker-skip">skip — audio only</button>
   </div>
 
   <!-- Outcome Picker Modal (cold-call mode) -->
-  <div class="outcome-picker-overlay" id="outcome-picker">
+  <div class="outcome-picker-overlay" id="outcome-picker" role="dialog" aria-modal="true" aria-label="How did that call end?">
     <div class="outcome-picker-title">how did that call end?</div>
     <div class="outcome-picker-subtitle">tag the outcome to log it. brutus uses this to roll up the session.</div>
     <div class="outcome-picker-grid" id="outcome-picker-grid"></div>
-    <div class="outcome-picker-cancel" id="outcome-picker-cancel">cancel</div>
+    <button class="outcome-picker-cancel" id="outcome-picker-cancel">cancel</button>
   </div>
 </body>
 </html>

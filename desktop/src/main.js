@@ -1,3 +1,16 @@
+// A closed parent console makes stdout a broken pipe. console.log then
+// throws EPIPE and Electron shows an uncaught-exception dialog. Ignore
+// only that write failure; any other stream error still throws.
+function ignoreBrokenPipe(stream) {
+  if (!stream || typeof stream.on !== 'function') return;
+  stream.on('error', (err) => {
+    if (err && err.code === 'EPIPE') return;
+    throw err;
+  });
+}
+ignoreBrokenPipe(process.stdout);
+ignoreBrokenPipe(process.stderr);
+
 console.log('Starting Brutus Desktop...');
 console.log('App is ready, creating window...');
 const { app, BrowserWindow, Tray, Menu, ipcMain, screen, nativeImage, shell, desktopCapturer, safeStorage, dialog } = require('electron');
@@ -5,19 +18,38 @@ const path = require('path');
 const fs = require('fs');
 const Store = require('electron-store');
 const { autoUpdater } = require('electron-updater');
+const { clipLilBrutusToMascot } = require('./lil-brutus-shape');
 
 const store = new Store();
+
+// Web UI the main window hosts. Overridable via the `appUrl` settings key so a
+// developer can point it at a local frontend (e.g. http://localhost:3001/frontend/index.html).
+const APP_URL = 'https://app.brutusai.coach/index.html';
 
 // Fix GPU crash issues
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-software-rasterizer');
+// DirectComposition ignores a window region, so the mascot's black plate
+// stays painted. Without it, SetWindowRgn can drop that plate while the
+// opaque character pixels still paint. A transparent BrowserWindow does not.
+app.commandLine.appendSwitch('disable-direct-composition');
 
 let mainWindow = null;
 let overlayWindow = null;
+let settingsWindow = null;
+let mascotWindow = null;
+let overlayGesture = null;
+let mascotGesture = null;
+let mascotWanted = false;
+let appIsQuitting = false;
 let tray = null;
 let isMonitoring = false;
 let selectedSourceId = null;
+
+// Paper chat decal (09/16/11): 168×95. The floating window matches that box.
+const LIL_BRUTUS_W = 168;
+const LIL_BRUTUS_H = 95;
 
 // Helper to get icon path (returns null if doesn't exist)
 function getIconPath(filename) {
@@ -40,15 +72,18 @@ function createPlaceholderIcon() {
   return nativeImage.createFromBuffer(canvas, { width: size, height: size });
 }
 
-// ==================== MAIN WINDOW (Login/Settings) ====================
+// ==================== MAIN WINDOW (Web UI) ====================
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
-    width: 450,
-    height: 600,
-    resizable: false,
-    frame: false,
-    backgroundColor: '#0a0a12',
+    // The web UI is a 1440x900 desktop design with a 224px sidebar. It draws no
+    // title bar of its own, so the window uses native frame/chrome.
+    width: 1440,
+    height: 900,
+    minWidth: 1024,
+    minHeight: 700,
+    frame: true,
+    backgroundColor: '#000000',
     icon: path.join(__dirname, '../assets/icon.png'),
     webPreferences: {
       nodeIntegration: false,
@@ -58,7 +93,23 @@ function createMainWindow() {
     }
   });
 
-  mainWindow.loadFile(path.join(__dirname, '../renderer/main.html'));
+  // The desktop window is the app itself: the same screens as the web app,
+  // shipped in renderer/app. It does not open the public website.
+  mainWindow.loadFile(path.join(__dirname, '../renderer/app/index.html'));
+
+  // https links (Stripe, downloads, target=_blank) leave the bundled UI.
+  // Opening them in the system browser keeps this window on the local app.
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (typeof url === 'string' && url.startsWith('https://')) {
+      shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (typeof url !== 'string' || url.startsWith('file:')) return;
+    event.preventDefault();
+    if (url.startsWith('https://')) shell.openExternal(url);
+  });
 
   // DevTools keyboard shortcuts (F12 and Ctrl+Shift+I)
   mainWindow.webContents.on('before-input-event', (event, input) => {
@@ -69,12 +120,76 @@ function createMainWindow() {
   });
 
   mainWindow.on('closed', () => {
+    destroyLilBrutus();
     mainWindow = null;
+  });
+
+  mainWindow.on('hide', () => {
+    concealLilBrutus();
+  });
+
+  mainWindow.on('show', () => {
+    if (mascotWanted) showLilBrutus();
   });
 
   mainWindow.on('minimize', () => {
     // minimize to taskbar normally
   });
+}
+
+// ==================== SETTINGS WINDOW (Desktop-only settings) ====================
+
+function showSettingsWindow() {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    if (settingsWindow.isMinimized()) settingsWindow.restore();
+    settingsWindow.show();
+    settingsWindow.focus();
+    return;
+  }
+
+  settingsWindow = new BrowserWindow({
+    width: 520,
+    height: 720,
+    frame: true,
+    backgroundColor: '#000000',
+    icon: path.join(__dirname, '../assets/icon.png'),
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
+      // webSecurity enabled (default) — backend CORS allows null origin from Electron
+    }
+  });
+
+  settingsWindow.loadFile(path.join(__dirname, '../renderer/main.html'));
+
+  settingsWindow.on('closed', () => {
+    settingsWindow = null;
+  });
+}
+
+// Tray Settings opens the page in the main window. It does not open the popup.
+function openInAppSettings() {
+  if (!mainWindow || mainWindow.isDestroyed()) createMainWindow();
+  const win = mainWindow;
+  if (!win || win.isDestroyed()) return;
+  if (win.isMinimized()) win.restore();
+  win.show();
+  win.focus();
+  const reveal = () => {
+    if (!win || win.isDestroyed()) return;
+    win.webContents.executeJavaScript(
+      "document.getElementById('nav-settings')?.click()"
+    ).catch((err) => {
+      console.error('[settings]', err?.message || err);
+    });
+  };
+  const contents = win.webContents;
+  if (contents.isLoading() || !contents.getURL()) {
+    contents.once('did-finish-load', reveal);
+  } else {
+    reveal();
+  }
 }
 
 // ==================== OVERLAY WINDOW (Live Coaching) ====================
@@ -84,14 +199,15 @@ function createOverlayWindow() {
   
   overlayWindow = new BrowserWindow({
     width: 380,
-    height: 450,
+    height: 620,
     x: width - 400,
     y: 100,
     frame: false,
-    backgroundColor: '#0a0a12',
+    backgroundColor: '#000000',
     alwaysOnTop: true,
     skipTaskbar: true,
     resizable: true,
+    movable: true,
     minimizable: false,
     maximizable: false,
     webPreferences: {
@@ -101,6 +217,23 @@ function createOverlayWindow() {
       preload: path.join(__dirname, 'preload.js')
       // webSecurity enabled (default) — backend CORS allows null origin from Electron
     }
+  });
+
+  overlayWindow.setMinimumSize(OVERLAY_MIN_W, OVERLAY_MIN_H);
+  // Re-apply after the window is actually on screen. setOpacity before the
+  // first show is ignored on Windows, which left every session fully opaque.
+  overlayWindow.on('ready-to-show', () => {
+    applyOverlayOpacity();
+  });
+  overlayWindow.on('show', () => {
+    applyOverlayOpacity();
+  });
+
+  overlayWindow.webContents.on('did-start-loading', () => {
+    endOverlayGesture();
+  });
+  overlayWindow.webContents.on('render-process-gone', () => {
+    endOverlayGesture();
   });
 
   overlayWindow.loadFile(path.join(__dirname, '../renderer/overlay.html'));
@@ -136,28 +269,30 @@ function createOverlayWindow() {
   });
 
   overlayWindow.on('closed', () => {
+    endOverlayGesture();
     overlayWindow = null;
     isMonitoring = false;
     if (mainWindow) mainWindow.webContents.send('monitoring-stopped');
     updateTrayMenu();
   });
 
-  // Apply stored opacity
-  const savedSettings = store.get('settings', { overlayOpacity: 0.95 });
-  overlayWindow.setOpacity(savedSettings.overlayOpacity || 0.95);
+  applyOverlayOpacity();
 }
 
 function showOverlay() {
-  if (!overlayWindow) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
     createOverlayWindow();
-  } else {
-    overlayWindow.show();
   }
-  if (overlayWindow) overlayWindow.focus();
+  applyOverlayOpacity();
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.show();
+    overlayWindow.focus();
+  }
 }
 
 function hideOverlay() {
-  if (overlayWindow) {
+  endOverlayGesture();
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.hide();
   }
 }
@@ -203,6 +338,12 @@ function createTray() {
         } else {
           startMonitoring();
         }
+      }
+    },
+    {
+      label: 'Settings',
+      click: () => {
+        openInAppSettings();
       }
     },
     { type: 'separator' },
@@ -262,6 +403,12 @@ function updateTrayMenu() {
         }
       }
     },
+    {
+      label: 'Settings',
+      click: () => {
+        openInAppSettings();
+      }
+    },
     { type: 'separator' },
     {
       label: 'Quit',
@@ -279,6 +426,10 @@ function updateTrayMenu() {
 // ==================== MONITORING CONTROL ====================
 
 function startMonitoring() {
+  // The Paper UI's Start Monitoring control is live coaching. Roleplay runs
+  // inside the main window. A leftover cold-call/roleplay flag would send the
+  // overlay down the wrong session.
+  store.delete('sessionMode');
   isMonitoring = true;
   showOverlay();
   updateTrayMenu();
@@ -374,6 +525,11 @@ ipcMain.handle('quit-app', () => {
   app.quit();
 });
 
+ipcMain.handle('show-settings', () => {
+  showSettingsWindow();
+  return true;
+});
+
 ipcMain.handle('start-monitoring', () => {
   startMonitoring();
   return true;
@@ -400,36 +556,583 @@ ipcMain.handle('get-overlay-bounds', () => {
     const bounds = overlayWindow.getBounds();
     return bounds;
   }
-  return { x: 0, y: 0, width: 380, height: 450 };
+  return { x: 0, y: 0, width: 380, height: 620 };
 });
 
-ipcMain.handle('move-overlay', (event, { x, y }) => {
-  if (overlayWindow) {
-    overlayWindow.setPosition(x, y);
+const OVERLAY_MIN_W = 280;
+const OVERLAY_MIN_H = 200;
+const OVERLAY_EDGES = new Set(['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']);
+
+function clampOverlayOpacity(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0.95;
+  return Math.min(1, Math.max(0.5, n));
+}
+
+function applyOverlayOpacity(value) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) return;
+  const opacity = clampOverlayOpacity(
+    value !== undefined ? value : readSettings().overlayOpacity
+  );
+  try {
+    overlayWindow.setOpacity(opacity);
+    // Layered windows (opacity < 1 on Windows) can drop mouse input.
+    overlayWindow.setIgnoreMouseEvents(false);
+  } catch (err) {
+    console.error('[overlayOpacity]', err?.message || err);
   }
+}
+
+function clampOverlaySize(width, height) {
+  let maxW = 2560;
+  let maxH = 1600;
+  try {
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      const display = screen.getDisplayMatching(overlayWindow.getBounds());
+      maxW = Math.max(OVERLAY_MIN_W, display.workAreaSize.width);
+      maxH = Math.max(OVERLAY_MIN_H, display.workAreaSize.height);
+    }
+  } catch (_) { /* keep the fallback cap */ }
+  return {
+    width: Math.round(Math.min(maxW, Math.max(OVERLAY_MIN_W, Number(width) || OVERLAY_MIN_W))),
+    height: Math.round(Math.min(maxH, Math.max(OVERLAY_MIN_H, Number(height) || OVERLAY_MIN_H)))
+  };
+}
+
+function boundsFromEdge(originBounds, originCursor, point, edge) {
+  const dx = point.x - originCursor.x;
+  const dy = point.y - originCursor.y;
+  let width = originBounds.width;
+  let height = originBounds.height;
+  if (edge.includes('e')) width += dx;
+  if (edge.includes('w')) width -= dx;
+  if (edge.includes('s')) height += dy;
+  if (edge.includes('n')) height -= dy;
+  const size = clampOverlaySize(width, height);
+  const x = edge.includes('w')
+    ? originBounds.x + (originBounds.width - size.width)
+    : originBounds.x;
+  const y = edge.includes('n')
+    ? originBounds.y + (originBounds.height - size.height)
+    : originBounds.y;
+  return {
+    x: Math.round(x),
+    y: Math.round(y),
+    width: size.width,
+    height: size.height
+  };
+}
+
+function overlaySender(event) {
+  return !!(overlayWindow && !overlayWindow.isDestroyed() && event.sender === overlayWindow.webContents);
+}
+
+function endOverlayGesture() {
+  if (!overlayGesture) return;
+  clearInterval(overlayGesture.timer);
+  overlayGesture = null;
+}
+
+function tickOverlayGesture(session) {
+  if (overlayGesture !== session) return;
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
+    endOverlayGesture();
+    return;
+  }
+  let point;
+  try {
+    point = screen.getCursorScreenPoint();
+  } catch (_) {
+    return;
+  }
+  if (session.mode === 'move') {
+    const x = Math.round(session.originBounds.x + (point.x - session.originCursor.x));
+    const y = Math.round(session.originBounds.y + (point.y - session.originCursor.y));
+    const current = overlayWindow.getBounds();
+    if (current.x !== x || current.y !== y) {
+      try { overlayWindow.setPosition(x, y, false); } catch (_) { endOverlayGesture(); }
+    }
+    return;
+  }
+  const next = boundsFromEdge(session.originBounds, session.originCursor, point, session.edge);
+  const current = overlayWindow.getBounds();
+  if (current.x === next.x && current.y === next.y && current.width === next.width && current.height === next.height) {
+    return;
+  }
+  try { overlayWindow.setBounds(next, false); } catch (_) { endOverlayGesture(); }
+}
+
+function startOverlayGesture(mode, edge) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) return;
+  endOverlayGesture();
+  let originCursor;
+  try {
+    originCursor = screen.getCursorScreenPoint();
+  } catch (_) {
+    return;
+  }
+  const session = {
+    mode,
+    edge,
+    originCursor,
+    originBounds: overlayWindow.getBounds(),
+    timer: null
+  };
+  session.timer = setInterval(() => tickOverlayGesture(session), 16);
+  overlayGesture = session;
+}
+
+ipcMain.handle('move-overlay', (event, { x, y }) => {
+  if (!overlayWindow || overlayWindow.isDestroyed()) return;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+  overlayWindow.setPosition(Math.round(x), Math.round(y), false);
 });
 
 ipcMain.handle('hide-overlay', () => {
   hideOverlay();
 });
 
-ipcMain.handle('resize-overlay', (event, { width, height }) => {
-  if (overlayWindow) {
-    overlayWindow.setSize(width, height);
+ipcMain.handle('resize-overlay', (event, { width, height, x, y }) => {
+  if (!overlayWindow || overlayWindow.isDestroyed()) return;
+  const bounds = overlayWindow.getBounds();
+  const size = clampOverlaySize(width, height);
+  overlayWindow.setBounds({
+    x: Number.isFinite(x) ? Math.round(x) : bounds.x,
+    y: Number.isFinite(y) ? Math.round(y) : bounds.y,
+    width: size.width,
+    height: size.height
+  }, false);
+});
+
+// Hardware acceleration is disabled, so -webkit-app-region drag never moves
+// this frameless window. The overlay header/edges start a cursor follow that
+// uses the same setPosition / setBounds path as move-overlay and resize-overlay.
+ipcMain.on('overlay-gesture-begin', (event, payload) => {
+  if (!overlaySender(event)) return;
+  const mode = payload && payload.mode === 'resize' ? 'resize' : 'move';
+  const requested = payload && typeof payload.edge === 'string' ? payload.edge : 'se';
+  const edge = OVERLAY_EDGES.has(requested) ? requested : 'se';
+  startOverlayGesture(mode, edge);
+});
+
+ipcMain.on('overlay-gesture-end', (event) => {
+  if (!overlaySender(event)) return;
+  endOverlayGesture();
+});
+
+// ==================== LIL BRUTUS (desktop mascot window) ====================
+// Hardware acceleration is off, so -webkit-app-region drag does not move a
+// frameless window. This follows the cursor the same way the overlay does.
+
+function mainWindowSender(event) {
+  return !!(mainWindow && !mainWindow.isDestroyed() && event.sender === mainWindow.webContents);
+}
+
+function mascotSender(event) {
+  return !!(mascotWindow && !mascotWindow.isDestroyed() && event.sender === mascotWindow.webContents);
+}
+
+function defaultLilBrutusPosition() {
+  let area = { x: 0, y: 0, width: 1280, height: 800 };
+  try {
+    const win = mainWindow && !mainWindow.isDestroyed() ? mainWindow : null;
+    const display = win ? screen.getDisplayMatching(win.getBounds()) : screen.getPrimaryDisplay();
+    area = display.workArea;
+  } catch (_) { /* keep the fallback */ }
+  return {
+    x: Math.round(area.x + area.width - LIL_BRUTUS_W - 28),
+    y: Math.round(area.y + area.height - LIL_BRUTUS_H - 142)
+  };
+}
+
+function savedLilBrutusPosition() {
+  const pos = readSettings().lilBrutusPos;
+  if (!pos || !Number.isFinite(Number(pos.x)) || !Number.isFinite(Number(pos.y))) {
+    return defaultLilBrutusPosition();
+  }
+  const x = Math.round(Number(pos.x));
+  const y = Math.round(Number(pos.y));
+  let displays = [];
+  try { displays = screen.getAllDisplays(); } catch (_) {}
+  const visible = displays.some((d) => {
+    const a = d.bounds;
+    return x < a.x + a.width && x + LIL_BRUTUS_W > a.x &&
+      y < a.y + a.height && y + LIL_BRUTUS_H > a.y;
+  });
+  if (!visible && displays.length) return defaultLilBrutusPosition();
+  return { x, y };
+}
+
+function writeLilBrutusPos(x, y) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+  const existing = readSettings();
+  const next = { x: Math.round(x), y: Math.round(y) };
+  const prev = existing.lilBrutusPos;
+  if (prev && prev.x === next.x && prev.y === next.y) return;
+  store.set('settings', { ...existing, lilBrutusPos: next });
+}
+
+function writeLilBrutusVisible(shown) {
+  const existing = readSettings();
+  const next = !!shown;
+  if (existing.lilBrutusVisible === next) return;
+  store.set('settings', { ...existing, lilBrutusVisible: next });
+}
+
+function returnFocusToMain() {
+  if (appIsQuitting) return;
+  if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible() || mainWindow.isMinimized()) return;
+  try { mainWindow.focus(); } catch (_) {}
+}
+
+function endLilBrutusGesture(save) {
+  const had = !!mascotGesture;
+  if (mascotGesture) {
+    clearInterval(mascotGesture.timer);
+    mascotGesture = null;
+  }
+  if (save && had && mascotWindow && !mascotWindow.isDestroyed()) {
+    try {
+      const [x, y] = mascotWindow.getPosition();
+      writeLilBrutusPos(x, y);
+    } catch (_) {}
+  }
+  if (had) setImmediate(returnFocusToMain);
+}
+
+const LIL_FRAMES = new Set([
+  'bust.png', 'laptop.png', 'notes.png', 'shadow.png',
+  'lap-close.png', 'lap-stand.png', 'lap-behind.png',
+  'notes-draw.png', 'fists-rise.png',
+  'punch-jab.png', 'punch-cross.png'
+]);
+let lilBrutusFrameFile = 'bust.png';
+let lilRoleplay = false;
+let lilMonitoring = false;
+
+function lilBrutusMascotPath() {
+  const file = LIL_FRAMES.has(lilBrutusFrameFile) ? lilBrutusFrameFile : 'bust.png';
+  return path.join(__dirname, '../renderer/app/mascot-frames', file);
+}
+
+function sendLilSession(kind) {
+  if (!mascotWindow || mascotWindow.isDestroyed()) return;
+  const on = kind === 'roleplay' ? lilRoleplay : lilMonitoring;
+  mascotWindow.webContents.send('lil-brutus-session', { kind, on });
+}
+
+function replayLilSession() {
+  if (lilRoleplay) sendLilSession('roleplay');
+  else if (lilMonitoring) sendLilSession('monitoring');
+}
+
+// setPosition on Windows is setBounds(x, y, currentWidth, currentHeight).
+// At 125% DPI that round-trip adds about a pixel per call, so a held drag
+// grows him for as long as the mouse moves. Position changes pass the
+// Paper size as literals and never write the live width or height back.
+// Call this only while the user is dragging. Idle bob is a translateY
+// inside the window and must not change this screen position.
+function placeLilBrutus(x, y) {
+  if (!mascotWindow || mascotWindow.isDestroyed()) return;
+  mascotWindow.setContentBounds({
+    x: Math.round(x),
+    y: Math.round(y),
+    width: LIL_BRUTUS_W,
+    height: LIL_BRUTUS_H
+  }, false);
+}
+
+function lockLilBrutusSize() {
+  if (!mascotWindow || mascotWindow.isDestroyed()) return;
+  mascotWindow.setResizable(false);
+  mascotWindow.setMinimumSize(LIL_BRUTUS_W, LIL_BRUTUS_H);
+  mascotWindow.setMaximumSize(LIL_BRUTUS_W, LIL_BRUTUS_H);
+  mascotWindow.setContentSize(LIL_BRUTUS_W, LIL_BRUTUS_H, false);
+}
+
+function clipLilBrutusPlate() {
+  if (!mascotWindow || mascotWindow.isDestroyed()) return;
+  try {
+    clipLilBrutusToMascot(mascotWindow, lilBrutusMascotPath());
+  } catch (err) {
+    console.error('[lil-brutus] clip failed', err?.message || err);
+  }
+}
+
+function tickLilBrutusGesture(session) {
+  if (mascotGesture !== session) return;
+  if (!mascotWindow || mascotWindow.isDestroyed()) {
+    endLilBrutusGesture(false);
+    return;
+  }
+  let point;
+  try {
+    point = screen.getCursorScreenPoint();
+  } catch (_) {
+    return;
+  }
+  const x = Math.round(session.originX + (point.x - session.originCursor.x));
+  const y = Math.round(session.originY + (point.y - session.originCursor.y));
+  const current = mascotWindow.getContentBounds();
+  if (current.x === x && current.y === y) return;
+  try {
+    placeLilBrutus(x, y);
+  } catch (_) {
+    endLilBrutusGesture(true);
+  }
+}
+
+function startLilBrutusGesture() {
+  if (!mascotWindow || mascotWindow.isDestroyed()) return;
+  endLilBrutusGesture(true);
+  let originCursor;
+  try {
+    originCursor = screen.getCursorScreenPoint();
+  } catch (_) {
+    return;
+  }
+  const origin = mascotWindow.getContentBounds();
+  const session = {
+    originCursor,
+    originX: origin.x,
+    originY: origin.y,
+    timer: null
+  };
+  session.timer = setInterval(() => tickLilBrutusGesture(session), 16);
+  mascotGesture = session;
+}
+
+function revealLilBrutus() {
+  if (!mascotWanted) return;
+  if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible()) {
+    console.log('[lil-brutus] window not shown, main window hidden');
+    return;
+  }
+  if (!mascotWindow || mascotWindow.isDestroyed()) return;
+  try {
+    // showInactive alone leaves this window under the focused main window
+    // on Windows, so the click looks like it did nothing.
+    if (!mascotWindow.isVisible()) mascotWindow.showInactive();
+    mascotWindow.setAlwaysOnTop(true, 'screen-saver');
+    mascotWindow.moveTop();
+    lockLilBrutusSize();
+    clipLilBrutusPlate();
+    console.log('[lil-brutus] window shown', JSON.stringify(mascotWindow.getBounds()));
+  } catch (err) {
+    console.error('[lil-brutus] show failed', err?.message || err);
+  }
+}
+
+function createLilBrutusWindow() {
+  if (mascotWindow && !mascotWindow.isDestroyed()) return;
+  const pos = savedLilBrutusPosition();
+  try {
+    // Opaque on purpose. Hardware acceleration is off, and a transparent
+    // window is created but never paints, so the click looks like a no-op.
+    mascotWindow = new BrowserWindow({
+      width: LIL_BRUTUS_W,
+      height: LIL_BRUTUS_H,
+      x: pos.x,
+      y: pos.y,
+      useContentSize: true,
+      frame: false,
+      transparent: false,
+      backgroundColor: '#000000',
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      resizable: false,
+      movable: false,
+      minimizable: false,
+      maximizable: false,
+      fullscreenable: false,
+      closable: false,
+      focusable: true,
+      hasShadow: false,
+      thickFrame: false,
+      roundedCorners: false,
+      show: false,
+      acceptFirstMouse: true,
+      title: 'Lil Brutus',
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, 'preload.js')
+      }
+    });
+  } catch (err) {
+    console.error('[lil-brutus] create failed', err?.message || err);
+    mascotWindow = null;
+    return;
+  }
+
+  mascotWindow.setAlwaysOnTop(true, 'screen-saver');
+  lockLilBrutusSize();
+  // A resize edge must not change the Paper box. Drag never writes width
+  // or height. A 1px DPI snap (95 -> 96 at 125%) is not growth; correcting
+  // it on every resize event loops, so only a real size change is pulled back.
+  let lockingLilBrutusSize = false;
+  mascotWindow.on('will-resize', (event) => {
+    event.preventDefault();
+  });
+  mascotWindow.on('resize', () => {
+    if (lockingLilBrutusSize || !mascotWindow || mascotWindow.isDestroyed()) return;
+    const [w, h] = mascotWindow.getContentSize();
+    if (Math.abs(w - LIL_BRUTUS_W) <= 2 && Math.abs(h - LIL_BRUTUS_H) <= 2) return;
+    lockingLilBrutusSize = true;
+    try {
+      lockLilBrutusSize();
+      clipLilBrutusPlate();
+    } finally {
+      lockingLilBrutusSize = false;
+    }
+  });
+  mascotWindow.once('ready-to-show', revealLilBrutus);
+  mascotWindow.webContents.once('did-finish-load', () => {
+    revealLilBrutus();
+    replayLilSession();
+  });
+  mascotWindow.loadFile(path.join(__dirname, '../renderer/lil-brutus.html'));
+
+  mascotWindow.on('closed', () => {
+    endLilBrutusGesture(false);
+    mascotWindow = null;
+  });
+
+  if (process.platform === 'win32') {
+    try {
+      // Button-up still arrives after SetCapture when the cursor leaves this
+      // small window. Ending here keeps a fast flick from sticking to the cursor.
+      mascotWindow.hookWindowMessage(0x0202, () => {
+        try { endLilBrutusGesture(true); } catch (_) {}
+      });
+    } catch (_) {}
+  }
+}
+
+function showLilBrutus() {
+  mascotWanted = true;
+  writeLilBrutusVisible(true);
+  if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible()) {
+    console.log('[lil-brutus] show deferred, main window hidden');
+    return;
+  }
+  if (!mascotWindow || mascotWindow.isDestroyed()) {
+    createLilBrutusWindow();
+    return;
+  }
+  revealLilBrutus();
+}
+
+function hideLilBrutus() {
+  mascotWanted = false;
+  writeLilBrutusVisible(false);
+  endLilBrutusGesture(true);
+  if (mascotWindow && !mascotWindow.isDestroyed()) mascotWindow.hide();
+}
+
+function concealLilBrutus() {
+  endLilBrutusGesture(true);
+  if (mascotWindow && !mascotWindow.isDestroyed()) mascotWindow.hide();
+}
+
+function destroyLilBrutus() {
+  endLilBrutusGesture(true);
+  if (mascotWindow && !mascotWindow.isDestroyed()) {
+    mascotWindow.destroy();
+  }
+  mascotWindow = null;
+}
+
+ipcMain.handle('set-lil-brutus-visible', (event, shown) => {
+  const fromMain = mainWindowSender(event);
+  console.log('[lil-brutus] toggle', !!shown, 'fromMain', fromMain);
+  if (!fromMain) return false;
+  if (shown) showLilBrutus();
+  else hideLilBrutus();
+  const live = mascotWindow && !mascotWindow.isDestroyed();
+  console.log('[lil-brutus] toggle done', !!shown, 'visible', live ? mascotWindow.isVisible() : false);
+  return true;
+});
+
+ipcMain.on('lil-brutus-gesture-begin', (event) => {
+  if (!mascotSender(event)) return;
+  startLilBrutusGesture();
+});
+
+ipcMain.on('lil-brutus-gesture-end', (event) => {
+  if (!mascotSender(event)) return;
+  endLilBrutusGesture(true);
+});
+
+ipcMain.on('lil-brutus-session', (event, session) => {
+  if (!mainWindowSender(event) || !session) return;
+  if (session.kind === 'roleplay') lilRoleplay = !!session.on;
+  else if (session.kind === 'monitoring') lilMonitoring = !!session.on;
+  else return;
+  sendLilSession(session.kind);
+});
+
+ipcMain.on('lil-brutus-clip', (event, file) => {
+  if (!mascotSender(event)) return;
+  const name = LIL_FRAMES.has(file) ? file : 'bust.png';
+  lilBrutusFrameFile = name;
+  if (!mascotWindow || mascotWindow.isDestroyed()) return;
+  try {
+    clipLilBrutusToMascot(mascotWindow, lilBrutusMascotPath());
+  } catch (err) {
+    console.error('[lil-brutus] clip failed', err?.message || err);
   }
 });
 
+const SETTINGS_DEFAULTS = {
+  apiUrl: 'https://api.brutusai.coach',
+  appUrl: APP_URL,
+  autoStart: false,
+  overlayOpacity: 0.95,
+  whiteBackground: false
+};
+
+function applyAutoStart(enabled) {
+  try {
+    app.setLoginItemSettings({ openAtLogin: !!enabled });
+  } catch (err) {
+    console.error('[autoStart]', err?.message || err);
+  }
+}
+
+function readSettings() {
+  const stored = store.get('settings');
+  if (!stored || typeof stored !== 'object') return { ...SETTINGS_DEFAULTS };
+  // Older installs saved settings before appUrl existed. Fill it so the main
+  // window and the settings field both keep the production app URL.
+  return {
+    ...SETTINGS_DEFAULTS,
+    ...stored,
+    appUrl: (typeof stored.appUrl === 'string' && stored.appUrl.trim()) ? stored.appUrl : APP_URL
+  };
+}
+
 ipcMain.handle('get-settings', () => {
-  return store.get('settings', {
-    apiUrl: 'https://api.brutusai.coach',
-    autoStart: false,
-    overlayOpacity: 0.95
-  });
+  return readSettings();
 });
 
 ipcMain.handle('set-settings', (event, settings) => {
-  const existing = store.get('settings', { apiUrl: 'https://api.brutusai.coach' });
-  if (settings.apiUrl && settings.apiUrl !== existing.apiUrl) {
+  const existing = readSettings();
+  const patch = (settings && typeof settings === 'object') ? settings : {};
+  const next = {
+    ...existing,
+    ...patch,
+    appUrl: (typeof patch.appUrl === 'string' && patch.appUrl.trim())
+      ? patch.appUrl.trim()
+      : (existing.appUrl || APP_URL)
+  };
+  if (Object.prototype.hasOwnProperty.call(patch, 'overlayOpacity')) {
+    next.overlayOpacity = clampOverlayOpacity(patch.overlayOpacity);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'whiteBackground')) {
+    next.whiteBackground = !!patch.whiteBackground;
+  }
+  if (typeof patch.apiUrl === 'string' && patch.apiUrl !== existing.apiUrl) {
     // Backend origin changed — clear stored token and invalidate all live renderer sessions
     memoryToken = null;
     store.delete('authToken');
@@ -439,9 +1142,12 @@ ipcMain.handle('set-settings', (event, settings) => {
     if (isMonitoring) stopMonitoring();
     if (overlayWindow) overlayWindow.webContents.send('auth-cleared');
   }
-  store.set('settings', settings);
-  if (overlayWindow && settings.overlayOpacity !== undefined) {
-    overlayWindow.setOpacity(settings.overlayOpacity);
+  store.set('settings', next);
+  if (Object.prototype.hasOwnProperty.call(patch, 'autoStart')) {
+    applyAutoStart(next.autoStart);
+  }
+  if (Object.prototype.hasOwnProperty.call(patch, 'overlayOpacity')) {
+    applyOverlayOpacity(next.overlayOpacity);
   }
   return true;
 });
@@ -549,6 +1255,7 @@ function setupAutoUpdate() {
 // ==================== APP LIFECYCLE ====================
 
 app.whenReady().then(() => {
+  applyAutoStart(readSettings().autoStart);
   createMainWindow();
   createTray();
   setupAutoUpdate();
@@ -562,6 +1269,13 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   // Keep running in tray
+});
+
+app.on('before-quit', () => {
+  appIsQuitting = true;
+  endOverlayGesture();
+  endLilBrutusGesture(true);
+  destroyLilBrutus();
 });
 
 const gotTheLock = app.requestSingleInstanceLock();

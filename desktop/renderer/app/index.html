@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brutus</title>
+<link rel="icon" href="favicon.png" type="image/png">
+<style>html,body{margin:0;background:#000;color:#FFF8EF}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gideon+Roman&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="paper.css">
+</head>
+<body>
+
+<!-- ======================================================================
+     AUTH — auth-signup-login.jsx
+     Full-bleed signed-out entry. There is no launch screen.
+     ====================================================================== -->
+<div id="auth-modal" class="p-auth">
+  <div class="p-auth-panel">
+    <div class="p-auth-brand">
+      <div class="p-logo p-logo-img"></div>
+      <div class="p-t-22">BRUTUS</div>
+    </div>
+
+    <div class="p-t-40" id="auth-heading">Create your account</div>
+    <div class="p-t-16-24 p-c-3 p-auth-sub" id="auth-subheading">
+      One screen for signup and login. New accounts continue into the six questions.
+    </div>
+
+    <button type="button" class="p-oauth p-oauth-google" id="oauth-google">
+      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+        <path d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.08-1.8 2.72v2.26h2.91c1.7-1.57 2.68-3.87 2.68-6.62z" fill="#4285F4"/>
+        <path d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.91-2.26c-.81.54-1.84.86-3.05.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33C2.44 15.98 5.48 18 9 18z" fill="#34A853"/>
+        <path d="M3.96 10.71A5.4 5.4 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.04l3-2.33z" fill="#FBBC05"/>
+        <path d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" fill="#EA4335"/>
+      </svg>
+      <span class="p-t-16 p-c-black">Continue with Google</span>
+    </button>
+
+    <button type="button" class="p-oauth p-oauth-apple" id="oauth-apple">
+      <svg width="16" height="18" viewBox="0 0 16 20" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+        <path d="M13.1 10.4c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.5.8s-1.8-.8-3-.8c-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.1 0 1.6-.7 3-.7s1.8.7 3 .7 2-1.2 2.7-2.3c.9-1.3 1.2-2.5 1.3-2.6-.1 0-2.4-.9-2.4-3.7zM10.9 3.4c.6-.8 1.1-1.8.9-2.9-1 .1-2.2.7-2.9 1.5-.6.7-1.2 1.8-1 2.8 1.1.1 2.2-.5 3-1.4z" fill="#FFF8EF"/>
+      </svg>
+      <span class="p-t-16 p-c-cream">Continue with Apple</span>
+    </button>
+
+    <div class="p-or p-auth-or">
+      <div class="p-or-line"></div>
+      <div class="p-t-13 p-c-3">or</div>
+      <div class="p-or-line"></div>
+    </div>
+
+    <div class="p-auth-tabs">
+      <button type="button" class="p-tab-auth active auth-tab" data-tab="signup">Create account</button>
+      <button type="button" class="p-tab-auth auth-tab" data-tab="login">Sign in</button>
+    </div>
+
+    <div id="auth-error" class="p-auth-error"></div>
+
+    <form id="signup-form" class="p-auth-form">
+      <input id="signup-name" class="p-input" type="text" placeholder="Name" autocomplete="name" required>
+      <input id="signup-email" class="p-input" type="email" placeholder="Email" autocomplete="email" required>
+      <input id="signup-password" class="p-input" type="password" placeholder="Password (min 8 characters)" autocomplete="new-password" minlength="8" required>
+      <button id="signup-btn" class="p-auth-submit" type="submit">Create account</button>
+      <div class="p-t-14 p-c-3">Already have an account? <button type="button" class="p-auth-link auth-tab" data-tab="login">Sign in</button></div>
+    </form>
+
+    <!-- app.js's auth-tab handler toggles the `hidden` class (not `p-hidden`),
+         so the login form must start with `hidden` or it could never be shown. -->
+    <form id="login-form" class="p-auth-form hidden">
+      <input id="login-email" class="p-input" type="email" placeholder="Email" autocomplete="email" required>
+      <div class="p-auth-pw">
+        <input id="login-password" class="p-input" type="password" placeholder="Password" autocomplete="current-password" required>
+        <button type="button" id="toggle-login-pw" class="p-auth-pw-toggle">Show</button>
+      </div>
+      <button id="login-btn" class="p-auth-submit" type="submit">Sign in</button>
+      <div class="p-t-14 p-c-3">
+        <a href="forgot-password.html" class="p-auth-link">Forgot password?</a>
+        &nbsp;·&nbsp;
+        <button type="button" class="p-auth-link auth-tab" data-tab="signup">Create account</button>
+      </div>
+    </form>
+  </div>
+  <div class="p-auth-photo"></div>
+  <div class="p-auth-scrim"></div>
+</div>
+
+<!-- ======================================================================
+     APP SHELL — 01-home-dashboard.jsx / 10-home-collapsed-sidebar.jsx
+     ====================================================================== -->
+<div id="main-content" class="p-app hidden">
+
+  <!-- Sidebar -->
+  <aside class="p-sidebar">
+    <div class="p-sidebar-head">
+      <div class="p-logo p-logo-img"></div>
+      <div class="p-wordmark">BRUTUS</div>
+      <button type="button" class="p-sidebar-toggle" id="sidebar-toggle" aria-label="Collapse sidebar">
+        <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+          <path d="M2 5H5M8 5H18M2 10H5M8 10H18M2 15H5M8 15H18" fill="none" stroke="#FFF8EF" stroke-width="1.5" stroke-linecap="square"/>
+        </svg>
+      </button>
+    </div>
+
+    <nav class="p-nav">
+      <button type="button" class="p-nav-item nav-item active" data-view="dashboard">
+        <span class="p-nav-item-label">Home</span>
+      </button>
+      <button type="button" class="p-nav-item nav-item" data-view="brutus">
+        <span class="p-nav-item-label">Brutus</span>
+      </button>
+      <button type="button" class="p-nav-item nav-item" data-view="progress">
+        <span class="p-nav-item-label">Calls</span>
+      </button>
+      <button type="button" class="p-nav-item nav-item hidden" id="nav-roleplays" data-view="roleplays">
+        <span class="p-nav-item-label">Roleplay</span>
+        <span class="p-pill-beta">BETA</span>
+      </button>
+      <button type="button" class="p-nav-item nav-item" data-view="research">
+        <span class="p-nav-item-label">Research</span>
+      </button>
+      <!-- Cold calls is revealed by app.js when the feature flag is on. It is
+           not part of the Paper nav, so it stays hidden by default. -->
+      <button type="button" class="p-nav-item nav-item hidden" id="nav-cold-calls" data-view="cold-calls">
+        <span class="p-nav-item-label">Cold calls</span>
+      </button>
+    </nav>
+
+    <div class="p-rule"></div>
+
+    <div class="p-sidebar-block">
+      <div class="p-label-12">DISCIPLINE</div>
+    </div>
+    <div class="p-sidebar-block">
+      <div class="p-t-13-19 p-c-2" id="discipline-line">Listen more. Ask sharper questions. Stop pitching before the pain is clear.</div>
+    </div>
+
+    <div class="p-spacer"></div>
+
+    <div class="p-sidebar-foot">
+      <button type="button" class="p-nav-item nav-item active" id="nav-lil-brutus" aria-pressed="true">
+        <span class="p-nav-item-label">Spawn Lil Brutus</span>
+      </button>
+      <button type="button" class="p-nav-item nav-item hidden" id="nav-settings" data-view="settings">
+        <span class="p-nav-item-label">Settings</span>
+      </button>
+      <button type="button" class="p-user-row nav-item" data-view="profile">
+        <span class="p-avatar" id="sidebar-avatar">—</span>
+        <span class="p-user-meta">
+          <span class="p-t-13 p-c-cream" id="sidebar-user-name">&nbsp;</span>
+          <span class="p-t-11 p-c-4">Profile and billing</span>
+        </span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main column -->
+  <div class="p-main">
+
+    <!-- Topbar -->
+    <header class="p-topbar">
+      <label class="p-search" for="history-search">
+        <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;flex-shrink:0">
+          <circle cx="11" cy="11" r="7" fill="none" stroke="#8E837D" stroke-width="1.6"/>
+          <path d="M20 20l-3.8-3.8" fill="none" stroke="#8E837D" stroke-width="1.6"/>
+        </svg>
+        <input id="history-search" type="text" placeholder="Search calls by score, tag, or date" autocomplete="off">
+        <span class="p-kbd">CTRL K</span>
+      </label>
+      <div class="p-spacer"></div>
+      <button type="button" class="p-btn-ghost hidden" id="start-monitoring-btn">Start monitoring</button>
+      <button type="button" class="p-btn-cta nav-item" data-view="upload">Analyze a call</button>
+    </header>
+
+    <!-- Email verification banner. Kept from the existing app; app.js toggles it. -->
+    <div id="verify-email-banner" class="p-verify-banner hidden">
+      <span class="p-t-13 p-c-bright">Verify <span id="verify-banner-email"></span> to keep your analyses.</span>
+      <button type="button" id="verify-resend-btn" class="p-btn-ghost">Resend email</button>
+    </div>
+
+    <!-- ============ HOME — 01-home-dashboard.jsx ============ -->
+    <section class="view p-page active" id="dashboard-view">
+      <!-- ============================================================
+     Home dashboard body — transcribed from
+     docs/paper-extract/01-home-dashboard.jsx (1216px main column,
+     the 828px block below the topbar). Outer padding 32/36/28 and
+     gap 24px come from .view.active in paper.css.
+     ============================================================ -->
+
+<!-- Greeting header row (JSX: align-items end, space-between) -->
+<header class="p-page-head">
+  <div class="p-page-head-text">
+    <div class="p-eyebrow" id="dash-date">MONDAY · SEPTEMBER 21</div>
+    <h1 class="p-t-36" id="dash-greeting">Good afternoon, Isaiah.</h1>
+    <div class="p-t-15 p-c-2" id="dash-subline">Your calls are getting tighter. The close still needs more nerve.</div>
+  </div>
+  <div class="p-head-actions">
+    <button type="button" class="p-btn-ghost nav-item" data-view="research">Research prospect</button>
+    <button type="button" class="p-btn-ghost nav-item" data-view="roleplays">Plan roleplay</button>
+  </div>
+</header>
+
+<!-- 4-up stat strip (JSX: 108px, hairlines top/bottom, 25%-wide cells) -->
+<div class="p-stat-strip">
+  <div class="p-stat">
+    <div class="p-t-25" id="overall-score">74</div>
+    <div class="p-stat-label">Average score · last 7 days</div>
+  </div>
+  <div class="p-stat">
+    <div class="p-t-30 p-c-orange" id="close-rate">36%</div>
+    <div class="p-stat-label">Close rate · logged outcomes</div>
+  </div>
+  <div class="p-stat">
+    <!-- app.js replaces the className of #talk-ratio, so the type/colour
+         classes live on this parent and the id sits on a bare span. -->
+    <div class="p-stat-value"><span id="talk-ratio">42%</span></div>
+    <div class="p-stat-label">Average talk ratio</div>
+  </div>
+  <div class="p-stat">
+    <div class="p-stat-value" id="calls-analyzed">18</div>
+    <div class="p-stat-label">Calls analyzed</div>
+  </div>
+</div>
+
+<!-- Main split: left column (chart + recent calls) and the Ask Brutus rail -->
+<div class="p-home-main">
+  <div class="p-home-left">
+
+    <!-- Weekly performance (JSX: 174px block, gap 14px) -->
+    <section class="p-home-chartblock">
+      <div class="p-section-head">
+        <h2 class="p-t-18">Weekly performance</h2>
+        <div class="p-t-12 p-c-3">Average call score</div>
+      </div>
+      <!-- Filled by paperWeeklyChart(points) -->
+      <div class="p-chart" id="performance-chart"></div>
+    </section>
+
+    <!-- Recent calls (JSX: column, flex 1, gap 12px, 62px rows) -->
+    <section class="p-home-recent">
+      <div class="p-section-head">
+        <h2 class="p-t-18">Recent calls</h2>
+        <button type="button" class="p-t-12 p-c-orange nav-item" data-view="progress">View library</button>
+      </div>
+      <!-- Filled by paperActivityRow(call) per row -->
+      <div class="p-home-rows" id="activity-list"></div>
+    </section>
+
+  </div>
+
+  <!-- Ask Brutus rail (JSX: 340px, left hairline, 24px left padding) -->
+  <aside class="p-rail">
+    <div class="p-rail-head">
+      <h2 class="p-t-18">Ask Brutus</h2>
+      <span class="p-dot"></span>
+    </div>
+    <p class="p-t-14-21 p-c-bright p-rail-summary" id="dash-brutus-summary">Your last two calls improved on discovery. You still explain value before the prospect names the cost of doing nothing.</p>
+    <div class="p-suggestions">
+      <button type="button" class="p-suggestion suggestion-btn" data-msg="How can I improve my close rate?">How can I improve my close rate?</button>
+      <button type="button" class="p-suggestion suggestion-btn" data-msg="Roast my last call">Roast my last call</button>
+      <button type="button" class="p-suggestion suggestion-btn" data-msg="What is wrong with my talk ratio?">What is wrong with my talk ratio?</button>
+    </div>
+    <div class="p-spacer"></div>
+    <div class="p-composer">
+      <input id="dash-ask-input" type="text" placeholder="Ask Brutus anything..." aria-label="Ask Brutus anything..." autocomplete="off">
+      <button type="button" class="p-send" id="dash-ask-send" aria-label="Send">
+        <svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="m5 12 14-7-4 14-3-5-7-2Z" fill="none" stroke="rgb(242 238 229)" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </aside>
+</div>
+    </section>
+
+    <!-- ============ BRUTUS — 09 / 11 / 16 ============ -->
+    <section class="view p-view-bleed" id="brutus-view">
+      <!-- ======================================================================
+     BRUTUS CHAT — fragment for <section class="view p-view-bleed" id="brutus-view">.
+     Transcribed from docs/paper-extract/09-brutus-chat.jsx (conversation),
+     16-brutus-chat-empty.jsx (empty state), 11-brutus-conversations.jsx
+     (conversation-list rail).
+
+     The fragment is a grid so the required DOM order (header, conversations
+     panel, transcript, composer) can coexist with the 11 layout, where the
+     256px rail spans the full column height alongside the 72px header.
+
+     State handling without JS (app.js owns behaviour and is not edited):
+     - #brutus-conversations is hidden by default; the header hamburger is
+       the JSX's own affordance for it (its stroke is #FF6550 in 11 when the
+       rail is open — reproduced via [aria-expanded="true"] in brutus.css).
+     - 09 shows the greeting above the messages; 16 replaces it with the
+       empty-state copy. brutus.css swaps the two on #chat-messages:empty
+       via :has(), so #chat-messages must stay whitespace-free when empty.
+
+     The suggestion chips do not exist in 09/16; they are required by the
+     app.js DOM contract. Copy comes from 01-home-dashboard.jsx: the three
+     rail suggestions, plus the header ghost-button copy "Research prospect"
+     for #chat-research-btn (no research-flavoured suggestion exists).
+     ====================================================================== -->
+<div class="p-chat">
+
+  <!-- Screen header (09/16): 72px, padding-inline 56, hairline #FFF8EF24,
+       180x44 hamburger cell, centred 24px/30 title. -->
+  <header class="p-chat-head">
+    <div class="p-chat-head-side">
+      <button type="button" class="p-chat-menu" id="brutus-conversations-toggle"
+              aria-label="Conversations" aria-controls="brutus-conversations" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <path d="M2 5H5M8 5H18M2 10H5M8 10H18M2 15H5M8 15H18" fill="none" stroke="#FFF8EF" stroke-width="1.5" stroke-linecap="square"/>
+        </svg>
+      </button>
+    </div>
+    <div class="p-chat-title">Brutus</div>
+  </header>
+
+  <!-- Conversation list (11): 256px rail, right hairline #FFF8EF24,
+       padding 20/14/16, gap 10. Hidden until the hamburger is wired. -->
+  <aside id="brutus-conversations" class="p-convos" hidden aria-label="Conversations">
+    <div class="p-convos-head">
+      <h2 class="p-convos-title">CONVERSATIONS</h2>
+    </div>
+    <input type="text" class="p-convos-search" placeholder="Search conversations"
+           aria-label="Search conversations" autocomplete="off">
+    <!-- 30px row, plus glyph right-aligned, stroke #FF6550. The JSX gives the
+         icon no text; "New conversation" is the accessible name only. -->
+    <button type="button" class="p-convos-new" aria-label="New conversation">
+      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <path d="M9 2.5V15.5M2.5 9H15.5" fill="none" stroke="#FF6550" stroke-width="1.5" stroke-linecap="square"/>
+      </svg>
+    </button>
+    <!-- Rows match paperConversationRow() output. Sample rows transcribed
+         from 11; replaced when app code populates this container. -->
+    <div class="p-convo-list" id="brutus-conversation-list">
+      <button type="button" class="p-convo-row active">Acme discovery</button>
+      <button type="button" class="p-convo-row">Pricing objection</button>
+      <button type="button" class="p-convo-row">Follow-up that stalled</button>
+    </div>
+  </aside>
+
+  <!-- Transcript column (09/16): padding-inline 96, padding-top 44. -->
+  <div class="p-chat-transcript">
+
+    <!-- Greeting (09) — shown with messages; hidden while chat is empty. -->
+    <div class="p-chat-greeting">
+      <h1 class="p-chat-h1">Afternoon, Isaiah.</h1>
+      <div class="p-chat-subwrap">
+        <p class="p-chat-sub">Ready to find out why your prospects keep escaping?</p>
+      </div>
+    </div>
+
+    <!-- Empty state (16) — shown while #chat-messages is empty. -->
+    <div id="chat-empty" class="p-chat-empty">
+      <h2 class="p-chat-h1">What are we fixing today?</h2>
+      <div class="p-chat-subwrap">
+        <p class="p-chat-sub">Ask about a call, objection, follow-up, or your sales habits.</p>
+      </div>
+      <!-- Not in 16; required by the app.js contract. Chip copy from the
+           01-home-dashboard.jsx rail; research copy from its header button. -->
+      <div class="p-chat-suggestions">
+        <button type="button" class="p-suggestion suggestion-btn" id="chat-research-btn">Research prospect</button>
+        <button type="button" class="p-suggestion suggestion-btn" data-msg="How can I improve my close rate?">How can I improve my close rate?</button>
+        <button type="button" class="p-suggestion suggestion-btn" data-msg="Roast my last call">Roast my last call</button>
+        <button type="button" class="p-suggestion suggestion-btn" data-msg="What is wrong with my talk ratio?">What is wrong with my talk ratio?</button>
+      </div>
+    </div>
+
+    <!-- Scrolling message container (09: gap 26, padding-top 50, 1024 wide).
+         app.js appends rows and sets scrollTop; must have NO whitespace
+         children so the :empty state swap in brutus.css works. -->
+    <div id="chat-messages" class="p-chat-messages" aria-live="polite"></div>
+  </div>
+
+  <!-- Composer (09/16): 110px end-aligned bar, padding-bottom 28,
+       padding-inline 96; 60px pill, radius 18, border #FFF8EF29. The static
+       placeholder is 16's "Ask Brutus"; 09 shows "Ask a follow-up" once a
+       conversation exists (app.js does not swap it). -->
+  <div class="p-chat-composerbar">
+    <div class="p-chat-composer">
+      <input id="chat-input" type="text" placeholder="Ask Brutus" aria-label="Ask Brutus" autocomplete="off">
+      <button type="button" id="chat-send-btn" class="p-chat-send" aria-label="Send">
+        <svg width="19" height="19" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <path d="m5 12 14-7-4 14-3-5-7-2Z" fill="none" stroke="rgb(242 238 229)" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Lil Brutus is a separate always-on-top window, not a plate in this view. -->
+
+</div>
+    </section>
+
+    <!-- ============ CALLS LIBRARY — 02 / 13 / 14 ============ -->
+    <section class="view" id="progress-view">
+      <!-- ======================================================================
+     CALLS LIBRARY — fragment for <section class="view" id="progress-view">.
+     Transcribed from docs/paper-extract/02-calls-library.jsx.
+     Filter-dropdown states from 13-calls-search-filter.jsx; page-2 pager
+     state confirmed against 14-calls-page-2.jsx.
+     The search input for screen 13 is the shared topbar #history-search —
+     not duplicated here.
+     ====================================================================== -->
+<div class="p-calls-page">
+
+  <!-- Header: "Calls" 34/40 + generated subline, "Newest first" right-aligned. -->
+  <div class="p-page-head">
+    <div class="p-page-head-text p-gap-5">
+      <div class="p-t-34">Calls</div>
+      <div class="p-t-14 p-c-2" id="calls-count-subline">18 analyzed calls. Outcomes logged on 11.</div>
+    </div>
+    <div class="p-t-12 p-c-4">Newest first</div>
+  </div>
+
+  <!-- Filter chip row (02): 46px row, 10px bottom padding, hairline under. -->
+  <div class="p-chip-row">
+    <button type="button" class="p-chip active" data-filter="all">All · 18</button>
+    <span class="p-chip-anchor">
+      <button type="button" class="p-chip" data-filter="outcome"
+              aria-haspopup="true" aria-expanded="false" aria-controls="calls-filter-dropdown">Outcome: all</button>
+      <!-- Screen 13 shows the applied-filter states (active chip: #211A17 bg,
+           #FF6550 border + text) and a "Clear filters" control, but no literal
+           dropdown panel exists in the JSX. This hidden panel is built from
+           those exact states. -->
+      <div id="calls-filter-dropdown" class="p-filter-dropdown hidden" role="menu" aria-label="Filter by outcome">
+        <button type="button" class="p-filter-option" role="menuitem" data-outcome="all">Outcome: all</button>
+        <button type="button" class="p-filter-option active" role="menuitem" data-outcome="closed">Outcome: closed</button>
+        <button type="button" class="p-filter-option" role="menuitem" data-outcome="lost">Outcome: lost</button>
+        <button type="button" class="p-filter-option" role="menuitem" data-outcome="follow_up">Outcome: follow up</button>
+        <button type="button" class="p-filter-option" role="menuitem" data-outcome="no_show">Outcome: no show</button>
+        <button type="button" class="p-filter-clear" role="menuitem">Clear filters</button>
+      </div>
+    </span>
+    <button type="button" class="p-chip" data-filter="tag">Tag: all</button>
+    <button type="button" class="p-chip" data-filter="score">Score: all</button>
+    <button type="button" class="p-chip" data-filter="range">Last 30 days</button>
+  </div>
+
+  <!-- Column header: SCORE 74 / CALL flex / TALK 122 / OUTCOME 130 / 28 spacer. -->
+  <div class="p-table-head">
+    <div class="p-th p-th-score">SCORE</div>
+    <div class="p-th p-th-call">CALL</div>
+    <div class="p-th p-th-talk">TALK</div>
+    <div class="p-th p-th-outcome">OUTCOME</div>
+    <div class="p-th p-th-chev" aria-hidden="true"></div>
+  </div>
+
+  <!-- List container. app.js replaces this innerHTML with
+       paperCallsList(calls) output (rows + day dividers from calls.js). -->
+  <div id="call-history-list" class="p-calls-list"></div>
+
+  <!-- Pagination footer (02). "Previous" ships disabled — page-1 state:
+       #766B65 text on #3A302C border. Enabled state (Next here, and both
+       buttons on page 2 per 14): #D8CEC6 text on #4A3A35 border. -->
+  <div class="p-pager">
+    <div class="p-t-12 p-c-4" id="calls-page-meta">Showing 5 of 18 calls</div>
+    <div class="p-pager-btns">
+      <button type="button" class="p-pager-btn" id="calls-prev-btn" disabled>Previous</button>
+      <button type="button" class="p-pager-btn" id="calls-next-btn">Next</button>
+    </div>
+  </div>
+
+</div>
+    </section>
+
+    <!-- ============ ANALYZE A CALL — 12-upload-analyze.jsx ============ -->
+    <section class="view p-view-bleed" id="upload-view">
+      <!-- ======================================================================
+     ANALYZE A CALL — fragment for <section class="view" id="upload-view">.
+     Transcribed from docs/paper-extract/12-upload-analyze.jsx.
+     The host section gets class p-view-bleed (zeroed gap/padding); this
+     fragment carries its own 72px header bar and centred body.
+
+     Note: #file-input is a SIBLING of #upload-zone, not a child. app.js
+     wires uploadZone click -> fileInput.click(); a child input would
+     re-bubble that synthetic click into the zone handler.
+     ====================================================================== -->
+<div class="p-upload">
+
+  <!-- 72px header bar: padding-inline 56, bottom hairline #FFF8EF24. -->
+  <div class="p-upload-head">
+    <div class="p-upload-title">Analyze a call</div>
+    <div class="p-upload-formats">mp3 · wav · mp4 · webm · m4a · ogg</div>
+  </div>
+
+  <!-- Centred body: gap 24, padding 64/96. -->
+  <div class="p-upload-body">
+
+    <!-- Dashed dropzone: 860x430, radius 18, 1px dashed #FF655080.
+         app.js writes uploadZone.style.borderColor directly and toggles
+         .uploading; border is declared in longhand so only the colour is
+         overridden. -->
+    <div id="upload-zone" class="p-dropzone" role="button" tabindex="0"
+         aria-label="Drop your call recording here or browse files">
+      <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <path d="M24 33V10M15 19L24 10L33 19M9 30V38H39V30" fill="none" stroke="#FF6550" stroke-width="2" stroke-linecap="square"/>
+      </svg>
+      <!-- app.js replaces this element's innerHTML with progress copy; the
+           icon and button are siblings so they survive the swap. -->
+      <div class="p-dropzone-title" id="upload-text">Drop your call recording here</div>
+      <div class="p-dropzone-sub">or choose a file from your computer</div>
+      <button type="button" class="p-dropzone-btn" id="upload-browse-btn">Browse files</button>
+      <div class="p-dropzone-note">Maximum 50MB · analysis starts immediately after upload</div>
+    </div>
+
+    <!-- Real file input, visually hidden. Accepted formats mirror the JSX
+         header line: mp3 · wav · mp4 · webm · m4a · ogg. -->
+    <input type="file" id="file-input" class="p-visually-hidden"
+           accept=".mp3,.wav,.mp4,.webm,.m4a,.ogg"
+           aria-label="Choose a call recording file">
+
+    <div class="p-upload-foot">Brutus stores the transcript and analysis. Uploaded audio is not kept for playback. The web app does not include a live recorder.</div>
+
+  </div>
+</div>
+    </section>
+
+    <!-- ============ ROLEPLAY — 07-setup / 17 / 18 / 19 / 20 ============ -->
+    <section class="view" id="roleplays-view">
+      <!-- ============================================================
+     Roleplay setup / planning view — transcribed from
+     docs/paper-extract/07-roleplay-setup.jsx (1216px main column,
+     the 828px block below the topbar). The JSX frame is
+     paddingBlock 30 / paddingInline 34 / gap 22, which differs from
+     .view.active (32/36/28, gap 24) — roleplay.css overrides it via
+     #roleplays-view.active.
+
+     The results panel at the bottom transcribes
+     docs/paper-extract/19-roleplay-results.jsx as an in-view panel
+     (#rp-results, hidden attribute); its 3-column body is generated
+     by paperRoleplayResults(results) in roleplay.js.
+
+     Sample copy ("Price objection from a skeptical VP of Sales",
+     "Skeptical VP of Sales · …") is the JSX artboard copy, replaced
+     at runtime by app.js.
+     ============================================================ -->
+
+<!-- Page head (JSX: align-items end, space-between; left column gap 5px) -->
+<header class="p-page-head">
+  <div class="p-page-head-text p-gap-5">
+    <!-- JSX title is 32px/40 with no letter-spacing; .p-rp-title clears
+         the -0.02em that .p-t-32 carries from other screens. -->
+    <h1 class="p-t-32 p-rp-title">Roleplay</h1>
+    <div class="p-t-14 p-c-2">Plan with Brutus, choose a prospect voice, then practice live.</div>
+  </div>
+  <div class="p-t-12 p-c-4">Headphones recommended</div>
+</header>
+
+<!-- Launcher card + plan column (JSX: flex, gap 24, fixed 388px tall) -->
+<div class="p-rp-split">
+
+  <!-- Launcher card (JSX: 360px, #3A302C border, radius 10, padding 24,
+       gap 18). Hidden until app.js reveals it when data.features.roleplay
+       is on (the FEATURE-GATED BETA state from the 07/20 artboards). -->
+  <section class="p-rp-launch hidden" id="rp-start-wrap" aria-label="Ready to drill?">
+    <div class="p-label-orange p-rp-track12">READY TO DRILL?</div>
+    <div class="p-rp-scenario">Price objection from a skeptical VP of Sales</div>
+    <div class="p-rp-scenario-sub">They lost trust after a difficult rollout. Uncover adoption risk before discussing price.</div>
+    <div class="p-rule"></div>
+    <label class="p-t-12 p-c-3" for="rp-voice-picker">Prospect voice</label>
+    <!-- Real <select>; app.js fills the options and binds change.
+         The ⌄ glyph is the JSX chevron, drawn over the select. -->
+    <div class="p-rp-voice">
+      <select id="rp-voice-picker" aria-label="Prospect voice"></select>
+      <span class="p-rp-voice-chev" aria-hidden="true">⌄</span>
+    </div>
+    <div class="p-spacer"></div>
+    <!-- Disabled until app.js locks a persona (rpLockPersonaUI). -->
+    <button type="button" class="p-rp-start" id="rp-start-btn" disabled>Start roleplay</button>
+  </section>
+
+  <!-- Plan-with-Brutus column (JSX: left hairline, padding-left 24, gap 14) -->
+  <section class="p-rp-plan" aria-label="Plan with Brutus">
+    <div class="p-section-head">
+      <h2 class="p-t-18">Plan with Brutus</h2>
+      <!-- Not on the artboard: app.js reveals this after a persona locks
+           (rpLockPersonaUI) so the plan can be discarded. Uses the JSX's
+           12px orange text-link treatment ("View library" on 01). -->
+      <button type="button" class="p-t-12 p-c-orange hidden" id="rp-plan-reset">Reset plan</button>
+    </div>
+
+    <!-- app.js appends .chat-message nodes here (and rewrites the whole
+         thing on reset); roleplay.css restyles that structure to the JSX
+         message treatment (30px orange B avatar, #171414 bubble). The
+         seeded message is the JSX sample copy. -->
+    <div class="p-rp-plan-messages" id="rp-plan-messages">
+      <div class="chat-message">
+        <div class="message-avatar brutus-avatar">B</div>
+        <div class="message-content">
+          <div class="message-text">Your last call got soft when price came up. Let us drill a prospect who thinks rollout risk makes any price too high.</div>
+          <div class="message-time">just now</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggestion chips (JSX: wrap, gap 8; chips 8/10 padding, radius 7) -->
+    <div class="p-rp-chiprow">
+      <button type="button" class="rp-plan-suggestion" data-msg="Suggest a scenario">Suggest a scenario</button>
+      <button type="button" class="rp-plan-suggestion" data-msg="Drill price objections">Drill price objections</button>
+      <button type="button" class="rp-plan-suggestion" data-msg="Practice cold opens">Practice cold opens</button>
+    </div>
+
+    <div class="p-spacer"></div>
+
+    <!-- Composer (JSX: 44px, #4A3A35 border — exactly .p-composer/.p-send) -->
+    <div class="p-composer">
+      <input id="rp-plan-input" type="text" placeholder="Describe what you want to practice..." aria-label="Describe what you want to practice..." autocomplete="off">
+      <button type="button" class="p-send" id="rp-plan-send-btn" aria-label="Send">
+        <svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="m5 12 14-7-4 14-3-5-7-2Z" fill="none" stroke="rgb(242 238 229)" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </section>
+</div>
+
+<!-- Recent sessions (JSX: section head + 72px hairline rows) -->
+<div class="p-section-head">
+  <h2 class="p-t-18">Recent sessions</h2>
+  <div class="p-t-12 p-c-4">Open for turns and weakness exposure</div>
+</div>
+<!-- app.js replaces this innerHTML; rows come from
+     paperRoleplaySessionRow(session) in roleplay.js. -->
+<div class="p-rp-sessions" id="roleplay-sessions-list"></div>
+
+<!-- ============================================================
+     Results panel — 19-roleplay-results.jsx. Hidden by default;
+     header bar is static (Close = #rp-results-close), the 3-column
+     body is generated into #rp-results-body by
+     paperRoleplayResults(results). "Sep 21 · 6:24 · 12 turns" is the
+     JSX sample meta.
+     ============================================================ -->
+<section class="p-rp-results" id="rp-results" hidden aria-label="Roleplay session results">
+  <header class="p-rp-results-bar">
+    <h2 class="p-rp-results-title">Roleplay session</h2>
+    <span class="p-rp-results-meta" id="rp-results-meta">Sep 21 · 6:24 · 12 turns</span>
+    <span class="p-spacer"></span>
+    <button type="button" class="p-rp-btn-dim p-rp-results-close" id="rp-results-close">Close</button>
+  </header>
+  <div class="p-rp-results-body" id="rp-results-body"></div>
+</section>
+    </section>
+
+    <!-- ============ RESEARCH — 08-research.jsx ============ -->
+    <section class="view" id="research-view">
+      <!-- ======================================================================
+     RESEARCH — fragment for <section class="view" id="research-view">.
+     Transcribed from docs/paper-extract/08-research.jsx.
+
+     08-research.jsx contains TWO near-identical 1216px frames. This
+     fragment transcribes the second (later) frame; the first differs only
+     in copy ("Build a brief from live web research and the context you
+     provide.", email sample "maya@northstarlabs.com" at 13px, notes copy
+     "…adoption and sales process consistency.") and an overflow:clip on
+     the right column (kept, since the column must clip its scroll area).
+
+     The JSX puts the 390px "Search name, company, or date" input and the
+     "Export report" button in the screen's 72px topbar. The shared shell
+     owns the topbar, but the DOM contract requires #research-search and
+     #export-research-btn in this fragment, so that topbar row is
+     transposed here as the first row of the view, with its exact JSX
+     treatment (search: 40px, #4A3A35 border, 15px icon; export: 38px,
+     #4A3A35 border, 12/16 cream).
+     ====================================================================== -->
+
+<!-- Toolbar row — from the research JSX topbar (08 lines 300–316). -->
+<div class="p-research-bar">
+  <label class="p-research-search">
+    <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" fill="none" stroke="#8E837D" stroke-width="1.6"/>
+      <path d="M20 20l-3.8-3.8" fill="none" stroke="#8E837D" stroke-width="1.6"/>
+    </svg>
+    <span class="p-vh">Search name, company, or date</span>
+    <input id="research-search" type="text" placeholder="Search name, company, or date" autocomplete="off">
+  </label>
+  <div class="p-spacer"></div>
+  <button type="button" id="export-research-btn" class="p-research-export">Export report</button>
+</div>
+
+<!-- Page head (08 lines 318–330): 32/40 title + 14/18 subline, right note. -->
+<div class="p-page-head">
+  <div class="p-page-head-text p-gap-5">
+    <h1 class="p-research-title">Prospect research</h1>
+    <div class="p-t-14 p-c-2">Build a sales brief from live web research and your context.</div>
+  </div>
+  <div class="p-t-12 p-c-4">Uses tokens · runs in background</div>
+</div>
+
+<!-- Two-column body (08 line 331): form 430px + right column, gap 28. -->
+<div class="p-research-body">
+
+  <!-- Prospect-info form (08 lines 332–429). Field pairs exactly as drawn:
+       [Name *, City / state], [Company, Role], [Email, LinkedIn / social],
+       then Context / notes. The Phone field is required by the DOM contract
+       but not drawn in the JSX; it reuses the same field treatment (label +
+       38px input) in its own row, with the legacy label/placeholder copy. -->
+  <form class="p-research-form" aria-label="Prospect info">
+    <div class="p-research-eyebrow">PROSPECT INFO</div>
+
+    <div class="p-research-pair">
+      <div class="p-research-field">
+        <label class="p-research-label" for="research-name">Name *</label>
+        <input class="p-research-input" id="research-name" type="text" placeholder="Maya Chen" autocomplete="off">
+      </div>
+      <div class="p-research-field">
+        <label class="p-research-label" for="research-location">City / state</label>
+        <input class="p-research-input" id="research-location" type="text" placeholder="Austin, TX" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="p-research-pair">
+      <div class="p-research-field">
+        <label class="p-research-label" for="research-company">Company</label>
+        <input class="p-research-input" id="research-company" type="text" placeholder="Northstar Labs" autocomplete="off">
+      </div>
+      <div class="p-research-field">
+        <label class="p-research-label" for="research-role">Role</label>
+        <input class="p-research-input" id="research-role" type="text" placeholder="VP of Sales" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="p-research-pair">
+      <div class="p-research-field">
+        <label class="p-research-label" for="research-email">Email</label>
+        <input class="p-research-input" id="research-email" type="email" placeholder="maya@northstar.com" autocomplete="off">
+      </div>
+      <div class="p-research-field">
+        <label class="p-research-label" for="research-linkedin">LinkedIn / social</label>
+        <input class="p-research-input" id="research-linkedin" type="text" placeholder="linkedin.com/in/maya" autocomplete="off">
+      </div>
+    </div>
+
+    <!-- Contract-required field, not in the JSX. Same treatment as above;
+         label + placeholder are the legacy copy. -->
+    <div class="p-research-pair">
+      <div class="p-research-field">
+        <label class="p-research-label" for="research-phone">Phone</label>
+        <input class="p-research-input" id="research-phone" type="tel" placeholder="555-867-5309" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="p-research-field">
+      <label class="p-research-label" for="research-notes">Context / notes</label>
+      <textarea class="p-research-notes" id="research-notes" placeholder="Growing team. Recently switched CRM. Concerned about adoption and process consistency."></textarea>
+    </div>
+
+    <!-- Context chips (08 lines 412–423): neutral + orange pill treatments.
+         data-hint carries the exact JSX chip copy; app.js appends it to
+         #research-notes. -->
+    <div class="p-research-hints">
+      <button type="button" class="research-hint-btn" data-hint="recently switched jobs">recently switched jobs</button>
+      <button type="button" class="research-hint-btn p-hint-orange" data-hint="executive level">executive level</button>
+    </div>
+
+    <div class="p-spacer"></div>
+
+    <!-- Submit (08 lines 425–429): 44px #FF6550 bar, black 14/18 text.
+         type="button" because app.js binds a click listener, not submit. -->
+    <button type="button" id="research-submit-btn" class="p-research-submit">Research this prospect</button>
+  </form>
+
+  <!-- Right column (08 lines 431–509). app.js replaces #research-list
+       innerHTML with paperResearchRow()/paperResearchDetail() output from
+       research.js — the JSX's sample brief (Maya Chen · Northstar Labs)
+       is transcribed there, not duplicated here. -->
+  <div class="p-research-main">
+    <div id="research-list" class="p-research-list" aria-live="polite">
+      <p class="p-t-13 p-c-3">loading...</p>
+    </div>
+
+    <!-- Footer (08 lines 501–508): hairline top, 14px padding.
+         "7 saved briefs" is the JSX's static sample count. -->
+    <div class="p-research-foot">
+      <div class="p-t-12 p-c-4">Research history: 7 saved briefs</div>
+      <button type="button" class="p-t-12 p-c-orange">Open history</button>
+    </div>
+  </div>
+
+</div>
+    </section>
+
+    <!-- ============ DESKTOP SETTINGS — same shell as Profile ============ -->
+    <section class="view" id="settings-view">
+      <div class="p-acct-col p-acct-col-left">
+        <section class="p-acct-card" aria-labelledby="desktop-settings-label">
+          <div class="p-acct-label" id="desktop-settings-label">DESKTOP</div>
+          <div class="p-acct-title">Settings</div>
+          <div class="p-acct-field">
+            <label class="p-acct-field-label" for="desktop-api-url">API URL</label>
+            <input type="text" id="desktop-api-url" class="p-acct-input" placeholder="https://api.brutusai.coach" spellcheck="false" autocomplete="off">
+            <span class="p-acct-t12">The URL of your Brutus backend server. Changing it signs you out.</span>
+          </div>
+          <button type="button" id="desktop-white-background" class="p-btn p-btn-secondary" aria-pressed="false">invert background color</button>
+        </section>
+
+        <section class="p-acct-card" aria-labelledby="desktop-app-label">
+          <div class="p-acct-label" id="desktop-app-label">APPLICATION</div>
+          <label class="p-acct-toggle-row">
+            <span class="p-acct-toggle-text">
+              <span class="p-acct-t15">Launch on system startup</span>
+              <span class="p-acct-t12">Automatically start Brutus when you log into Windows</span>
+            </span>
+            <input type="checkbox" id="desktop-auto-start" class="p-switch-input">
+            <span class="p-switch-track" aria-hidden="true"><span class="p-switch-knob"></span></span>
+          </label>
+        </section>
+
+        <section class="p-acct-card" aria-labelledby="desktop-overlay-label">
+          <div class="p-acct-label" id="desktop-overlay-label">OVERLAY</div>
+          <div class="p-acct-field">
+            <label class="p-acct-field-label" for="desktop-overlay-opacity">Overlay opacity</label>
+            <div class="p-acct-range">
+              <input type="range" id="desktop-overlay-opacity" min="50" max="100" value="95">
+              <span class="p-acct-range-value" id="desktop-opacity-value">95%</span>
+            </div>
+            <span class="p-acct-t12">Adjust transparency of the coaching overlay window</span>
+          </div>
+        </section>
+
+        <section class="p-acct-card" aria-labelledby="desktop-audio-label">
+          <div class="p-acct-label" id="desktop-audio-label">AUDIO</div>
+          <label class="p-acct-toggle-row">
+            <span class="p-acct-toggle-text">
+              <span class="p-acct-t15">Audio feedback notifications</span>
+              <span class="p-acct-t12">Play a subtle sound when Brutus gives feedback</span>
+            </span>
+            <input type="checkbox" id="desktop-audio-feedback" class="p-switch-input">
+            <span class="p-switch-track" aria-hidden="true"><span class="p-switch-knob"></span></span>
+          </label>
+          <div class="p-acct-field">
+            <label class="p-acct-field-label" for="desktop-min-feedback-interval">Minimum feedback interval (seconds)</label>
+            <input type="number" id="desktop-min-feedback-interval" class="p-acct-input" placeholder="20" min="10" max="120" value="20">
+            <span class="p-acct-t12">Minimum time between Brutus feedback messages (default: 20s)</span>
+          </div>
+          <div class="p-acct-field">
+            <label class="p-acct-field-label" for="desktop-tts-voice">Brutus voice (TTS)</label>
+            <div class="p-acct-select">
+              <select id="desktop-tts-voice">
+                <option value="UgBBYS2sOqTuMpoF3BR0">Mark</option>
+                <option value="c6SfcYrb2t09NHXiT80T">Jarnathan</option>
+                <option value="NOpBlnGInO9m6vDvFkFC">Spuds Oxley</option>
+                <option value="Cz0K1kOv9tD8l0b5Qu53">Jon</option>
+                <option value="DMyrgzQFny3JI1Y1paM5">Donovan</option>
+                <option value="gfRt6Z3Z8aTbpLfexQ7N">Boyd</option>
+              </select>
+              <span class="p-acct-chev" aria-hidden="true">⌄</span>
+            </div>
+            <span class="p-acct-t12">voice Brutus uses for audio feedback. requires headphones — prevents your prospect from hearing Brutus.</span>
+          </div>
+          <div class="p-acct-note">System audio capture (prospect's voice) requires macOS Ventura 13+ or Windows — no virtual cable needed.</div>
+        </section>
+
+        <div id="desktop-settings-msg" class="p-acct-msg" role="status"></div>
+        <button type="button" id="desktop-settings-save" class="p-acct-save">Save changes</button>
+      </div>
+    </section>
+
+    <!-- ============ ACCOUNT — 21-account.jsx ============ -->
+    <section class="view" id="profile-view">
+      <!-- ======================================================================
+     ACCOUNT — fragment for <section class="view" id="profile-view">.
+     Transcribed from docs/paper-extract/21-account.jsx.
+
+     The JSX draws two side-by-side cards: the 520px ACCOUNT INFO card
+     (name, email, coaching style, save, note, danger zone) and the 584px
+     billing card. Billing belongs to the credits view (see credits.html),
+     so the right column here carries the DOM-contract sections the JSX
+     does not draw (sales profile, coaching settings, AI profile, your
+     data), each built with the account card's own treatments:
+     #FFF8EF24 card border/radius 12/pad 24, the 13/18 0.08em #FFF8EF8F
+     section label, the 42px #FFF8EF29 field, the #FF6550 save button,
+     the account screen's 42×22 switch, and the #FFF8EF40 bordered button.
+
+     Functional deviation from the JSX, reported: the JSX places the
+     "Coaching style" select in the ACCOUNT INFO card, but app.js saves
+     coachingStyle only through #save-sales-btn, so the select (in its
+     exact JSX treatment) lives in the SALES PROFILE card.
+     ====================================================================== -->
+
+<!-- Left column — the 520px card (21 lines 92–156). -->
+<div class="p-acct-col p-acct-col-left">
+  <section class="p-acct-card" aria-labelledby="acct-info-label">
+    <div class="p-acct-label" id="acct-info-label">ACCOUNT INFO</div>
+
+    <!-- 30/38 heading (21 line 96). "Isaiah Rios" is the JSX sample user;
+         the wiring layer should set it to the signed-in user's name. -->
+    <div class="p-acct-title" id="account-heading-name">Isaiah Rios</div>
+
+    <form class="p-acct-form" aria-label="Account info">
+      <div class="p-acct-field">
+        <label class="p-acct-field-label" for="profile-name">Name</label>
+        <input type="text" id="profile-name" class="p-acct-input" placeholder="your name" autocomplete="name">
+      </div>
+      <div class="p-acct-field">
+        <label class="p-acct-field-label" for="profile-email">Email</label>
+        <input type="email" id="profile-email" class="p-acct-input" placeholder="your email" autocomplete="email">
+      </div>
+      <div id="profile-account-msg" class="p-acct-msg" role="status"></div>
+      <button type="button" id="save-account-btn" class="p-acct-save">Save changes</button>
+    </form>
+
+    <div class="p-acct-rule"></div>
+
+    <!-- 13/20 #FFF8EF70 note (21 lines 138–140). -->
+    <div class="p-acct-note">Account edits and coaching settings save in place. Downloading account data stays available from Profile.</div>
+
+    <div>
+      <button type="button" class="p-acct-ghost" data-action="switch-credits">Tokens</button>
+    </div>
+
+    <!-- Danger zone (21 lines 141–155): #E23B2F border card. -->
+    <div class="p-acct-danger">
+      <div class="p-acct-danger-title">Danger zone</div>
+      <div class="p-acct-danger-copy">Deleting the account permanently removes the profile, calls, and tokens, and cancels the subscription.</div>
+      <button type="button" id="delete-account-btn" class="p-acct-danger-btn">Delete account</button>
+    </div>
+  </section>
+</div>
+
+<!-- Right column — 584px, contract sections in the account card treatment. -->
+<div class="p-acct-col p-acct-col-right">
+
+  <!-- Sales profile. Labels, options, and placeholders are the legacy copy
+       (the JSX does not draw these fields); option values are the exact
+       strings the backend stores. -->
+  <section class="p-acct-card" aria-labelledby="acct-sales-label">
+    <div class="p-acct-label" id="acct-sales-label">SALES PROFILE</div>
+    <form class="p-acct-form" aria-label="Sales profile">
+      <div class="p-acct-field">
+        <label class="p-acct-field-label" for="profile-product">what are you selling?</label>
+        <input type="text" id="profile-product" class="p-acct-input" placeholder="e.g. SaaS CRM to SMBs, solar panels, insurance">
+      </div>
+      <div class="p-acct-field">
+        <label class="p-acct-field-label" for="profile-company">company / employer</label>
+        <input type="text" id="profile-company" class="p-acct-input" placeholder="company name">
+        <label class="p-acct-check" for="profile-selfemployed">
+          <input type="checkbox" id="profile-selfemployed"> self-employed
+        </label>
+      </div>
+      <div id="profile-businessname-wrap">
+        <div class="p-acct-field">
+          <label class="p-acct-field-label" for="profile-businessname">business name</label>
+          <input type="text" id="profile-businessname" class="p-acct-input" placeholder="your business name">
+        </div>
+      </div>
+      <div class="p-acct-field">
+        <label class="p-acct-field-label" for="profile-experience">experience level</label>
+        <div class="p-acct-select">
+          <select id="profile-experience">
+            <option value="">select...</option>
+            <option value="Less than 1 year">less than 1 year</option>
+            <option value="1-3 years">1–3 years</option>
+            <option value="3-7 years">3–7 years</option>
+            <option value="7+ years">7+ years</option>
+          </select>
+          <span class="p-acct-chev" aria-hidden="true">⌄</span>
+        </div>
+      </div>
+      <div class="p-acct-field">
+        <label class="p-acct-field-label" for="profile-challenge">biggest challenge right now</label>
+        <div class="p-acct-select">
+          <select id="profile-challenge">
+            <option value="">select...</option>
+            <option value="Closing">closing</option>
+            <option value="Handling objections">handling objections</option>
+            <option value="Building rapport">building rapport</option>
+            <option value="Discovery">discovery / asking questions</option>
+            <option value="Following up">following up</option>
+            <option value="Talking too much">talking too much</option>
+          </select>
+          <span class="p-acct-chev" aria-hidden="true">⌄</span>
+        </div>
+      </div>
+      <div class="p-acct-field">
+        <label class="p-acct-field-label" for="profile-closerate">estimated close rate</label>
+        <div class="p-acct-select">
+          <select id="profile-closerate">
+            <option value="">select...</option>
+            <option value="Under 10%">under 10%</option>
+            <option value="10-25%">10–25%</option>
+            <option value="25-50%">25–50%</option>
+            <option value="Over 50%">over 50%</option>
+            <option value="Not sure">not sure</option>
+          </select>
+          <span class="p-acct-chev" aria-hidden="true">⌄</span>
+        </div>
+      </div>
+      <!-- Coaching style select (21 lines 119–131): 42px field, value
+           14/18 cream, orange ⌄. "Brutal — no sugarcoating" is the exact
+           JSX option copy. -->
+      <div class="p-acct-field">
+        <label class="p-acct-field-label" for="profile-coachingstyle">Coaching style</label>
+        <div class="p-acct-select">
+          <select id="profile-coachingstyle">
+            <option value="Brutal">Brutal — no sugarcoating</option>
+            <option value="Balanced">balanced</option>
+            <option value="Encouraging">encouraging — I'm sensitive</option>
+          </select>
+          <span class="p-acct-chev" aria-hidden="true">⌄</span>
+        </div>
+      </div>
+      <div id="profile-sales-msg" class="p-acct-msg" role="status"></div>
+      <button type="button" id="save-sales-btn" class="p-acct-save">Save changes</button>
+    </form>
+  </section>
+
+  <!-- Coaching settings: four switches. The switch is the account screen's
+       own 42×22 track / 16px knob control (21 lines 238–240); each row is
+       the JSX's title + sublabel toggle-row pattern. Row copy is legacy
+       (the JSX draws no coaching-settings section). data-setting values
+       per the DOM contract. -->
+  <section class="p-acct-card" aria-labelledby="acct-coach-label">
+    <div class="p-acct-label" id="acct-coach-label">COACHING SETTINGS</div>
+
+    <label class="p-acct-toggle-row">
+      <span class="p-acct-toggle-text">
+        <span class="p-acct-t15">brutal honesty mode</span>
+        <span class="p-acct-t12">Brutus tells it like it is, no filter</span>
+      </span>
+      <input type="checkbox" id="toggle-brutal" class="coaching-toggle p-switch-input" data-setting="brutalHonestyMode">
+      <span class="p-switch-track" aria-hidden="true"><span class="p-switch-knob"></span></span>
+    </label>
+
+    <label class="p-acct-toggle-row">
+      <span class="p-acct-toggle-text">
+        <span class="p-acct-t15">real-time interrupts</span>
+        <span class="p-acct-t12">flag you mid-sentence when you're losing the prospect</span>
+      </span>
+      <input type="checkbox" id="toggle-interrupts" class="coaching-toggle p-switch-input" data-setting="realTimeInterrupts">
+      <span class="p-switch-track" aria-hidden="true"><span class="p-switch-knob"></span></span>
+    </label>
+
+    <label class="p-acct-toggle-row">
+      <span class="p-acct-toggle-text">
+        <span class="p-acct-t15">daily roast summary</span>
+        <span class="p-acct-t12">end-of-day recap of what you did wrong</span>
+      </span>
+      <input type="checkbox" id="toggle-roast" class="coaching-toggle p-switch-input" data-setting="dailyRoastSummary">
+      <span class="p-switch-track" aria-hidden="true"><span class="p-switch-knob"></span></span>
+    </label>
+
+    <label class="p-acct-toggle-row">
+      <span class="p-acct-toggle-text">
+        <span class="p-acct-t15">improvement alerts</span>
+        <span class="p-acct-t12">notify when a bad habit is getting worse</span>
+      </span>
+      <input type="checkbox" id="toggle-alerts" class="coaching-toggle p-switch-input" data-setting="improvementAlerts">
+      <span class="p-switch-track" aria-hidden="true"><span class="p-switch-knob"></span></span>
+    </label>
+  </section>
+
+  <!-- AI coaching profile (BR-06). Copy is legacy; treatments are the
+       account card's. -->
+  <section class="p-acct-card" aria-labelledby="acct-ai-label">
+    <div class="p-acct-label" id="acct-ai-label">AI COACHING PROFILE</div>
+    <div class="p-acct-note">Brutus builds a behavioural profile from your calls (strengths, habits, talk patterns). This is included in data export and deleted with your account.</div>
+    <div id="ai-profile-summary" class="p-acct-summary"></div>
+    <div id="ai-profile-stats" class="p-acct-dim"></div>
+    <div id="ai-profile-msg" class="p-acct-msg" role="status"></div>
+    <div><button type="button" id="reset-ai-profile-btn" class="p-acct-ghost">reset coaching profile</button></div>
+  </section>
+
+  <!-- Your data. Copy is legacy. -->
+  <section class="p-acct-card" aria-labelledby="acct-data-label">
+    <div class="p-acct-label" id="acct-data-label">YOUR DATA</div>
+    <div class="p-acct-note">Download a JSON copy of your account, calls, sessions, notes, research, coaching profile, and related product data.</div>
+    <div id="profile-export-msg" class="p-acct-msg" role="status"></div>
+    <div><button type="button" id="export-my-data-btn" class="p-acct-ghost">download my data</button></div>
+  </section>
+
+  <!-- Visible log-out control at the bottom of profile content. Wired by
+       the glue layer to proxy the hidden #logout-btn. -->
+  <div>
+    <button type="button" id="account-logout-btn" class="p-acct-ghost">Log out</button>
+  </div>
+
+</div>
+    </section>
+
+    <!-- ============ BILLING — reached from the account screen ============ -->
+    <section class="view" id="credits-view">
+      <!-- ======================================================================
+     BILLING — fragment for <section class="view" id="credits-view">.
+     Transcribed from docs/paper-extract/21-account.jsx, right card
+     (lines 157–245): billing IS drawn on the account artboard, so this
+     view reuses that card verbatim — TOKEN BALANCE head, subscription
+     row, EXTRA TOKEN PACKS, custom top-up, auto top-up switch, Stripe
+     footer copy.
+
+     Dynamic slots the JSX fills with sample data start empty or with the
+     legacy load placeholder instead (reported): the 42/50 balance shows
+     "---" rather than the sample "428,600", and the right-aligned 13/18
+     note slot ("starter active" in the JSX) is the contract's
+     #credits-expiry-note, which app.js fills on load.
+
+     Contract elements the JSX does not draw (auto-topup amount/threshold
+     fields, save button, success/hint lines, low-balance warning, desktop
+     download CTAs) reuse the card's own field/button treatments — see
+     account.css comments.
+     ====================================================================== -->
+
+<section class="p-acct-card p-bill-card" aria-labelledby="bill-balance-label">
+
+  <!-- Head (21 lines 158–170): label + 42/50 balance, note right. -->
+  <div class="p-bill-head">
+    <div>
+      <div class="p-acct-label" id="bill-balance-label">TOKEN BALANCE</div>
+      <div class="p-bill-balance" id="credits-balance-display">---</div>
+      <div class="p-bill-note" id="credits-balance-dollars"></div>
+    </div>
+    <div class="p-bill-note" id="credits-expiry-note"></div>
+  </div>
+
+  <div>
+    <button type="button" class="p-acct-ghost" data-action="switch-credits">Tokens</button>
+  </div>
+
+  <div class="p-bill-warning" id="credits-low-warning" role="status">running low — top up to keep Brutus watching your calls</div>
+
+  <div class="p-acct-rule"></div>
+
+  <!-- Subscription row (21 lines 172–186). Initial copy is the JSX's;
+       app.js rewrites title, copy, button label, and data-action from the
+       live subscription state on load. -->
+  <div class="p-bill-subrow">
+    <div>
+      <div class="p-bill-sub-title" id="subscription-banner-title">Starter · $10/month</div>
+      <div class="p-bill-note" id="subscription-banner-copy">500,000 tokens every month</div>
+    </div>
+    <button type="button" class="p-acct-ghost" id="subscription-cta-btn" data-action="manage-subscription">Manage subscription</button>
+  </div>
+
+  <!-- Token packs (21 lines 187–214): price 22/28 + "2M · grind" 12/16. -->
+  <div class="p-acct-label">EXTRA TOKEN PACKS</div>
+  <div class="p-bill-packs">
+    <button type="button" class="pack-card" data-action="buy-pack" data-pack="grind">
+      <span class="pack-price">$29</span>
+      <span class="pack-desc">2M · grind</span>
+    </button>
+    <button type="button" class="pack-card" data-action="buy-pack" data-pack="closer">
+      <span class="pack-price">$59</span>
+      <span class="pack-desc">5M · closer</span>
+    </button>
+    <button type="button" class="pack-card" data-action="buy-pack" data-pack="team">
+      <span class="pack-price">$199</span>
+      <span class="pack-desc">20M · team</span>
+    </button>
+  </div>
+
+  <!-- Custom top-up (21 lines 215–227): flex input + orange "Top up". -->
+  <div class="p-bill-topup">
+    <label class="p-vh" for="custom-amount-input">Custom top-up amount in dollars (minimum $10)</label>
+    <input type="number" id="custom-amount-input" class="p-bill-input" placeholder="$10.00 custom top-up" min="10" step="1">
+    <button type="button" id="custom-topup-btn" class="p-bill-btn" data-action="custom-topup">Top up</button>
+  </div>
+
+  <div class="p-acct-rule"></div>
+
+  <!-- Auto top-up row (21 lines 229–241): title/sublabel + the 42×22
+       switch. -->
+  <div class="p-bill-row">
+    <div>
+      <div class="p-acct-t15">Auto top-up</div>
+      <div class="p-acct-t12">Charge saved card when balance drops below $2</div>
+    </div>
+    <label class="p-switch">
+      <span class="p-vh">Auto top-up</span>
+      <input type="checkbox" id="auto-topup-toggle" class="p-switch-input">
+      <span class="p-switch-track" aria-hidden="true"><span class="p-switch-knob"></span></span>
+    </label>
+  </div>
+
+  <!-- Auto top-up settings (contract; not drawn in the JSX — same field
+       treatment, legacy label copy). -->
+  <div class="p-bill-fields">
+    <div class="p-bill-field">
+      <label class="p-acct-field-label" for="auto-amount-input">top up amount (min $10)</label>
+      <input type="number" id="auto-amount-input" class="p-bill-input" placeholder="10" min="10" step="1">
+    </div>
+    <div class="p-bill-field">
+      <label class="p-acct-field-label" for="auto-threshold-input">trigger when balance drops below (min $1 worth)</label>
+      <input type="number" id="auto-threshold-input" class="p-bill-input" placeholder="2" min="1" step="1">
+    </div>
+  </div>
+
+  <div class="p-bill-row">
+    <button type="button" id="save-auto-topup-btn" class="p-acct-ghost" data-action="save-auto-topup">save settings</button>
+    <div id="auto-topup-success" class="p-bill-success" role="status">settings saved.</div>
+  </div>
+
+  <div id="auto-topup-hint" class="p-bill-hint">requires a saved card — make any purchase first and your card will be saved automatically.</div>
+
+  <!-- Footer copy (21 lines 242–244). -->
+  <div class="p-bill-foot">Subscription and purchases continue through Stripe Checkout or the Stripe billing portal.</div>
+
+  <!-- Desktop download CTAs — hidden until app.js unhides the block and
+       fills hrefs/labels/note (BRUTUS_DOWNLOADS_ENABLED). Not in the JSX;
+       links take the card's bordered-button treatment. -->
+  <div id="credits-download-ctas" class="hidden">
+    <div class="p-bill-dl">
+      <a id="credits-download-windows" class="p-acct-ghost" href="#" target="_blank" rel="noopener">download for windows</a>
+      <a id="credits-download-mac" class="p-acct-ghost" href="#" target="_blank" rel="noopener">download for mac (apple silicon)</a>
+      <a id="credits-download-mac-intel" class="p-acct-ghost" href="#" target="_blank" rel="noopener">download for mac (intel)</a>
+    </div>
+    <div class="p-acct-t12" id="credits-download-note"></div>
+  </div>
+
+</section>
+    </section>
+
+    <!-- ============ NOTES — 06-call-notes.jsx surface, library form ============ -->
+    <section class="view" id="notes-view">
+      <!-- ======================================================================
+     NOTES — fragment for <section class="view" id="notes-view">.
+     The design has no standalone notes-library artboard; notes live on
+     the call-detail Notes tab (docs/paper-extract/06-call-notes.jsx).
+     This minimal view exists to satisfy the app.js contract (#notes-list,
+     #notes-search, #export-notes-btn) and reuses 06's own treatments:
+     .p-nt-title (24/30 head), .p-nt-showts (34px #FFF8EF29 bordered
+     button), .p-nt-rule (#FFF8EF20 hairline), plus the shared .p-search.
+     "Notes" is 06's tab label; the export/search copy is the legacy
+     app copy (the artboard draws neither control at library level).
+     ====================================================================== -->
+<div class="p-nt-head">
+  <div class="p-nt-title">Notes</div>
+  <button type="button" id="export-notes-btn" class="p-nt-showts">export to CSV</button>
+</div>
+<label class="p-search" for="notes-search">
+  <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg" style="width:16px;height:16px;flex-shrink:0" aria-hidden="true">
+    <circle cx="11" cy="11" r="7" fill="none" stroke="#8E837D" stroke-width="1.6"/>
+    <path d="M20 20l-3.8-3.8" fill="none" stroke="#8E837D" stroke-width="1.6"/>
+  </svg>
+  <input id="notes-search" type="text" placeholder="search by content or date..." autocomplete="off">
+</label>
+<div class="p-nt-rule"></div>
+<!-- app.js's renderNotes(groups) fills this container. -->
+<div id="notes-list"></div>
+    </section>
+
+    <!-- ============ COLD CALLS — desktop-only feature, no Paper artboard ============ -->
+    <section class="view" id="cold-calls-view">
+      <div class="p-page-head">
+        <div class="p-page-head-text p-gap-5">
+          <div class="p-t-34">Cold calls</div>
+          <div class="p-t-14 p-c-2">Sessions recorded from the desktop app.</div>
+        </div>
+      </div>
+      <div id="cold-call-sessions-list"></div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ======================================================================
+     CALL DETAIL — 03 / 04 / 05 / 06 / 07 / 15
+     Occupies the whole frame. app.js opens it via openCallModal().
+     ====================================================================== -->
+<div id="call-modal-overlay" class="p-calldetail hidden">
+  <!-- ======================================================================
+     CALL DETAIL — fragment spliced directly inside
+     <div id="call-modal-overlay" class="p-calldetail hidden"> (a fixed,
+     full-viewport, black, column-flex container).
+
+     Shell chrome (breadcrumb bar, 112px header, tab bar) transcribed from
+     docs/paper-extract/03-call-overview.jsx; the delete confirmation from
+     15-call-delete.jsx. Tab panels are generated into #call-modal-body by
+     calldetail.js (paperCallDetail). Inactive panels carry the `hidden`
+     attribute; tabs carry data-calltab + an .active class.
+
+     "Mia" / "Today, 2:18 PM | 28 min | pricing" are the JSX sample values;
+     app.js sets #call-modal-meta (and can set the two name spans by id).
+     ====================================================================== -->
+
+<!-- Breadcrumb bar: 72px, gap 14, padding-inline 28, bottom hairline.
+     "Calls" is the close affordance back to the library. -->
+<div class="p-cd-crumbbar">
+  <button type="button" class="p-cd-crumb" id="call-modal-close" aria-label="Back to Calls">Calls</button>
+  <span class="p-cd-crumb-slash" aria-hidden="true">/</span>
+  <span class="p-cd-crumb-name" id="call-detail-crumb-name">Mia</span>
+  <span class="p-spacer"></span>
+  <button type="button" class="p-cd-delete" id="call-delete-btn">Delete call</button>
+</div>
+
+<!-- 112px header: title/meta centred in the row, tab bar bottom-aligned. -->
+<div class="p-cd-head">
+  <div class="p-cd-head-text">
+    <div class="p-cd-title" id="call-detail-title">Mia</div>
+    <div class="p-cd-meta" id="call-modal-meta">Today, 2:18 PM | 28 min | pricing</div>
+  </div>
+  <!-- Call-detail tab bar: 46px tall, 18px gap, 13px/16; inactive #A9A09A,
+       active #FF8A78 over a 2px #FF6550 bottom border. NOT .p-tabs. -->
+  <div class="p-cd-tabs" role="tablist" aria-label="Call detail sections">
+    <button type="button" role="tab" class="p-cd-tab active" data-calltab="overview"
+            aria-selected="true" aria-controls="calltab-overview">Overview</button>
+    <button type="button" role="tab" class="p-cd-tab" data-calltab="coaching"
+            aria-selected="false" aria-controls="calltab-coaching">Coaching</button>
+    <button type="button" role="tab" class="p-cd-tab" data-calltab="transcript"
+            aria-selected="false" aria-controls="calltab-transcript">Transcript</button>
+    <button type="button" role="tab" class="p-cd-tab" data-calltab="notes"
+            aria-selected="false" aria-controls="calltab-notes">Notes</button>
+  </div>
+</div>
+
+<!-- app.js replaces this innerHTML with paperCallDetail(call): the four tab
+     panels (#calltab-overview / -coaching / -transcript / -notes) plus the
+     hidden recording block (#call-recording-panel). -->
+<div id="call-modal-body" class="p-cd-body"></div>
+
+<!-- Delete confirmation — 15-call-delete.jsx. Copy transcribed exactly;
+     the JSX names the sample call ("Mia and her transcript, …"). -->
+<div id="call-delete-overlay" class="p-overlay hidden">
+  <div class="p-del-modal" role="alertdialog" aria-modal="true"
+       aria-labelledby="call-delete-title" aria-describedby="call-delete-text">
+    <div class="p-del-title" id="call-delete-title">Delete this call?</div>
+    <div class="p-del-text" id="call-delete-text"><span id="call-delete-name"></span> and her transcript, analysis, outcome, notes, and feedback will be permanently removed.</div>
+    <div class="p-del-warn">This cannot be undone.</div>
+    <div class="p-del-actions">
+      <button type="button" class="p-del-cancel" id="call-delete-cancel">Cancel</button>
+      <button type="button" class="p-del-confirm" id="call-delete-confirm">Delete call</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ======================================================================
+     ONBOARDING — onboarding-02…07 + 09-paywall
+     ====================================================================== -->
+<div id="onboarding-overlay" class="p-ob hidden">
+  <!-- ======================================================================
+     ONBOARDING — fragment for <div id="onboarding-overlay" class="p-ob hidden">.
+     Transcribed from docs/paper-extract/onboarding-02…07.jsx (six questions)
+     and onboarding-09-paywall.jsx (paywall).
+
+     Step mechanism (app.js): every .ob-step is hidden, then
+     #ob-step-N gets style.display = 'block'. Panels therefore default to
+     display:none via a class rule (no !important), and their internal
+    10|     spacing uses margins, not flex gap, because the shown panel is block.
+
+     The JSX repeats the progress bar and the Skip/Next footer on every
+     question screen; app.js owns a single #ob-progress-bar, #ob-step-num
+     and #ob-next-btn, so that chrome is transcribed once, above and below
+     the six sibling panels inside the shared 560px column.
+
+     #ob-step-num does not appear visually in the JSX (only the bar does);
+     it is kept as visually-hidden text that doubles as the progressbar's
+     accessible label.
+    20|     ====================================================================== -->
+
+<!-- The six questions: 560px column, gap 20, centred on black. -->
+<div id="ob-quiz" class="p-ob-frame">
+  <div class="p-ob-col">
+
+    <!-- Progress: 3px track #2A2320, orange fill. app.js sets the fill's
+         style.width as a percentage; the fill declares no width of its own. -->
+    <span id="ob-progress-label" class="p-visually-hidden">Step <span id="ob-step-num">1</span> of 6</span>
+    <div class="p-ob-progress" role="progressbar" aria-valuemin="1" aria-valuemax="6" aria-labelledby="ob-progress-label">
+      <div id="ob-progress-bar" class="p-ob-progress-fill"></div>
+    </div>
+
+    <!-- Step 1 — onboarding-02-selling.jsx -->
+    <section class="ob-step" id="ob-step-1">
+      <label class="p-ob-title" for="ob-product">What are you selling?</label>
+      <p class="p-ob-sub p-t-16-24 p-c-3">Brutus uses this to give you context-specific feedback.</p>
+      <div class="p-ob-fields">
+        <input type="text" id="ob-product" class="p-input" autocomplete="off"
+               placeholder="E.g. SaaS CRM to SMBs, solar panels, health insurance">
+      </div>
+    </section>
+
+    <!-- Step 2 — onboarding-03-employer.jsx -->
+    <section class="ob-step" id="ob-step-2">
+      <label class="p-ob-title" for="ob-company">Who do you work for?</label>
+      <p class="p-ob-sub p-t-16-24 p-c-3">Helps Brutus understand your environment. Self-employed reveals your business name.</p>
+      <div class="p-ob-fields">
+        <input type="text" id="ob-company" class="p-input" autocomplete="organization"
+               placeholder="Company name">
+        <div class="p-ob-checkrow">
+          <input type="checkbox" id="ob-selfemployed" class="p-ob-check">
+          <label for="ob-selfemployed" class="p-t-16 p-c-cream">Self-employed</label>
+        </div>
+        <!-- app.js toggles this wrapper's style.display between 'block' and
+             'none' on the checkbox change event; hidden by default because
+             the checkbox starts unchecked. -->
+        <div id="ob-businessname-wrap" class="p-ob-bizwrap">
+          <label class="p-visually-hidden" for="ob-businessname">Your business name</label>
+          <input type="text" id="ob-businessname" class="p-input" autocomplete="off"
+                 placeholder="Your business name">
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 3 — onboarding-04-experience.jsx -->
+    <section class="ob-step" id="ob-step-3">
+      <fieldset class="p-ob-fieldset">
+        <legend class="p-ob-title">How long have you been in sales?</legend>
+        <p class="p-ob-sub p-t-16-24 p-c-3">Brutus adjusts its coaching to your experience level.</p>
+        <div class="p-ob-options">
+          <label class="p-ob-option" for="ob-exp-1">
+            <input type="radio" id="ob-exp-1" class="p-visually-hidden" name="ob-experience" value="less-than-1-year">
+            <span class="p-t-18">Less than 1 year</span>
+          </label>
+          <label class="p-ob-option" for="ob-exp-2">
+            <input type="radio" id="ob-exp-2" class="p-visually-hidden" name="ob-experience" value="1-3-years">
+            <span class="p-t-18">1-3 years</span>
+          </label>
+          <label class="p-ob-option" for="ob-exp-3">
+            <input type="radio" id="ob-exp-3" class="p-visually-hidden" name="ob-experience" value="3-7-years">
+            <span class="p-t-18">3-7 years</span>
+          </label>
+          <label class="p-ob-option" for="ob-exp-4">
+            <input type="radio" id="ob-exp-4" class="p-visually-hidden" name="ob-experience" value="7-plus-years">
+            <span class="p-t-18">7+ years</span>
+          </label>
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- Step 4 — onboarding-05-challenge.jsx -->
+    <section class="ob-step" id="ob-step-4">
+      <fieldset class="p-ob-fieldset">
+        <legend class="p-ob-title">What's your biggest challenge right now?</legend>
+        <p class="p-ob-sub p-t-16-24 p-c-3">Brutus will focus extra attention here.</p>
+        <div class="p-ob-options">
+          <label class="p-ob-option" for="ob-cha-1">
+            <input type="radio" id="ob-cha-1" class="p-visually-hidden" name="ob-challenge" value="closing">
+            <span class="p-t-18">Closing</span>
+          </label>
+          <label class="p-ob-option" for="ob-cha-2">
+            <input type="radio" id="ob-cha-2" class="p-visually-hidden" name="ob-challenge" value="handling-objections">
+            <span class="p-t-18">Handling objections</span>
+          </label>
+          <label class="p-ob-option" for="ob-cha-3">
+            <input type="radio" id="ob-cha-3" class="p-visually-hidden" name="ob-challenge" value="building-rapport">
+            <span class="p-t-18">Building rapport</span>
+          </label>
+          <label class="p-ob-option" for="ob-cha-4">
+            <input type="radio" id="ob-cha-4" class="p-visually-hidden" name="ob-challenge" value="discovery-asking-questions">
+            <span class="p-t-18">Discovery / asking questions</span>
+          </label>
+          <label class="p-ob-option" for="ob-cha-5">
+            <input type="radio" id="ob-cha-5" class="p-visually-hidden" name="ob-challenge" value="following-up">
+            <span class="p-t-18">Following up</span>
+          </label>
+          <label class="p-ob-option" for="ob-cha-6">
+            <input type="radio" id="ob-cha-6" class="p-visually-hidden" name="ob-challenge" value="talking-too-much">
+            <span class="p-t-18">Talking too much</span>
+          </label>
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- Step 5 — onboarding-06-close-rate.jsx -->
+    <section class="ob-step" id="ob-step-5">
+      <fieldset class="p-ob-fieldset">
+        <legend class="p-ob-title">Rough close rate estimate?</legend>
+        <p class="p-ob-sub p-t-16-24 p-c-3">Sets a baseline so Brutus can track your progress.</p>
+        <div class="p-ob-options">
+          <label class="p-ob-option" for="ob-cr-1">
+            <input type="radio" id="ob-cr-1" class="p-visually-hidden" name="ob-closerate" value="under-10">
+            <span class="p-t-18">Under 10%</span>
+          </label>
+          <label class="p-ob-option" for="ob-cr-2">
+            <input type="radio" id="ob-cr-2" class="p-visually-hidden" name="ob-closerate" value="10-25">
+            <span class="p-t-18">10-25%</span>
+          </label>
+          <label class="p-ob-option" for="ob-cr-3">
+            <input type="radio" id="ob-cr-3" class="p-visually-hidden" name="ob-closerate" value="25-50">
+            <span class="p-t-18">25-50%</span>
+          </label>
+          <label class="p-ob-option" for="ob-cr-4">
+            <input type="radio" id="ob-cr-4" class="p-visually-hidden" name="ob-closerate" value="over-50">
+            <span class="p-t-18">Over 50%</span>
+          </label>
+          <label class="p-ob-option" for="ob-cr-5">
+            <input type="radio" id="ob-cr-5" class="p-visually-hidden" name="ob-closerate" value="not-sure">
+            <span class="p-t-18">Not sure</span>
+          </label>
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- Step 6 — onboarding-07-coaching.jsx. The JSX shows Balanced selected
+         (orange border), so it ships checked; app.js also defaults the
+         submitted coachingStyle to Balanced when nothing is checked. -->
+    <section class="ob-step" id="ob-step-6">
+      <fieldset class="p-ob-fieldset">
+        <legend class="p-ob-title">How tough do you want Brutus?</legend>
+        <p class="p-ob-sub p-t-16-24 p-c-3">You can always change this later in your profile.</p>
+        <div class="p-ob-options">
+          <label class="p-ob-option" for="ob-co-1">
+            <input type="radio" id="ob-co-1" class="p-visually-hidden" name="ob-coaching" value="brutal">
+            <span class="p-t-18">Brutal</span>
+            <span class="p-ob-option-desc">No sugarcoating, straight facts</span>
+          </label>
+          <label class="p-ob-option" for="ob-co-2">
+            <input type="radio" id="ob-co-2" class="p-visually-hidden" name="ob-coaching" value="balanced" checked>
+            <span class="p-t-18">Balanced</span>
+            <span class="p-ob-option-desc">Honest but constructive</span>
+          </label>
+          <label class="p-ob-option" for="ob-co-3">
+            <input type="radio" id="ob-co-3" class="p-visually-hidden" name="ob-coaching" value="encouraging">
+            <span class="p-t-18">Encouraging</span>
+            <span class="p-ob-option-desc">I'm sensitive, be nice</span>
+          </label>
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- Shared footer: skip left, advance right. app.js overwrites
+         #ob-next-btn's textContent with lowercase 'next' / 'finish' /
+         'saving...'; text-transform:capitalize on .p-ob-next restores the
+         JSX capitalisation. -->
+    <div class="p-between">
+      <button type="button" class="p-t-14 p-c-3" data-action="skip-onboarding">Skip for now</button>
+      <button type="button" class="p-ob-next" id="ob-next-btn" data-action="onboarding-next">Next</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================================================================
+     PAYWALL — onboarding-09-paywall.jsx. 640px column, gap 12. Hidden by
+     default; app.js does not drive it yet (wired separately), so it has no
+     ob-step class and sits outside the six-step column.
+     ====================================================================== -->
+<section id="ob-paywall" class="p-ob-pay" aria-labelledby="ob-paywall-title">
+  <div class="p-ob-frame">
+    <div class="p-ob-col p-ob-col-pay">
+
+      <!-- Brand row: back chevron in a 36px circle (no destination in the
+           JSX — transcribed as decorative), 34px logo, BRUTUS wordmark. -->
+      <div class="p-ob-pay-brand">
+        <div class="p-ob-pay-back" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg" focusable="false">
+            <path d="M9 2 L4 7 L9 12" fill="none" stroke="#FFF8EF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="p-logo p-logo-img" role="img" aria-label="Brutus"></div>
+        <div class="p-t-18">BRUTUS</div>
+      </div>
+
+      <h2 class="p-ob-pay-title" id="ob-paywall-title">Start with Starter</h2>
+      <p class="p-ob-pay-sub p-t-16-24 p-c-3">Required to use Brutus. 500,000 tokens refill every month.</p>
+
+      <!-- Starter plan card: orange border, radius 12. The 22px radio visual
+           is decorative — there is only one plan. -->
+      <div class="p-ob-plan">
+        <div class="p-ob-plan-head">
+          <div class="p-ob-plan-radio" aria-hidden="true">
+            <div class="p-ob-plan-radio-dot"></div>
+          </div>
+          <div class="p-ob-plan-meta">
+            <div class="p-ob-pay-plan">STARTER</div>
+            <div class="p-ob-plan-priceline">
+              <div class="p-ob-pay-price">$10</div>
+              <div class="p-t-16 p-c-3">/ month</div>
+            </div>
+          </div>
+        </div>
+        <div class="p-t-15 p-c-cream">500,000 tokens every month</div>
+        <ul class="p-ob-plan-feats">
+          <li class="p-ob-plan-feat"><span class="p-ob-pay-dot" aria-hidden="true"></span><span class="p-ob-pay-feat">Call review and coaching</span></li>
+          <li class="p-ob-plan-feat"><span class="p-ob-pay-dot" aria-hidden="true"></span><span class="p-ob-pay-feat">Transcripts and notes</span></li>
+          <li class="p-ob-plan-feat"><span class="p-ob-pay-dot" aria-hidden="true"></span><span class="p-ob-pay-feat">Brutus chat</span></li>
+          <li class="p-ob-plan-feat"><span class="p-ob-pay-dot" aria-hidden="true"></span><span class="p-ob-pay-feat">Roleplay</span></li>
+          <li class="p-ob-plan-feat"><span class="p-ob-pay-dot" aria-hidden="true"></span><span class="p-ob-pay-feat">Prospect research</span></li>
+        </ul>
+      </div>
+
+      <!-- One-time add-ons header. -->
+      <div class="p-ob-addons-head">
+        <div class="p-ob-addons-copy">
+          <div class="p-ob-addons-title">One-time add-ons</div>
+          <div class="p-t-12 p-c-3">Available after Starter is active.</div>
+        </div>
+        <div class="p-ob-pay-optional">OPTIONAL</div>
+      </div>
+
+      <!-- Token pack rows. The three named packs match backend TOKEN_PACKS
+           ids exactly (grind / closer / team), so their + controls carry
+           the existing buy-pack delegation. Custom top-up names no pack;
+           its + is transcribed as non-interactive. -->
+      <div class="p-ob-pack">
+        <div class="p-ob-pack-name">Grind</div>
+        <div class="p-ob-pack-price">$29 / 2,000,000 tokens</div>
+        <button type="button" class="p-ob-pack-add" data-action="buy-pack" data-pack="grind"
+                aria-label="Buy Grind — $29 / 2,000,000 tokens">+</button>
+      </div>
+      <div class="p-ob-pack">
+        <div class="p-ob-pack-name">Closer</div>
+        <div class="p-ob-pack-price">$59 / 5,000,000 tokens</div>
+        <button type="button" class="p-ob-pack-add" data-action="buy-pack" data-pack="closer"
+                aria-label="Buy Closer — $59 / 5,000,000 tokens">+</button>
+      </div>
+      <div class="p-ob-pack">
+        <div class="p-ob-pack-name">Team</div>
+        <div class="p-ob-pack-price">$199 / 20,000,000 tokens</div>
+        <button type="button" class="p-ob-pack-add" data-action="buy-pack" data-pack="team"
+                aria-label="Buy Team — $199 / 20,000,000 tokens">+</button>
+      </div>
+      <div class="p-ob-pack">
+        <div class="p-ob-pack-name">Custom top-up</div>
+        <div class="p-ob-pack-price">$10 minimum / 50,000 tokens per $1</div>
+        <span class="p-ob-pack-add" aria-hidden="true">+</span>
+      </div>
+
+      <p class="p-ob-pay-fine p-t-12-18 p-c-3">Published rate: $0.02 per 1,000 tokens. Token grants expire 45 days after they land.</p>
+
+      <!-- Primary purchase action: existing subscribe delegation starts
+           Stripe checkout for the starter plan. -->
+      <button type="button" class="p-ob-pay-cta" id="ob-paywall-cta" data-action="subscribe">Continue</button>
+
+      <!-- Footer copy. No actions exist for these in the JSX or app.js;
+           transcribed as non-interactive text. -->
+      <div class="p-ob-pay-links">
+        <div class="p-t-13 p-c-3">Restore purchases</div>
+        <div class="p-t-13 p-c-3">Cancel anytime in billing</div>
+      </div>
+      <div class="p-ob-pay-terms">
+        <div class="p-t-13 p-c-3">Terms of Service / Privacy Policy</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ======================================================================
+     Secondary modals kept from the existing app (app.js requires these ids).
+     ====================================================================== -->
+<div id="cold-call-modal-overlay" class="p-overlay hidden">
+  <div class="p-modal p-modal-wide">
+    <div class="p-modal-head">
+      <div class="p-t-18" id="cold-call-modal-meta"></div>
+      <button type="button" id="cold-call-modal-close" class="p-modal-close">×</button>
+    </div>
+    <div class="p-modal-body" id="cold-call-modal-body"></div>
+  </div>
+</div>
+
+<div id="roleplay-modal-overlay" class="p-overlay hidden">
+  <div class="p-modal p-modal-wide">
+    <div class="p-modal-head">
+      <div class="p-t-18" id="roleplay-modal-meta"></div>
+      <button type="button" id="roleplay-modal-close" class="p-modal-close">×</button>
+    </div>
+    <div class="p-modal-body" id="roleplay-modal-body"></div>
+  </div>
+</div>
+
+<!-- ======================================================================
+     DELETE-ACCOUNT FLOW — sibling top-level overlays.
+     Transcribed from docs/paper-extract/22-account-delete.jsx.
+
+     The JSX draws exactly ONE stage: the password confirmation — a 520px
+     #E23B2F-border card (radius 12, pad 28, gap 16) centred on a solid
+     #000000 field, with the 28/34 red title, 16/24 cream copy, 14/18
+     #8E837D prompt, 44px #3A302C input, and the Cancel / Delete forever
+     44px button pair. The survey, progress-recap, and export stages are
+     not drawn; they are built with that same card treatment and carry
+     the legacy copy. The ✕ close buttons are a contract requirement the
+     JSX does not draw (design-system modal-close treatment).
+
+     All overlays start hidden; app.js drives the sequence:
+     survey → progress → export → password confirm.
+     ====================================================================== -->
+
+<!-- Stage 1 — reason survey (copy: legacy; treatment: 22's card). -->
+<div class="pd-overlay hidden" id="delete-survey-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-survey-title">
+  <div class="pd-card">
+    <div class="pd-head">
+      <div>
+        <div class="pd-title" id="delete-survey-title">before you go — why?</div>
+        <div class="pd-sub">we're not gonna stop you. we just want to learn.</div>
+      </div>
+      <button type="button" class="pd-close" id="delete-survey-close" aria-label="Close">✕</button>
+    </div>
+
+    <div class="pd-reasons">
+      <label class="pd-reason">
+        <input type="radio" name="delete-reason" value="didnt_help">
+        <span>didn't help me close more deals</span>
+      </label>
+      <label class="pd-reason">
+        <input type="radio" name="delete-reason" value="not_using">
+        <span>i'm not using it / forgot about it</span>
+      </label>
+      <label class="pd-reason">
+        <input type="radio" name="delete-reason" value="switched_jobs">
+        <span>switched jobs / leaving sales</span>
+      </label>
+      <label class="pd-reason">
+        <input type="radio" name="delete-reason" value="other">
+        <span>other</span>
+      </label>
+    </div>
+
+    <div class="pd-actions">
+      <button type="button" id="delete-survey-cancel" class="pd-btn pd-btn-ghost">Cancel</button>
+      <button type="button" id="delete-survey-continue" class="pd-btn pd-btn-danger">continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stage 2 — progress recap (copy: legacy; stats take the account
+     screen's pack-card treatment). -->
+<div class="pd-overlay hidden" id="delete-progress-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-progress-title">
+  <div class="pd-card">
+    <div class="pd-head">
+      <div>
+        <div class="pd-title" id="delete-progress-title">you've put work into this.</div>
+        <div class="pd-sub">before you delete it all —</div>
+      </div>
+      <button type="button" class="pd-close" id="delete-progress-close" aria-label="Close">✕</button>
+    </div>
+
+    <div id="delete-progress-stats" class="pd-stats">
+      <div class="pd-stat">
+        <div class="pd-stat-num" id="delete-stat-calls">--</div>
+        <div class="pd-stat-label">calls analyzed</div>
+      </div>
+      <div class="pd-stat">
+        <div class="pd-stat-num" id="delete-stat-score">--</div>
+        <div class="pd-stat-label">avg score</div>
+      </div>
+      <div class="pd-stat">
+        <div class="pd-stat-num" id="delete-stat-talk">--%</div>
+        <div class="pd-stat-label">talk ratio</div>
+      </div>
+      <div class="pd-stat">
+        <div class="pd-stat-num" id="delete-stat-tokens">--</div>
+        <div class="pd-stat-label">tokens left</div>
+      </div>
+    </div>
+
+    <div id="delete-progress-copy" class="pd-copy">Brutus learned your style across these calls. that context goes away the second this account is gone. give it one more real call before you decide.</div>
+
+    <div class="pd-actions">
+      <button type="button" id="delete-progress-stay" class="pd-btn pd-btn-danger">give it another shot</button>
+      <button type="button" id="delete-progress-continue" class="pd-btn pd-btn-ghost">continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stage 3 — data export offer (copy: legacy). app.js swaps the two
+     button rows and toggles .visible on the success/error lines. -->
+<div class="pd-overlay hidden" id="delete-export-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-export-title">
+  <div class="pd-card">
+    <div class="pd-head">
+      <div>
+        <div class="pd-title" id="delete-export-title">take your data with you.</div>
+        <div class="pd-sub">free, takes a second.</div>
+      </div>
+      <button type="button" class="pd-close" id="delete-export-close" aria-label="Close">✕</button>
+    </div>
+
+    <div class="pd-copy">grab a copy of your call analysis, transcripts, and notes before you delete. you'll get a single JSON file you can keep forever.</div>
+
+    <div id="delete-export-error" class="pd-error" role="alert"></div>
+    <div id="delete-export-success" class="pd-success" role="status">downloaded. ready to delete?</div>
+
+    <div id="delete-export-buttons-initial" class="pd-actions">
+      <button type="button" id="delete-export-cancel" class="pd-btn pd-btn-ghost">Cancel</button>
+      <button type="button" id="delete-export-skip" class="pd-btn pd-btn-ghost">delete without exporting</button>
+      <button type="button" id="delete-export-download" class="pd-btn pd-btn-danger">download my data</button>
+    </div>
+
+    <div id="delete-export-buttons-after" class="pd-actions">
+      <button type="button" id="delete-export-after-cancel" class="pd-btn pd-btn-ghost">Cancel</button>
+      <button type="button" id="delete-export-after-continue" class="pd-btn pd-btn-danger">delete anyway</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stage 4 — password confirmation. This is the stage the JSX draws
+     (22 lines 87–113); copy is the exact JSX copy. -->
+<div class="pd-overlay hidden" id="delete-account-overlay" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
+  <div class="pd-card">
+    <div class="pd-head">
+      <div class="pd-title" id="delete-account-title">Delete account</div>
+      <button type="button" class="pd-close" id="delete-account-close" aria-label="Close">✕</button>
+    </div>
+
+    <div class="pd-copy">Deleting the account permanently removes the profile, calls, and tokens, and cancels the subscription.</div>
+
+    <label class="pd-label" for="delete-account-password">Enter your password to confirm</label>
+    <input type="password" id="delete-account-password" class="pd-input" placeholder="Password" autocomplete="current-password">
+
+    <div id="delete-account-error" class="pd-error" role="alert"></div>
+
+    <div class="pd-actions">
+      <button type="button" id="delete-account-cancel" class="pd-btn pd-btn-ghost">Cancel</button>
+      <button type="button" id="delete-account-confirm" class="pd-btn pd-btn-danger">Delete forever</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     Roleplay full-frame overlays, spliced at the top level of the
+     document. Order: headphones prompt (17), live stage (18).
+     All hidden by default; app.js toggles .hidden.
+     20-roleplay-gate.jsx draws NO gate modal — it is the home
+     screen with the Roleplay nav item absent, i.e. the feature
+     flag off. The gate is the hidden #nav-roleplays nav item.
+     ============================================================ -->
+
+<!-- ============================================================
+     HEADPHONES PROMPT — 17-roleplay-headphones.jsx.
+     Backdrop #000000B8 = .p-overlay. Dialog: 470px, black, border
+     #FFF8EF29, radius 14, padding 28, gap 18. Copy verbatim.
+     ============================================================ -->
+<div id="rp-headphone-overlay" class="p-overlay hidden">
+  <div class="p-rp-modal" role="dialog" aria-modal="true"
+       aria-labelledby="rp-headphone-title" aria-describedby="rp-headphone-text">
+    <h2 class="p-rp-modal-title" id="rp-headphone-title">Plug in your headphones</h2>
+    <p class="p-rp-modal-body" id="rp-headphone-text">Roleplay plays Brutus through your speakers and listens through your mic. Without headphones, your mic can catch Brutus's voice and loop the conversation.</p>
+    <p class="p-rp-modal-note">Starting here closes any Brutus session open in another tab or the desktop app.</p>
+    <div class="p-rp-modal-actions">
+      <button type="button" class="p-rp-btn-ghost" id="rp-headphone-cancel">Cancel</button>
+      <button type="button" class="p-btn-cta" id="rp-headphone-go">Go anyway</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     LIVE STAGE — 18-roleplay-active.jsx, built full-frame.
+     Header: 72px, padding-inline 44, hairline #FFF8EF24; ROLEPLAY
+     badge, phase, persona title, pause + end actions.
+     Body: padding 34/64/30, gap 24; two visualizer cards (app.js
+     fills #rp-active-rep-viz / #rp-active-brutus-viz with .rp-bar
+     children and sets their height inline), hairline, live
+     transcript (app.js appends .rp-msg nodes; roleplay.js's
+     paperRoleplayTranscriptLine emits the same structure), status
+     line. Header/status sample copy is the JSX artboard copy;
+     app.js overwrites #rp-active-phase / #rp-active-persona /
+     #rp-mic-state / #rp-active-status at runtime.
+     ============================================================ -->
+<div id="rp-active-overlay" class="p-rp-stage hidden" role="dialog" aria-modal="true" aria-label="Live roleplay">
+  <header class="p-rp-stage-bar">
+    <span class="p-rp-stage-badge">ROLEPLAY</span>
+    <span class="p-rp-stage-phase" id="rp-active-phase">DRILL</span>
+    <span class="p-rp-stage-title" id="rp-active-persona">Skeptical VP of Sales · price objection after a difficult rollout</span>
+    <span class="p-spacer"></span>
+    <button type="button" class="p-rp-btn-dim" id="rp-active-pause">Pause + coach me</button>
+    <button type="button" class="p-rp-btn-end" id="rp-active-close">End roleplay</button>
+  </header>
+
+  <div class="p-rp-stage-body">
+    <!-- Visualizers (JSX: two flex-1 cards, border #FFF8EF20, radius 12,
+         padding 18, gap 12; bar lane 42px tall, bars 7px wide, gap 6) -->
+    <div class="p-rp-viz-row">
+      <section class="p-rp-viz-card" aria-label="Your microphone">
+        <div class="p-rp-viz-head">
+          <span class="p-rp-viz-label">YOU</span>
+          <!-- app.js swaps rp-mic-live / rp-mic-muted / rp-mic-thinking
+               and sets the text. "MIC LIVE" is the JSX sample state. -->
+          <span class="p-rp-mic rp-mic-live" id="rp-mic-state">MIC LIVE</span>
+        </div>
+        <div class="p-rp-viz" id="rp-active-rep-viz" aria-hidden="true"></div>
+      </section>
+      <section class="p-rp-viz-card" aria-label="Brutus prospect voice">
+        <div class="p-rp-viz-head">
+          <span class="p-rp-viz-label">BRUTUS · PROSPECT</span>
+          <span class="p-rp-viz-voice">VOICE · MARK</span>
+        </div>
+        <div class="p-rp-viz p-rp-viz-brutus" id="rp-active-brutus-viz" aria-hidden="true"></div>
+      </section>
+    </div>
+
+    <div class="p-rp-stage-rule" aria-hidden="true"></div>
+
+    <!-- Live transcript. The empty state's copy/structure matches what
+         app.js re-injects on session reset (it removes this node when
+         the first line arrives). -->
+    <div class="p-rp-transcript" id="rp-active-transcript" aria-live="polite">
+      <div class="rp-active-empty" id="rp-active-empty">drill is live. speak when you're ready and brutus will respond in character.</div>
+    </div>
+
+    <!-- Status line (JSX: 28px, centered, 13/16 #FFF8EF70). app.js sets
+         textContent and toggles .error. -->
+    <div class="p-rp-status" id="rp-active-status">Mic live · speak when you are ready · silence sends each turn automatically</div>
+  </div>
+</div>
+
+<!-- Walkthrough. No Paper artboard; kept minimal so app.js keeps working. -->
+<div id="walkthrough-overlay" class="p-overlay hidden">
+  <div class="p-modal p-modal-narrow">
+    <div class="p-modal-head">
+      <div class="p-t-18" id="walkthrough-step1-title">Welcome to Brutus</div>
+      <button type="button" id="walkthrough-close" class="p-modal-close">×</button>
+    </div>
+    <div class="p-modal-body">
+      <div class="p-t-14-21 p-c-2" id="walkthrough-step1-body"></div>
+      <div class="p-t-12 p-c-4" id="walkthrough-download-note"></div>
+      <div class="p-modal-actions">
+        <a class="p-btn p-btn-primary" id="walkthrough-cta-windows" href="#">Download for Windows</a>
+        <a class="p-btn p-btn-secondary" id="walkthrough-cta-mac" href="#">Download for Mac</a>
+        <a class="p-btn p-btn-secondary" id="walkthrough-cta-mac-intel" href="#">Mac (Intel)</a>
+        <button type="button" class="p-btn p-btn-secondary" id="walkthrough-later">Later</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="token-toast-container" class="p-toasts"></div>
+
+<!-- Hidden logout control. The account screen's visible button proxies to it. -->
+<button type="button" id="logout-btn" class="p-hidden">Log out</button>
+
+<script src="../../node_modules/animejs/dist/bundles/anime.umd.min.js"></script>
+<script src="config.js"></script>
+<script src="posthog.js"></script>
+<script src="app.js"></script>
+<script src="paper-ui.js"></script>
+</body>
+</html>

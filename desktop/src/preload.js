@@ -47,9 +47,20 @@ contextBridge.exposeInMainWorld('brutus', {
   getOverlayBounds: () => ipcRenderer.invoke('get-overlay-bounds'),
   moveOverlay: (x, y) => ipcRenderer.invoke('move-overlay', { x, y }),
   resizeOverlay: (width, height) => ipcRenderer.invoke('resize-overlay', { width, height }),
+  beginOverlayGesture: (mode, edge) => ipcRenderer.send('overlay-gesture-begin', { mode, edge }),
+  endOverlayGesture: () => ipcRenderer.send('overlay-gesture-end'),
   hideOverlay: () => ipcRenderer.invoke('hide-overlay'),
 
+  // Lil Brutus — a small always-on-top window, dragged like the overlay.
+  setLilBrutusVisible: (shown) => ipcRenderer.invoke('set-lil-brutus-visible', !!shown),
+  beginLilBrutusGesture: () => ipcRenderer.send('lil-brutus-gesture-begin'),
+  endLilBrutusGesture: () => ipcRenderer.send('lil-brutus-gesture-end'),
+  setLilBrutusSession: (session) => ipcRenderer.send('lil-brutus-session', session || {}),
+  onLilBrutusSession: (callback) => ipcRenderer.on('lil-brutus-session', (_event, session) => callback(session)),
+  clipLilBrutus: (file) => ipcRenderer.send('lil-brutus-clip', String(file || 'bust.png')),
+
   // Settings
+  showSettings: () => ipcRenderer.invoke('show-settings'),
   getSettings: () => ipcRenderer.invoke('get-settings'),
   setSettings: (settings) => ipcRenderer.invoke('set-settings', settings),
 

@@ -1,0 +1,6298 @@
+/* ==========================================================================
+   Brutus — Paper design system
+   Transcribed from docs/paper-extract/*.jsx (Paper file: Noble lemon,
+   01M2XF3A1BE41V81RAMNB66AX2). Every value in this file comes from the
+   extracted JSX. Gideon Roman is the only typeface.
+
+   The JSX artboards are a fixed 1440x900 desktop frame. Fixed cross-axis
+   sizes (sidebar 224px, topbar 72px, column widths) are kept exactly; the
+   900px artboard height becomes 100vh and the 1216px content column grows.
+   ========================================================================== */
+
+/* --- tokens --------------------------------------------------------------- */
+:root {
+  /* surfaces */
+  --p-bg: #000000;
+  --p-bg-raised: #0B0A0A;
+  --p-bg-panel: #171414;
+  --p-bg-active: #211A17;
+  --p-bg-bar: #241C19;
+  --p-bg-orange-tint: #2A1714;
+
+  /* orange — action and focus, not decoration */
+  --p-orange: #FF6550;
+  --p-orange-text: #FF8A78;
+  --p-orange-border: #623B34;
+
+  /* type */
+  --p-cream: #FFF8EF;
+  --p-text-bright: #D8CEC6;
+  --p-text-chip: #C7BDB6;
+  --p-text-2: #A9A09A;
+  --p-text-3: #8E837D;
+  --p-text-4: #766B65;
+  --p-text-5: #655A55;
+
+  /* lines */
+  --p-line: #2A2320;
+  --p-line-2: #3A302C;
+  --p-line-3: #4A3A35;
+  --p-line-active: #3B2D29;
+
+  /* metrics */
+  --p-sidebar-w: 224px;
+  --p-sidebar-collapsed-w: 72px;
+  --p-topbar-h: 72px;
+  --p-radius: 8px;
+  --p-font: "Gideon Roman", system-ui, sans-serif;
+}
+
+/* --- reset -------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--p-bg);
+  color: var(--p-cream);
+  font-family: var(--p-font);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-wrap: anywhere;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  margin: 0;
+}
+
+button {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Scrollbars stay inside the palette. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--p-line-2) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--p-line-2);
+  border-radius: 999px;
+}
+
+/* --- type scale --------------------------------------------------------- */
+/* Names carry the JSX px/line-height pair so drift is visible in review. */
+.p-t-40 { font-size: 40px; line-height: 46px; color: var(--p-cream); }
+.p-t-36 { font-size: 36px; line-height: 42px; letter-spacing: -0.02em; color: var(--p-cream); }
+.p-t-34 { font-size: 34px; line-height: 40px; color: var(--p-cream); }
+.p-t-32 { font-size: 32px; line-height: 40px; letter-spacing: -0.02em; color: var(--p-cream); }
+.p-t-30 { font-size: 30px; line-height: 34px; color: var(--p-cream); }
+.p-t-28 { font-size: 28px; line-height: 34px; color: var(--p-cream); }
+.p-t-25 { font-size: 25px; line-height: 30px; color: var(--p-cream); }
+.p-t-22 { font-size: 22px; line-height: 28px; color: var(--p-cream); }
+.p-t-18 { font-size: 18px; line-height: 22px; color: var(--p-cream); }
+.p-t-16 { font-size: 16px; line-height: 20px; }
+.p-t-16-24 { font-size: 16px; line-height: 24px; }
+.p-t-15 { font-size: 15px; line-height: 18px; }
+.p-t-14 { font-size: 14px; line-height: 18px; }
+.p-t-14-21 { font-size: 14px; line-height: 21px; }
+.p-t-13 { font-size: 13px; line-height: 16px; }
+.p-t-13-19 { font-size: 13px; line-height: 19px; }
+.p-t-12 { font-size: 12px; line-height: 16px; }
+.p-t-12-18 { font-size: 12px; line-height: 18px; }
+.p-t-11 { font-size: 11px; line-height: 14px; }
+.p-t-10 { font-size: 10px; line-height: 12px; }
+
+/* Tracked labels. */
+.p-label {
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.1em;
+  color: var(--p-text-4);
+}
+.p-label-12 {
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.12em;
+  color: var(--p-text-4);
+}
+.p-label-orange {
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.1em;
+  color: var(--p-orange-text);
+}
+.p-eyebrow {
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: 0.12em;
+  color: var(--p-orange-text);
+}
+
+/* colour utilities */
+.p-c-cream { color: var(--p-cream); }
+.p-c-bright { color: var(--p-text-bright); }
+.p-c-2 { color: var(--p-text-2); }
+.p-c-3 { color: var(--p-text-3); }
+.p-c-4 { color: var(--p-text-4); }
+.p-c-5 { color: var(--p-text-5); }
+.p-c-orange { color: var(--p-orange-text); }
+.p-c-black { color: #000000; }
+
+/* --- app shell ---------------------------------------------------------- */
+.p-app {
+  display: flex;
+  height: 100vh;
+  background-color: var(--p-bg);
+  overflow: clip;
+}
+
+/* Sidebar — 224px, collapses to 72px (10-home-collapsed-sidebar). */
+.p-sidebar {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 18px;
+  width: var(--p-sidebar-w);
+  height: 100vh;
+  min-height: 0;
+  padding: 20px 14px 16px;
+  overflow: hidden;
+  background-color: var(--p-bg);
+}
+
+.p-sidebar-head {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 10px;
+  height: 48px;
+  padding-inline: 8px;
+}
+
+.p-logo {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  background-position: 50%;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.p-logo-img {
+  background-image: url("https://app.paper.design/file-assets/01M2XF3A1BE41V81RAMNB66AX2/3W5W9EBY2BHV8M8NRT1Q096DKS.png");
+}
+
+.p-wordmark {
+  flex: 1 1 0%;
+  font-size: 18px;
+  line-height: 20px;
+  letter-spacing: 0.12em;
+  color: var(--p-cream);
+}
+
+.p-sidebar-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 32px;
+}
+
+.p-nav {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+  gap: 4px;
+  /* Short windows scroll the nav list. The footer stays pinned. */
+  overflow-y: auto;
+}
+
+.p-nav-item {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 10px;
+  height: 42px;
+  padding-inline: 12px;
+  border: 1px solid transparent;
+  border-radius: var(--p-radius);
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-text-2);
+  width: 100%;
+}
+
+.p-nav-item.active {
+  background-color: var(--p-bg-active);
+  border-color: var(--p-line-active);
+  color: var(--p-cream);
+}
+
+.p-nav-item-label {
+  flex: 1 1 0%;
+}
+
+/* BETA pill on Roleplay. */
+.p-pill-beta {
+  border: 1px solid var(--p-orange-border);
+  border-radius: 999px;
+  padding: 3px 6px;
+  font-size: 10px;
+  line-height: 12px;
+  color: var(--p-orange-text);
+}
+
+.p-rule {
+  flex-shrink: 0;
+  height: 1px;
+  background-color: var(--p-line);
+}
+
+.p-sidebar-block {
+  flex-shrink: 0;
+  padding-inline: 12px;
+}
+
+/* A long coaching line is the usual overflow. It shrinks and scrolls
+   before the nav does, so Spawn / Tokens / Settings / Profile stay inside
+   the sidebar. .p-app { overflow: clip } would otherwise swallow them. */
+.p-sidebar-block:has(#discipline-line) {
+  flex: 0 999 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.p-spacer {
+  flex: 1 1 0%;
+  min-height: 0;
+}
+
+.p-sidebar-foot {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 12px;
+  padding-top: 14px;
+  padding-inline: 8px;
+  border-top: 1px solid var(--p-line);
+}
+
+.p-tokens-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.p-user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.p-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background-color: var(--p-orange);
+  font-size: 13px;
+  line-height: 16px;
+  color: #000000;
+}
+
+.p-user-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Collapsed sidebar (10-home-collapsed-sidebar.jsx): 72px, gap 12px, the
+   nav/discipline blocks and the wordmark go display:none, and the head
+   becomes a 44px-wide centred column. */
+.p-app.p-collapsed .p-sidebar {
+  width: var(--p-sidebar-collapsed-w);
+  gap: 12px;
+}
+.p-app.p-collapsed .p-sidebar-head {
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  width: 44px;
+  height: 84px;
+  padding-inline: 0;
+}
+.p-app.p-collapsed .p-wordmark,
+.p-app.p-collapsed .p-nav,
+.p-app.p-collapsed .p-sidebar .p-rule,
+.p-app.p-collapsed .p-sidebar-block,
+.p-app.p-collapsed .p-tokens-row,
+.p-app.p-collapsed .p-user-meta,
+.p-app.p-collapsed #nav-settings,
+.p-app.p-collapsed #nav-lil-brutus {
+  display: none;
+}
+.p-app.p-collapsed .p-sidebar-foot {
+  align-items: center;
+  width: 44px;
+  border-top-color: transparent;
+}
+
+/* Main column. */
+.p-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-width: 0;
+  height: 100vh;
+  background-color: var(--p-bg);
+}
+
+.p-topbar {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 16px;
+  height: var(--p-topbar-h);
+  padding-inline: 28px;
+  border-bottom: 1px solid var(--p-line);
+}
+
+/* Homepage only. The hairline under the search is a section divider.
+   Other pages keep it. */
+.p-main:has(#dashboard-view.active) > .p-topbar {
+  border-bottom: 0;
+}
+
+/* Topbar search: 430px, 40px tall. Border is #3A302C on the dashboard and
+   #4A3A35 on the calls library; the brighter one is the focus state. */
+.p-search {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 10px;
+  width: 430px;
+  height: 40px;
+  padding-inline: 14px;
+  border: 1px solid var(--p-line-2);
+  border-radius: var(--p-radius);
+}
+
+.p-search:focus-within {
+  border-color: var(--p-line-3);
+}
+
+.p-search input {
+  flex: 1 1 0%;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: none;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-cream);
+}
+
+.p-search input::placeholder {
+  color: var(--p-text-3);
+}
+
+.p-kbd {
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--p-text-5);
+}
+
+/* Page body inside the main column. */
+.p-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  gap: 24px;
+  padding: 32px 36px 28px;
+  overflow-y: auto;
+}
+
+/* 02-calls-library uses gap 18px and 30/26 vertical padding. */
+.p-page.p-page-tight {
+  gap: 18px;
+  padding-top: 30px;
+  padding-bottom: 26px;
+}
+
+.p-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.p-page-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.p-page-head-text.p-gap-5 {
+  gap: 5px;
+}
+
+/* --- controls ----------------------------------------------------------- */
+.p-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding-inline: 16px;
+  border-radius: var(--p-radius);
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.p-btn-primary {
+  background-color: var(--p-orange);
+  color: #000000;
+}
+
+.p-btn-secondary {
+  border: 1px solid var(--p-line-3);
+  color: var(--p-cream);
+}
+
+.p-btn-focus {
+  border: 2px solid var(--p-orange);
+  color: var(--p-cream);
+}
+
+.p-btn-disabled,
+.p-btn:disabled {
+  background-color: var(--p-bg-panel);
+  border-color: transparent;
+  color: var(--p-text-5);
+  cursor: default;
+}
+
+/* Topbar CTA is 14px/18 (01-home-dashboard). */
+.p-btn-cta {
+  height: 40px;
+  padding-inline: 16px;
+  border-radius: var(--p-radius);
+  background-color: var(--p-orange);
+  color: #000000;
+  font-size: 14px;
+  line-height: 18px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Header ghost buttons: 38px tall, #3A302C border, #D8CEC6 text. */
+.p-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding-inline: 14px;
+  border: 1px solid var(--p-line-2);
+  border-radius: var(--p-radius);
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-text-bright);
+}
+
+/* Filter chips (02-calls-library): 34px, radius 7px, 12px/16 text. */
+.p-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding-inline: 13px;
+  border: 1px solid var(--p-line-2);
+  border-radius: 7px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-2);
+}
+
+.p-chip.active {
+  background-color: var(--p-bg-active);
+  border-color: var(--p-line-active);
+  color: var(--p-cream);
+}
+
+.p-chip-row {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+  height: 46px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--p-line);
+}
+
+/* Status pills. Neutral / logged / orange variants. */
+.p-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--p-line-2);
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--p-text-chip);
+}
+
+.p-tag-muted {
+  border-color: var(--p-line-2);
+  color: var(--p-text-2);
+}
+
+.p-tag-orange {
+  border-color: var(--p-orange-border);
+  color: var(--p-orange-text);
+}
+
+/* Outcome pills in the calls table are a fixed 72px wide, 6px/8px padding. */
+.p-outcome {
+  display: grid;
+  justify-items: center;
+  width: 72px;
+  padding: 6px 8px;
+  border: 1px solid var(--p-line-3);
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 14px;
+  text-align: center;
+  color: var(--p-cream);
+}
+
+.p-outcome-closed {
+  background-color: var(--p-bg-orange-tint);
+  border-color: var(--p-orange-border);
+  color: var(--p-orange-text);
+}
+
+.p-outcome-none {
+  border-color: var(--p-line-2);
+  color: var(--p-text-3);
+}
+
+/* Text inputs: 48px tall, #3A302C border (auth); 42/44px in-app. */
+.p-input {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 48px;
+  padding-inline: 16px;
+  border: 1px solid var(--p-line-2);
+  border-radius: var(--p-radius);
+  background: none;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-cream);
+  outline: none;
+}
+
+.p-input::placeholder {
+  color: var(--p-text-3);
+}
+
+.p-input:focus {
+  border-color: var(--p-orange);
+}
+
+.p-input-sm {
+  height: 42px;
+  padding-inline: 12px;
+  border-color: var(--p-line-3);
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.p-input-sm::placeholder {
+  color: var(--p-text-4);
+}
+
+.p-textarea {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--p-line-2);
+  border-radius: var(--p-radius);
+  background: none;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--p-cream);
+  outline: none;
+  resize: vertical;
+}
+
+.p-textarea::placeholder {
+  color: var(--p-text-4);
+}
+
+.p-textarea:focus {
+  border-color: var(--p-orange);
+}
+
+/* Send affordance: 28px orange square, radius 9px, 12px glyph. */
+.p-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  border-radius: 9px;
+  background-color: var(--p-orange);
+}
+
+/* Ask-Brutus composer row: 44px, #4A3A35 border. */
+.p-composer {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 10px;
+  height: 44px;
+  padding-inline: 12px;
+  border: 1px solid var(--p-line-3);
+  border-radius: var(--p-radius);
+}
+
+.p-composer input {
+  flex: 1 1 0%;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: none;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-cream);
+}
+
+.p-composer input::placeholder {
+  color: var(--p-text-4);
+}
+
+/* Suggestion cards. */
+.p-suggestion {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--p-line-2);
+  border-radius: var(--p-radius);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-2);
+}
+
+/* --- stat strip --------------------------------------------------------- */
+/* Home iPhone cards (Noble lemon, p-2-0, Home iPhone): radius 16px,
+   padding 13px 12px, no stroke. Peer cards use #F2EEE514; the row gap
+   is the 9px from that card row. */
+.p-stat-strip {
+  display: flex;
+  flex-shrink: 0;
+  align-items: stretch;
+  gap: 9px;
+  border: 0;
+}
+
+.p-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  flex: 1 1 0%;
+  min-width: 0;
+  padding: 13px 12px;
+  border: 0;
+  border-radius: 16px;
+  background-color: #F2EEE514;
+}
+
+.p-stat-value {
+  font-size: 30px;
+  line-height: 34px;
+  color: var(--p-cream);
+}
+
+.p-stat-label {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-2);
+}
+
+/* --- weekly bar chart --------------------------------------------------- */
+/* Fills the 174px weekly block (22px head, 14px gap, 4px padding). The
+   bars stay that tall. This block does not scroll on its own; the
+   homepage scrolls as one page. */
+.p-chart {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(calc(174px - 22px - 14px - 4px), 1fr);
+  align-items: end;
+  flex: 1 1 auto;
+  gap: 14px;
+  padding-inline: 8px;
+  padding-top: 4px;
+}
+
+.p-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 1 1 0%;
+  min-width: 0;
+  padding-top: 6px;
+  border-radius: 4px 4px 0 0;
+  background-color: var(--p-bg-bar);
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--p-text-2);
+}
+
+.p-bar-peak {
+  background-color: var(--p-orange);
+  color: #000000;
+}
+
+.p-bar-empty {
+  background-color: var(--p-bg-panel);
+  border: 1px dashed var(--p-line-2);
+}
+
+/* --- list rows ---------------------------------------------------------- */
+/* Recent calls on the dashboard: 62px rows, hairline on top. */
+.p-row {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 14px;
+  height: 62px;
+  border-top: 1px solid var(--p-line);
+  width: 100%;
+}
+
+.p-row:last-child {
+  border-bottom: 1px solid var(--p-line);
+}
+
+.p-row-score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  font-size: 25px;
+  line-height: 30px;
+  color: var(--p-cream);
+}
+
+.p-row-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-width: 0;
+  gap: 4px;
+}
+
+/* Calls library table: 78px rows, fixed columns 74 / flex / 122 / 130 / 28. */
+.p-table-head {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 24px;
+}
+
+.p-trow {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 78px;
+  border-top: 1px solid var(--p-line);
+  width: 100%;
+}
+
+.p-trow:last-child {
+  border-bottom: 1px solid var(--p-line);
+}
+
+.p-col-score { flex-shrink: 0; width: 74px; }
+.p-col-call { flex: 1 1 0%; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.p-col-talk { flex-shrink: 0; width: 122px; font-size: 14px; line-height: 18px; color: var(--p-cream); }
+.p-col-outcome { flex-shrink: 0; width: 130px; }
+.p-col-chev { flex-shrink: 0; width: 28px; font-size: 16px; line-height: 20px; color: var(--p-text-4); }
+
+.p-trow-score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  font-size: 25px;
+  line-height: 30px;
+  color: var(--p-cream);
+}
+
+/* Day divider inside the calls table. */
+.p-day-divider {
+  display: flex;
+  align-items: flex-end;
+  flex-shrink: 0;
+  height: 28px;
+  padding-bottom: 4px;
+  border-top: 1px solid var(--p-line);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-2);
+}
+
+.p-day-divider-today {
+  align-content: center;
+  align-items: center;
+  height: 28px;
+  padding-bottom: 0;
+  border-top: 0;
+  color: var(--p-orange-text);
+}
+
+/* --- right rail --------------------------------------------------------- */
+/* Ask Brutus. The card stretches with the homepage row so its bottom
+   meets the left column instead of stopping short. height 0 plus
+   min-height 100% is that stretch: the row height still comes from the
+   chart and recent calls, the card fills that height, and a longer
+   summary scrolls inside the card. The composer stays in the card.
+   #dashboard-view still scrolls the page. */
+.p-rail {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-self: stretch;
+  gap: 16px;
+  width: 340px;
+  height: 0;
+  min-height: 100%;
+  max-height: none;
+  padding: 13px 12px;
+  border: 0;
+  border-radius: 16px;
+  background-color: #F2EEE514;
+  overflow-y: auto;
+}
+
+.p-rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.p-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background-color: var(--p-orange);
+}
+
+/* --- section header ----------------------------------------------------- */
+.p-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* --- tabs (call detail) ------------------------------------------------- */
+.p-tabs {
+  display: flex;
+  flex-shrink: 0;
+  gap: 20px;
+  border-bottom: 1px solid var(--p-line);
+}
+
+.p-tab {
+  padding-bottom: 10px;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-text-3);
+}
+
+.p-tab.active {
+  border-bottom-color: var(--p-orange);
+  color: var(--p-cream);
+}
+
+/* Auth uses the same underline treatment at 16px with 6px padding. */
+.p-tab-auth {
+  padding-bottom: 6px;
+  border-bottom: 2px solid transparent;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-text-3);
+}
+
+.p-tab-auth.active {
+  border-bottom-color: var(--p-orange);
+  color: var(--p-cream);
+}
+
+/* --- panels / cards ----------------------------------------------------- */
+.p-card {
+  border: 1px solid var(--p-line-2);
+  border-radius: var(--p-radius);
+  padding: 10px 12px;
+}
+
+.p-panel {
+  background-color: var(--p-bg-panel);
+  border-radius: var(--p-radius);
+}
+
+/* --- overlays / modals -------------------------------------------------- */
+.p-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.72);
+}
+
+.p-overlay.hidden {
+  display: none;
+}
+
+.p-modal {
+  background-color: var(--p-bg-raised);
+  border: 1px solid var(--p-line-2);
+  border-radius: 12px;
+}
+
+/* --- divider with label ------------------------------------------------- */
+.p-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.p-or-line {
+  flex-shrink: 0;
+  height: 1px;
+  background-color: var(--p-line-2);
+}
+
+/* --- auth screen (auth-signup-login.jsx) -------------------------------- */
+/* Photo plate at z-0, an oklab scrim at z-1, the 640px form column at z-2. */
+.p-auth {
+  position: relative;
+  display: flex;
+  min-height: 100vh;
+  background-color: #000000;
+  overflow: clip;
+}
+
+.p-auth.hidden {
+  display: none;
+}
+
+.p-auth-photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url("https://app.paper.design/file-assets/01M2XF3A1BE41V81RAMNB66AX2/68T5V8FZ7NDB5P1J8E7ZT8TGQ3.jpg");
+  background-position: 50%;
+  background-size: cover;
+}
+
+.p-auth-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image: linear-gradient(in oklab 90deg,
+    oklab(0% 0 0 / 92%) 0%,
+    oklab(0% 0 0 / 82%) 28%,
+    oklab(0% 0 0 / 45%) 52%,
+    oklab(0% 0 0 / 18%) 100%);
+}
+
+/* Fallback for engines without oklab in gradients. */
+@supports not (background-image: linear-gradient(in oklab 90deg, #000, #000)) {
+  .p-auth-scrim {
+    background-image: linear-gradient(90deg,
+      rgba(0, 0, 0, 0.92) 0%,
+      rgba(0, 0, 0, 0.82) 28%,
+      rgba(0, 0, 0, 0.45) 52%,
+      rgba(0, 0, 0, 0.18) 100%);
+  }
+}
+
+.p-auth-panel {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  justify-content: center;
+  gap: 16px;
+  width: 640px;
+  min-height: 100vh;
+  padding: 56px 64px;
+}
+
+.p-auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.p-auth-sub {
+  width: 520px;
+  max-width: 100%;
+}
+
+/* Both OAuth buttons are 592px x 48px with a 12px gap. */
+.p-oauth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 12px;
+  width: 592px;
+  max-width: 100%;
+  height: 48px;
+  border-radius: var(--p-radius);
+}
+
+.p-oauth-google {
+  background-color: var(--p-cream);
+}
+
+.p-oauth-apple {
+  background-color: #000000;
+  border: 1px solid var(--p-cream);
+}
+
+.p-auth-or {
+  width: 592px;
+  max-width: 100%;
+}
+
+.p-auth-or .p-or-line {
+  width: 250px;
+  flex: 1 1 auto;
+}
+
+.p-auth-or .p-t-13 {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.p-auth-tabs {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 592px;
+  max-width: 100%;
+}
+
+.p-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 592px;
+  max-width: 100%;
+}
+
+.p-auth-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 48px;
+  border-radius: var(--p-radius);
+  background-color: var(--p-orange);
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-cream);
+}
+
+.p-auth-submit:disabled {
+  background-color: var(--p-bg-panel);
+  color: var(--p-text-5);
+  cursor: default;
+}
+
+.p-auth-link {
+  color: var(--p-cream);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.p-auth-pw {
+  position: relative;
+  display: flex;
+}
+
+.p-auth-pw-toggle {
+  position: absolute;
+  top: 0;
+  right: 16px;
+  height: 48px;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-text-3);
+}
+
+.p-auth-error {
+  display: none;
+  width: 592px;
+  max-width: 100%;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-orange-text);
+}
+
+.p-auth-error.visible {
+  display: block;
+}
+
+/* Standalone auth pages (login/signup/forgot/reset/verify/credits-success)
+   use real <h1>/<h2>/<p> elements for semantics. The panel's 16px flex gap
+   supplies all spacing and Gideon Roman ships a single weight, so UA
+   heading/paragraph margins and heading bolding are zeroed. index.html's
+   auth block uses divs and is unaffected. */
+.p-auth h1,
+.p-auth h2,
+.p-auth p {
+  margin: 0;
+  font-weight: 400;
+}
+
+/* --- verify-email banner ------------------------------------------------ */
+/* Dark fill stays raised (#0B0A0A). Pin cream ink so --p-text-bright
+   remaps under html.p-white-bg cannot turn this into black-on-black.
+   White mode flips both fill and ink so the strip stays readable on #F4EFE8. */
+.p-verify-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 16px;
+  padding: 12px 36px;
+  border-bottom: 1px solid var(--p-line);
+  background-color: var(--p-bg-raised);
+  color: #FFF8EF;
+}
+
+.p-verify-banner .p-c-bright,
+.p-verify-banner .p-btn-ghost {
+  color: #FFF8EF;
+}
+
+html.p-white-bg .p-verify-banner {
+  background-color: #FFFFFF;
+  color: #161311;
+}
+
+html.p-white-bg .p-verify-banner .p-c-bright,
+html.p-white-bg .p-verify-banner .p-btn-ghost {
+  color: #161311;
+}
+
+.p-verify-banner.hidden {
+  display: none;
+}
+
+/* --- view switching ----------------------------------------------------- */
+/* Matches the existing contract: app.js toggles .active on .view. */
+.view {
+  display: none;
+}
+
+.view.active {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  gap: 24px;
+  padding: 32px 36px 28px;
+  overflow-y: auto;
+}
+
+/* Screens whose own JSX sets the frame (upload, chat, roleplay stage) opt out
+   of the standard page padding. */
+.view.active.p-view-bleed {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#main-content.hidden {
+  display: none;
+}
+
+/* --- call detail container (03-call-overview.jsx) ----------------------- */
+.p-calldetail {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--p-sidebar-w);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background-color: #000000;
+}
+
+.p-app.p-collapsed ~ .p-calldetail {
+  left: var(--p-sidebar-collapsed-w);
+}
+
+.p-calldetail.hidden {
+  display: none;
+}
+
+/* --- onboarding container ---------------------------------------------- */
+.p-ob {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  background-color: #000000;
+}
+
+.p-ob.hidden {
+  display: none;
+}
+
+/* --- modal chrome ------------------------------------------------------- */
+.p-modal-wide {
+  display: flex;
+  flex-direction: column;
+  width: min(960px, calc(100vw - 96px));
+  max-height: calc(100vh - 96px);
+}
+
+.p-modal-narrow {
+  display: flex;
+  flex-direction: column;
+  width: min(520px, calc(100vw - 96px));
+  max-height: calc(100vh - 96px);
+}
+
+.p-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--p-line);
+}
+
+.p-modal-close {
+  font-size: 22px;
+  line-height: 22px;
+  color: var(--p-text-3);
+}
+
+.p-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.p-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* --- toasts ------------------------------------------------------------- */
+.p-toasts {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* --- shared hidden contract -------------------------------------------- */
+.hidden {
+  display: none !important;
+}
+
+/* --- generic helpers used by transcribed screens ------------------------ */
+.p-flex { display: flex; }
+.p-col { display: flex; flex-direction: column; }
+.p-between { display: flex; align-items: center; justify-content: space-between; }
+.p-center { display: flex; align-items: center; }
+.p-grow { flex: 1 1 0%; min-width: 0; }
+.p-shrink0 { flex-shrink: 0; }
+.p-hidden { display: none !important; }
+.p-scroll { overflow-y: auto; min-height: 0; }
+
+/* Visually-hidden text and inputs (accessibility only; adds nothing visual).
+   Deduplicated here: .p-visually-hidden was declared by both the upload and
+   onboarding lanes, .p-vh by both the research and account lanes — all four
+   declarations were this same rule. */
+.p-visually-hidden,
+.p-vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   HOME — 01-home-dashboard.jsx
+   (merged from .paper-build/home.css)
+   ========================================================================== */
+
+/* ==========================================================================
+   Home dashboard — rules NOT already in paper.css.
+   Every value transcribed from docs/paper-extract/01-home-dashboard.jsx.
+   ========================================================================== */
+
+/* Greeting header action pair (JSX: display flex, gap 8px). */
+.p-head-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* The JSX headings are styled divs; real h1/h2 must not add browser
+   margin or bold weight (Gideon Roman ships one weight; font-synthesis
+   is off, but the system-ui fallback would still embolden). */
+.p-page-head h1,
+.p-section-head h2,
+.p-rail-head h2 {
+  margin: 0;
+  font-weight: 400;
+}
+
+/* The rail summary is a real <p>; the JSX div has no margins. */
+.p-rail-summary {
+  margin: 0;
+}
+
+/* Main split under the stat strip (JSX: flex, gap 24px). It fills the
+   homepage under the greeting and stats, so an empty Recent calls card
+   still reaches the bottom and Ask Brutus is not clipped. A long page
+   can still scroll inside #dashboard-view. */
+.p-home-main {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: stretch;
+  min-height: 0;
+  gap: 24px;
+}
+
+/* Left column (JSX: column, flexBasis 0% / flexGrow 1, gap 22px).
+   The 0% basis is the width share beside the rail. Height follows the
+   chart plus the call list so the page can grow past the window. */
+.p-home-left {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-width: 0;
+  gap: 22px;
+}
+
+/* Weekly performance block (JSX: column, gap 14px, 174px). Fixed at the
+   artboard height so the bars do not squash and the block does not scroll
+   inside itself. */
+.p-home-chartblock {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 200px;
+  gap: 14px;
+  padding: 13px 12px;
+  border: 0;
+  border-radius: 16px;
+  background-color: #F2EEE514;
+}
+
+/* The section head stays put, same as Recent calls. */
+.p-home-chartblock > .p-section-head {
+  flex-shrink: 0;
+}
+
+/* Recent calls block. The card grows into the space under the chart,
+   even when the list is empty, so the box waits for calls and the row
+   stays tall enough for Ask Brutus. A long list scrolls inside the rows. */
+.p-home-recent {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 12px;
+  padding: 13px 12px;
+  border: 0;
+  border-radius: 16px;
+  background-color: #F2EEE514;
+}
+
+.p-home-recent > .p-section-head {
+  flex-shrink: 0;
+}
+
+/* Cream-alpha cards vanish on the white canvas. Same boxes, light fill,
+   dark text from the white-mode tokens, still no divider lines. */
+html.p-white-bg .p-stat,
+html.p-white-bg .p-home-chartblock,
+html.p-white-bg .p-home-recent,
+html.p-white-bg .p-rail {
+  background-color: #FFFFFF;
+  color: #161311;
+  border: 0;
+}
+
+.p-home-rows {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Suggestion card stack in the rail (JSX: column, gap 8px). */
+.p-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   CALLS LIBRARY — 02-calls-library.jsx / 13-calls-search-filter.jsx / 14-calls-page-2.jsx
+   (merged from .paper-build/calls.css)
+   ========================================================================== */
+
+/* ==========================================================================
+   Calls library — new CSS only. Reuses paper.css for .p-chip/.p-chip-row,
+   .p-table-head, .p-trow/.p-col-*/.p-trow-score, .p-day-divider,
+   .p-outcome*, type/colour utilities.
+   Transcribed from docs/paper-extract/02-calls-library.jsx; the filter
+   dropdown transcribes the applied-filter states of
+   13-calls-search-filter.jsx.
+   ========================================================================== */
+
+/* Fragment root. Owns the JSX column gap (18px, not the 24px the generic
+   .view.active applies between its children). */
+.p-calls-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  gap: 18px;
+}
+
+/* 02-calls-library.jsx page frame: gap 18, paddingTop 30, paddingBottom 26
+   (the generic .view.active rule uses 24 / 32 / 28). The padding lives on
+   the host <section>, so override it there; the :has() form also covers a
+   host that isn't #progress-view. */
+#progress-view.active,
+.view.active:has(> .p-calls-page) {
+  gap: 18px;
+  padding-top: 30px;
+  padding-bottom: 26px;
+}
+
+/* Column-header cells: 11px/14, letter-spacing 0.1em, #766B65 (02 lines
+   148–160). Widths mirror the row columns: 74 / flex / 122 / 130 / 28. */
+.p-th {
+  flex-shrink: 0;
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.1em;
+  color: var(--p-text-4);
+}
+.p-th-score { width: 74px; }
+.p-th-call { flex: 1 1 0%; min-width: 0; }
+.p-th-talk { width: 122px; }
+.p-th-outcome { width: 130px; }
+.p-th-chev { width: 28px; }
+
+/* Calls list uses the same Home iPhone cards as the homepage
+   (.p-stat / .p-home-recent): fill #F2EEE514, radius 16px, padding
+   13px 12px, no stroke. Peer rows stack with the stat-strip's 9px gap.
+   Scoped to .p-calls-page so call detail, home, and chat stay put. */
+.p-calls-page .p-chip-row {
+  height: auto;
+  padding: 13px 12px;
+  border: 0;
+  border-radius: 16px;
+  background-color: #F2EEE514;
+}
+
+.p-calls-page .p-table-head,
+.p-calls-page .p-day-divider {
+  padding-inline: 12px;
+}
+
+.p-calls-page .p-day-divider,
+.p-calls-page .p-day-divider-today {
+  border: 0;
+  border-top: 0;
+}
+
+.p-calls-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.p-calls-page .p-trow,
+.p-calls-page .p-trow:last-child {
+  height: auto;
+  padding: 13px 12px;
+  border: 0;
+  border-radius: 16px;
+  background-color: #F2EEE514;
+}
+
+html.p-white-bg .p-calls-page .p-chip-row,
+html.p-white-bg .p-calls-page .p-trow {
+  background-color: #FFFFFF;
+  color: #161311;
+  border: 0;
+}
+
+/* High talk ratio flips the 14px/18 talk cell orange (#FF8A78): 51% and 56%
+   are orange in 02, 38–43% stay cream. Applied by calls.js at >= 50. */
+.p-talk-high {
+  color: var(--p-orange-text);
+}
+
+/* Pagination footer (02 lines 322–338). Buttons: radius 6, padding 7px 11px,
+   12px/16. Enabled = #D8CEC6 on #4A3A35; disabled = #766B65 on #3A302C
+   (the "Previous" treatment on page 1). 14-calls-page-2.jsx shows both
+   buttons in the same live treatment on page 2, so the pair is expressed
+   as :disabled styling. */
+.p-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.p-pager-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.p-pager-btn {
+  padding: 7px 11px;
+  border: 1px solid var(--p-line-3);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-bright);
+}
+
+.p-pager-btn:disabled {
+  border-color: var(--p-line-2);
+  color: var(--p-text-4);
+  cursor: default;
+}
+
+/* --- filter dropdown (states from 13-calls-search-filter.jsx) ------------ */
+/* Anchor wrapper so the panel hangs under the "Outcome" chip. */
+.p-chip-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+/* No dropdown container exists in the JSX; the surface (black + #FFF8EF29
+   hairline) is borrowed from the 15-call-delete.jsx modal, the only floating
+   surface in this set. The offset clears the chip row's 10px bottom pad. */
+.p-filter-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 196px;
+  padding: 10px;
+  background-color: #000000;
+  border: 1px solid #FFF8EF29;
+  border-radius: 8px;
+}
+
+/* Option rows: 13's inactive chip — h34, padding-inline 14, radius 8,
+   #FFF8EF29 border, 13px/16 #FFF8EF. */
+.p-filter-option {
+  display: flex;
+  align-items: center;
+  height: 34px;
+  padding-inline: 14px;
+  border: 1px solid #FFF8EF29;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 16px;
+  color: #FFF8EF;
+}
+
+/* 13's applied chip: #211A17 bg, #FF6550 border + text. */
+.p-filter-option.active {
+  background-color: #211A17;
+  border-color: #FF6550;
+  color: #FF6550;
+}
+
+/* 13's footer control: h32, padding-inline 12, #FFF8EF20 border,
+   13px/16 #FFF8EF70. */
+.p-filter-clear {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  height: 32px;
+  padding-inline: 12px;
+  border: 1px solid #FFF8EF20;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 16px;
+  color: #FFF8EF70;
+}
+
+/* ==========================================================================
+   ANALYZE A CALL — 12-upload-analyze.jsx
+   (merged from .paper-build/upload.css)
+   ========================================================================== */
+
+/* ==========================================================================
+   Analyze a call — new CSS only.
+   Transcribed from docs/paper-extract/12-upload-analyze.jsx. This screen
+   uses the alpha-cream token generation (#FFF8EF70 / #FFF8EF8F / #FFF8EF24),
+   written as literals because paper.css has no tokens for them.
+   ========================================================================== */
+
+/* Fragment root fills the p-view-bleed section. */
+.p-upload {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+}
+
+/* 72px header bar: padding-inline 56, bottom hairline #FFF8EF24. */
+.p-upload-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  height: 72px;
+  padding-inline: 56px;
+  border-bottom: 1px solid #FFF8EF24;
+}
+
+.p-upload-title {
+  font-size: 24px;
+  line-height: 30px;
+  color: var(--p-cream);
+}
+
+.p-upload-formats {
+  font-size: 13px;
+  line-height: 18px;
+  color: #FFF8EF70;
+}
+
+/* Body: centred column, gap 24, paddingBlock 64, paddingInline 96. */
+.p-upload-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0%;
+  min-height: 0;
+  gap: 24px;
+  padding: 64px 96px;
+  overflow-y: auto;
+}
+
+/* Dropzone: 860x430, dashed 1px #FF655080, radius 18, centred column gap 18.
+   Border in longhand — app.js overwrites style.borderColor on dragover /
+   dragleave / drop and must not clobber style or width. */
+.p-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 18px;
+  width: 860px;
+  max-width: 100%;
+  height: 430px;
+  background-color: #000000;
+  border-style: dashed;
+  border-width: 1px;
+  border-color: #FF655080;
+  border-radius: 18px;
+}
+
+/* "Drop your call recording here" — 34px/42 cream. app.js swaps this
+   element's innerHTML for progress copy. */
+.p-dropzone-title {
+  font-size: 34px;
+  line-height: 42px;
+  color: var(--p-cream);
+  text-align: center;
+}
+
+/* "or choose a file from your computer" — 16px/24 #FFF8EF8F. */
+.p-dropzone-sub {
+  font-size: 16px;
+  line-height: 24px;
+  color: #FFF8EF8F;
+}
+
+/* "Browse files" — 44px tall, padding-inline 22, #FF6550 bg, 15px/20 black. */
+.p-dropzone-btn {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 44px;
+  padding-inline: 22px;
+  background-color: var(--p-orange);
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 20px;
+  color: #000000;
+}
+
+/* "Maximum 50MB · analysis starts immediately after upload" — 13/20. */
+.p-dropzone-note {
+  font-size: 13px;
+  line-height: 20px;
+  color: #FFF8EF70;
+}
+
+/* Footnote under the zone: 14px/22, centred, 860 wide. */
+.p-upload-foot {
+  width: 860px;
+  max-width: 100%;
+  font-size: 14px;
+  line-height: 22px;
+  text-align: center;
+  color: #FFF8EF70;
+}
+
+/* ==========================================================================
+   CALL DETAIL — 03-call-overview.jsx / 04-call-coaching.jsx / 05-call-transcript.jsx / 06-call-notes.jsx / 07-call-recording.jsx / 15-call-delete.jsx
+   (merged from .paper-build/calldetail.css)
+   ========================================================================== */
+
+/* ==========================================================================
+   Call detail — new CSS only. Reuses paper.css tokens (--p-line = #2A2320,
+   --p-line-2 = #3A302C, --p-line-3 = #4A3A35, --p-text-* etc.), .p-rule,
+   .p-spacer, .p-overlay, and the type/colour utilities.
+
+   Sources:
+     shell + Overview tab .... 03-call-overview.jsx
+     Coaching tab ............ 04-call-coaching.jsx
+     Transcript tab .......... 05-call-transcript.jsx
+     Notes tab ............... 06-call-notes.jsx  (alpha-cream token set)
+     recording block ......... 07-call-recording.jsx (alpha-cream token set)
+     delete confirmation ..... 15-call-delete.jsx
+
+   The JSX artboards fix panel heights (660/716 in a 900px frame); here the
+   body flexes to the viewport and the middle columns scroll (the JSX marks
+   them overflow: clip on a fixed canvas).
+   ========================================================================== */
+
+/* --- breadcrumb bar (03: 72px, gap 14, padding-inline 28) ---------------- */
+.p-cd-crumbbar {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 14px;
+  height: 72px;
+  padding-inline: 28px;
+  border-bottom: 1px solid var(--p-line);
+}
+
+.p-cd-crumb {
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-text-3);
+}
+
+.p-cd-crumb-slash {
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-line-3);
+}
+
+.p-cd-crumb-name {
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-cream);
+}
+
+/* "Delete call": 38px, padding-inline 14, #4A3A35 border, 12/16 #D8CEC6. */
+.p-cd-delete {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding-inline: 14px;
+  border: 1px solid var(--p-line-3);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-bright);
+}
+
+/* --- 112px title/tab header (03) ----------------------------------------- */
+.p-cd-head {
+  display: flex;
+  align-items: flex-end;
+  flex-shrink: 0;
+  height: 112px;
+  padding-left: 34px;
+  padding-right: 30px;
+  border-bottom: 1px solid var(--p-line);
+}
+
+.p-cd-head-text {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  flex: 1 1 0%;
+  min-width: 0;
+  gap: 5px;
+}
+
+.p-cd-title {
+  font-size: 28px;
+  line-height: 34px;
+  color: var(--p-cream);
+}
+
+.p-cd-meta {
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-text-3);
+}
+
+/* Call-detail tab bar: 46px tall, 18px gap, 290px wide, 13px/16 text;
+   inactive #A9A09A, active #FF8A78 + 2px #FF6550 bottom border. */
+.p-cd-tabs {
+  display: flex;
+  flex-shrink: 0;
+  gap: 18px;
+  height: 46px;
+  width: 290px;
+}
+
+.p-cd-tab {
+  display: flex;
+  align-items: center;
+  height: 46px;
+  border-bottom: 2px solid transparent;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-text-2);
+}
+
+.p-cd-tab.active {
+  border-bottom-color: var(--p-orange);
+  color: var(--p-orange-text);
+}
+
+/* --- body / panels -------------------------------------------------------- */
+.p-cd-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+}
+
+.p-cd-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+}
+
+/* The display:flex above would defeat the UA rule for [hidden]. */
+.p-cd-panel[hidden] {
+  display: none;
+}
+
+/* Three-column row inside each panel. */
+.p-cd-cols {
+  display: flex;
+  flex: 1 1 0%;
+  min-height: 0;
+}
+
+/* --- kickers -------------------------------------------------------------- */
+/* CALL CONTEXT / KEY MOMENTS / SPEAKERS: 11px/14, 0.12em, #766B65. */
+.p-cd-kicker {
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.12em;
+  color: var(--p-text-4);
+}
+
+/* BRUTUS VERDICT / NEXT CALL: same metrics in #FF8A78. */
+.p-cd-kicker--orange {
+  color: var(--p-orange-text);
+}
+
+/* 17px/22 cream section headings (Action items…, How did it go?, Top
+   coaching reads, 24 transcript turns, Search results). */
+.p-cd-h17 {
+  font-size: 17px;
+  line-height: 22px;
+  color: var(--p-cream);
+}
+
+/* --- left rail, Overview variant (03: 244px, gap 22, padding 26/22) ------ */
+.p-cd-rail {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 22px;
+  width: 244px;
+  padding: 26px 22px;
+  border-right: 1px solid var(--p-line);
+}
+
+.p-cd-scoreblock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.p-cd-score {
+  font-size: 44px;
+  line-height: 48px;
+  color: var(--p-cream);
+}
+
+.p-cd-score-sub {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-2);
+}
+
+.p-cd-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.p-cd-metric {
+  display: flex;
+  justify-content: space-between;
+}
+
+.p-cd-metric-k {
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-text-3);
+}
+
+.p-cd-metric-v {
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-cream);
+}
+
+.p-cd-tagwrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+/* Rail tag pill (03): #4A3A35 border, 5px 8px, 11/14 cream — narrower than
+   the generic .p-tag (9px inline, #3A302C, #C7BDB6). */
+.p-cd-tag {
+  padding: 5px 8px;
+  border: 1px solid var(--p-line-3);
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--p-cream);
+}
+
+.p-cd-rail-note {
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--p-text-4);
+}
+
+/* "Show call recording": 195x38, #FFF8EF40 border, 13/18 cream, centred. */
+.p-cd-showrec {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 195px;
+  height: 38px;
+  border: 1px solid #FFF8EF40;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-cream);
+}
+
+/* --- Overview main column (03: gap 22, padding 28/32) -------------------- */
+.p-cd-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-width: 0;
+  gap: 22px;
+  padding: 28px 32px;
+  overflow-y: auto;
+}
+
+.p-ov-verdict {
+  max-width: 600px;
+  font-size: 24px;
+  line-height: 32px;
+  color: var(--p-cream);
+}
+
+.p-ov-items {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.p-ov-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/* Roman-numeral badge: 26px circle, #211A17 bg, 16/20 #FF8A78 glyph. */
+.p-ov-numeral {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background-color: var(--p-bg-active);
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-orange-text);
+}
+
+.p-ov-item-text {
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--p-text-bright);
+}
+
+/* Outcome buttons (03 "How did it go?"). Idle: #3A302C border, 9px/12px
+   padding, radius 7, 12/16 #A9A09A. Selected (the JSX "Follow up" state):
+   #211A17 bg, #623B34 border, #FF8A78 — app.js marks selection by adding
+   the outcome value as a class on .outcome-btn. */
+.outcome-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.outcome-btn {
+  padding: 9px 12px;
+  border: 1px solid var(--p-line-2);
+  border-radius: 7px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-2);
+}
+
+.outcome-btn.closed,
+.outcome-btn.lost,
+.outcome-btn.follow_up,
+.outcome-btn.no_show {
+  background-color: var(--p-bg-active);
+  border-color: var(--p-orange-border);
+  color: var(--p-orange-text);
+}
+
+/* --- Overview right rail (03: 318px, gap 18, padding 28/22) --------------- */
+.p-cd-right {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 18px;
+  width: 318px;
+  padding: 28px 22px;
+  border-left: 1px solid var(--p-line);
+  overflow-y: auto;
+}
+
+/* Coaching read blocks: top hairline, 14px top padding, gap 8. */
+.p-cd-read {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--p-line);
+}
+
+.p-cd-read-kicker {
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.1em;
+}
+
+/* Read/moment kind colours: CRITICAL #FF8A78, WARNING #C9A989,
+   INSIGHT #A9A09A, GOOD (04's GOOD READ) #D8CEC6. */
+.p-kind-critical { color: var(--p-orange-text); }
+.p-kind-warning { color: #C9A989; }
+.p-kind-insight { color: var(--p-text-2); }
+.p-kind-good { color: var(--p-text-bright); }
+
+.p-cd-read-text {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--p-text-bright);
+}
+
+/* "Helpful?  Yes  No" rating row (03). Idle text #766B65; the rated choice
+   (block one's "Yes") is #D8CEC6 — mapped to .rating-btn.active. */
+.p-cd-helpful {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.p-cd-helpful-label {
+  color: var(--p-text-4);
+}
+
+.rating-btns {
+  display: flex;
+  gap: 10px;
+}
+
+.rating-btn {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-4);
+}
+
+.rating-btn.active {
+  color: var(--p-text-bright);
+}
+
+/* --- Overview footer bar (03: 56px, gap 18, padding-inline 30) ------------ */
+.p-cd-footbar {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 18px;
+  height: 56px;
+  padding-inline: 30px;
+  border-top: 1px solid var(--p-line);
+}
+
+.p-cd-foot-score {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-orange-text);
+}
+
+.p-cd-foot-item {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-3);
+}
+
+/* ==========================================================================
+   Coaching tab — 04-call-coaching.jsx
+   ========================================================================== */
+
+/* Rail: 246px, gap 18 (03's is 244/22). */
+.p-cd-rail--coaching {
+  width: 246px;
+  gap: 18px;
+}
+
+/* Key-moment filters: 38px rows, padding-inline 11, 13/16.
+   Active: #211A17 bg, #3B2D29 border, radius 7, cream. */
+.p-co-filter {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  background: transparent;
+  flex-shrink: 0;
+  height: 38px;
+  padding-inline: 11px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-text-2);
+}
+
+.p-co-filter.active {
+  background-color: var(--p-bg-active);
+  border-color: var(--p-line-active);
+  color: var(--p-cream);
+}
+
+.p-co-pattern-label {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-3);
+}
+
+.p-co-pattern {
+  font-size: 22px;
+  line-height: 28px;
+  color: var(--p-cream);
+}
+
+.p-co-pattern-sub {
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--p-text-2);
+}
+
+/* Main column: padding 28/30, no column gap — the timeline rows carry their
+   own 18px block padding and top hairlines. */
+.p-cd-main--coaching {
+  gap: 0;
+  padding: 28px 30px;
+}
+
+.p-co-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+}
+
+.p-co-head-title {
+  font-size: 18px;
+  line-height: 22px;
+  color: var(--p-cream);
+}
+
+.p-co-head-count {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-3);
+}
+
+.p-co-moment {
+  display: flex;
+  cursor: pointer;
+  gap: 16px;
+  padding-block: 18px;
+  border-top: 1px solid var(--p-line);
+}
+.p-co-moment.is-open {
+  background-color: #171414;
+  border-radius: 8px;
+}
+
+.p-co-time {
+  flex-shrink: 0;
+  width: 52px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.p-co-moment-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.p-co-kicker {
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.1em;
+}
+
+.p-co-quote {
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--p-cream);
+}
+
+.p-co-note {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--p-text-2);
+}
+
+/* Right rail: 322px, padding 28/24. */
+.p-cd-right--coaching {
+  width: 322px;
+  padding: 28px 24px;
+}
+
+.p-co-next-title {
+  font-size: 23px;
+  line-height: 30px;
+  color: var(--p-cream);
+}
+
+.p-co-next-sub {
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--p-text-2);
+}
+
+.p-co-plan-title {
+  font-size: 15px;
+  line-height: 18px;
+  color: var(--p-cream);
+}
+
+.p-co-plan-item {
+  display: flex;
+  gap: 10px;
+}
+
+.p-co-plan-numeral {
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--p-orange-text);
+}
+
+.p-co-plan-text {
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--p-text-bright);
+}
+
+/* "Practice this in roleplay": 42px, #FF6550, 13/16 black, centred. */
+.p-co-practice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 42px;
+  background-color: var(--p-orange);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 16px;
+  color: #000000;
+}
+
+/* ==========================================================================
+   Transcript tab — 05-call-transcript.jsx
+   ========================================================================== */
+
+/* Rail: 236px, gap 18, padding 26/20. */
+.p-cd-rail--transcript {
+  width: 236px;
+  gap: 18px;
+  padding: 26px 20px;
+}
+
+/* Speaker rows: 42px, gap 10, padding-inline 11.
+   Active: #211A17 bg, #3B2D29 border, radius 7. */
+.p-ts-speaker {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  background: transparent;
+  flex-shrink: 0;
+  gap: 10px;
+  height: 42px;
+  padding-inline: 11px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+}
+
+.p-ts-speaker.active {
+  background-color: var(--p-bg-active);
+  border-color: var(--p-line-active);
+}
+
+/* 8px dot: filled #FF6550 on the active row, hollow #8E837D otherwise. */
+.p-ts-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--p-text-3);
+  border-radius: 999px;
+}
+
+.p-ts-speaker.active .p-ts-dot {
+  background-color: var(--p-orange);
+  border-color: var(--p-orange);
+}
+
+.p-ts-speaker-name {
+  flex: 1 1 0%;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-text-2);
+}
+
+.p-ts-speaker-count {
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-text-2);
+}
+
+.p-ts-speaker.active .p-ts-speaker-name {
+  color: var(--p-cream);
+}
+
+.p-ts-speaker.active .p-ts-speaker-count {
+  color: var(--p-text-3);
+}
+
+.p-ts-rail-note {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--p-text-4);
+}
+
+/* JSX wraps the rail button in an end-aligned, growing box. */
+.p-ts-rail-end {
+  display: flex;
+  align-items: flex-end;
+  flex-grow: 1;
+}
+
+/* Main column: gap 18, padding 26/34. */
+.p-cd-main--transcript {
+  gap: 18px;
+  padding: 26px 34px;
+}
+
+.p-ts-head {
+  display: flex;
+  justify-content: space-between;
+}
+
+.p-ts-head-note {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-3);
+}
+
+/* Turns: 84px speaker label (11px, 0.08em, lh 14), 14/22 text.
+   Rep text #D8CEC6, prospect text cream. */
+.p-ts-turn {
+  display: flex;
+  gap: 16px;
+}
+
+.p-ts-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+  width: 84px;
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.08em;
+}
+
+.p-ts-jump {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: 0.08em;
+  line-height: 14px;
+  color: #FFF8EF70;
+  text-align: left;
+  cursor: pointer;
+}
+
+.p-ts-turn--rep .p-ts-label { color: var(--p-orange-text); }
+.p-ts-turn--prospect .p-ts-label { color: var(--p-text-2); }
+
+.p-ts-text {
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.p-ts-turn--rep .p-ts-text { color: var(--p-text-bright); }
+.p-ts-turn--prospect .p-ts-text { color: var(--p-cream); }
+
+/* Flagged turn: #171414 plate, radius 8, padding 12/14, 70px label, cream. */
+.p-ts-turn--flag {
+  background-color: var(--p-bg-panel);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.p-ts-turn--flag .p-ts-label { width: 70px; }
+.p-ts-turn--flag .p-ts-text { color: var(--p-cream); }
+
+/* Right rail: 302px, gap 16, padding 26/22. */
+.p-cd-right--transcript {
+  width: 302px;
+  gap: 16px;
+  padding: 26px 22px;
+}
+
+.p-ts-query {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-3);
+}
+
+.p-ts-match {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-top: 14px;
+  border-top: 1px solid var(--p-line);
+}
+
+.p-ts-match-label {
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.p-ts-match--rep .p-ts-match-label { color: var(--p-orange-text); }
+.p-ts-match--prospect .p-ts-match-label { color: var(--p-text-2); }
+
+.p-ts-match-text {
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--p-text-bright);
+}
+
+.p-ts-footnote {
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--p-text-4);
+}
+
+/* ==========================================================================
+   Notes tab — 06-call-notes.jsx (alpha-cream token set, kept as literals)
+   ========================================================================== */
+
+/* Rail: 244px, gap 15, padding 30/22, hairlines #FFF8EF20. */
+.p-cd-rail--notes {
+  gap: 15px;
+  padding: 30px 22px;
+  border-right-color: #FFF8EF20;
+}
+
+.p-cd-rail--notes .p-cd-kicker {
+  letter-spacing: 0.08em;
+  color: #FFF8EF70;
+}
+
+.p-cd-rail--notes .p-rule {
+  background-color: #FFF8EF20;
+}
+
+.p-nt-score {
+  font-size: 46px;
+  line-height: 52px;
+  color: var(--p-cream);
+}
+
+.p-nt-score-sub {
+  font-size: 13px;
+  line-height: 16px;
+  color: #FFF8EF70;
+}
+
+/* Metric rows: both sides 13/16 cream in 06. */
+.p-nt-metric {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-cream);
+}
+
+.p-nt-tagwrap {
+  display: flex;
+  gap: 6px;
+}
+
+/* Tag pills in 06: #FFF8EF29 border, radius 8, 5px/9px, 11/14 cream. */
+.p-nt-tagpill {
+  padding: 5px 9px;
+  border: 1px solid #FFF8EF29;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--p-cream);
+}
+
+.p-nt-railnote {
+  font-size: 12px;
+  line-height: 18px;
+  color: #FFF8EF70;
+}
+
+/* Middle column: gap 15, padding 28/34, right hairline #FFF8EF20.
+   (Fixed 650px on the artboard; flexes here.) */
+.p-nt-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-width: 0;
+  gap: 15px;
+  padding: 28px 34px;
+  border-right: 1px solid #FFF8EF20;
+  overflow-y: auto;
+}
+
+.p-nt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.p-nt-title {
+  font-size: 24px;
+  line-height: 30px;
+  color: var(--p-cream);
+}
+
+/* "Show transcript": 34px, padding-inline 12, #FFF8EF29 border, 12/16. */
+.p-nt-showts {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding-inline: 12px;
+  border: 1px solid #FFF8EF29;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-cream);
+}
+
+.p-nt-counts {
+  font-size: 12px;
+  line-height: 16px;
+  color: #FFF8EF70;
+}
+
+.p-nt-rule {
+  flex-shrink: 0;
+  height: 1px;
+  background-color: #FFF8EF20;
+}
+
+/* Note rows: gap 16, padding-block 12, bottom hairline #FFF8EF18. */
+.p-nt-row {
+  display: flex;
+  gap: 16px;
+  padding-block: 12px;
+  border-bottom: 1px solid #FFF8EF18;
+}
+
+/* Source tag: 82px, 11/14 — AI #FF6550, MANUAL #FFF8EF70. */
+.p-nt-tag {
+  flex-shrink: 0;
+  width: 82px;
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.p-nt-tag--ai { color: var(--p-orange); }
+.p-nt-tag--manual { color: #FFF8EF70; }
+
+.p-nt-text {
+  flex: 1 1 0%;
+  font-size: 15px;
+  line-height: 23px;
+  color: var(--p-cream);
+}
+
+.p-nt-foot {
+  font-size: 12px;
+  line-height: 16px;
+  color: #FFF8EF70;
+}
+
+/* Right column: 322px, gap 15, padding 28/24, no border. */
+.p-cd-right--notes {
+  width: 322px;
+  gap: 15px;
+  padding: 28px 24px;
+  border-left: 0;
+}
+
+.p-nt-sumhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.p-nt-sumtitle {
+  font-size: 21px;
+  line-height: 26px;
+  color: var(--p-cream);
+}
+
+.p-nt-ready {
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--p-orange);
+}
+
+.p-nt-summary {
+  font-size: 15px;
+  line-height: 24px;
+  color: #FFF8EFB8;
+}
+
+.p-nt-kf-title {
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-cream);
+}
+
+.p-nt-kf {
+  font-size: 14px;
+  line-height: 22px;
+  color: #FFF8EF8F;
+}
+
+.p-nt-note {
+  font-size: 12px;
+  line-height: 18px;
+  color: #FFF8EF70;
+}
+
+/* ==========================================================================
+   Recording / player block — 07-call-recording.jsx (alpha-cream token set)
+   ========================================================================== */
+
+/* Player column (07's main column: padding 24/38/20, gap 12). */
+.p-rec {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  gap: 12px;
+  padding: 24px 38px 20px;
+}
+
+.p-rec-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-shrink: 0;
+  height: 54px;
+}
+
+.p-rec-kicker {
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.08em;
+  color: #FFF8EF70;
+}
+
+.p-rec-title-wrap {
+  padding-top: 3px;
+}
+
+.p-rec-title {
+  font-size: 27px;
+  line-height: 32px;
+  color: var(--p-cream);
+}
+
+.p-rec-meta {
+  font-size: 12px;
+  line-height: 16px;
+  color: #FFF8EF70;
+}
+
+/* Waveform: 100px box, #FFF8EF20 border, radius 10, centred 5px bars, 6px
+   gap; cream-alpha bars with #FF6550 accents. */
+.p-rec-wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 6px;
+  height: 100px;
+  padding-inline: 18px;
+  border: 1px solid #FFF8EF20;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.p-rec-bar {
+  flex-shrink: 0;
+  width: 5px;
+  background-color: #FFF8EF8F;
+}
+
+.p-rec-bar--hot {
+  background-color: var(--p-orange);
+}
+
+/* Controls row: 44px, gap 16. Play: 44px circle, #FF6550 border. */
+.p-rec-controls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 16px;
+  height: 44px;
+}
+
+.p-rec-audio {
+  display: none;
+}
+
+.p-rec-play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--p-orange);
+  border-radius: 22px;
+}
+
+.p-rec-track-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  gap: 7px;
+}
+
+.p-rec-track {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 3px;
+  background-color: #FFF8EF24;
+}
+
+.p-rec-fill {
+  height: 3px;
+  background-color: var(--p-orange);
+}
+
+.p-rec-knob {
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 5px;
+  background-color: var(--p-orange);
+}
+
+.p-rec-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  line-height: 14px;
+  color: #FFF8EF70;
+}
+
+.p-rec-rule {
+  flex-shrink: 0;
+  height: 1px;
+  background-color: #FFF8EF20;
+}
+
+.p-rec-ts-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  height: 24px;
+}
+
+.p-rec-ts-title {
+  font-size: 19px;
+  line-height: 24px;
+  color: var(--p-cream);
+}
+
+.p-rec-ts-hint {
+  font-size: 11px;
+  line-height: 14px;
+  color: #FFF8EF70;
+}
+
+.p-rec-turns {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Turns: gap 18, padding-block 10, bottom hairline #FFF8EF12; 76px speaker
+   label (10px, 0.08em, lh 12), 14/20 text at #FFF8EFD9 (cream when the turn
+   is flagged, with the flagged span in #FF6550). */
+.p-rec-turn {
+  display: flex;
+  gap: 18px;
+  padding-block: 10px;
+  border-bottom: 1px solid #FFF8EF12;
+}
+
+.p-rec-turn:last-child {
+  border-bottom: 0;
+}
+
+.p-rec-speaker {
+  flex-shrink: 0;
+  width: 76px;
+  font-size: 10px;
+  line-height: 12px;
+  letter-spacing: 0.08em;
+  color: #FFF8EF70;
+  white-space: pre-wrap;
+}
+
+.p-rec-text {
+  font-size: 14px;
+  line-height: 20px;
+  color: #FFF8EFD9;
+}
+
+.p-rec-turn--flag .p-rec-text {
+  display: flex;
+  flex-wrap: wrap;
+  color: var(--p-cream);
+}
+
+.p-rec-hot {
+  color: var(--p-orange);
+}
+
+/* ==========================================================================
+   Delete confirmation — 15-call-delete.jsx (overlay uses .p-overlay,
+   whose rgba(0,0,0,.72) equals the JSX #000000B8 scrim)
+   ========================================================================== */
+
+.p-del-modal {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 18px;
+  width: 470px;
+  max-width: calc(100vw - 48px);
+  padding: 28px;
+  background-color: #000000;
+  border: 1px solid #FFF8EF29;
+  border-radius: 14px;
+}
+
+.p-del-title {
+  font-size: 28px;
+  line-height: 36px;
+  color: var(--p-cream);
+}
+
+.p-del-text {
+  font-size: 15px;
+  line-height: 24px;
+  color: #FFF8EFB8;
+}
+
+.p-del-warn {
+  font-size: 13px;
+  line-height: 21px;
+  color: var(--p-orange);
+}
+
+.p-del-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.p-del-cancel {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding-inline: 18px;
+  border: 1px solid #FFF8EF29;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-cream);
+}
+
+.p-del-confirm {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding-inline: 18px;
+  border: 1px solid var(--p-orange);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-orange);
+}
+
+/* ==========================================================================
+   BRUTUS CHAT — 09-brutus-chat.jsx / 11-brutus-conversations.jsx / 16-brutus-chat-empty.jsx
+   (merged from .paper-build/brutus.css)
+   ========================================================================== */
+
+/* ==========================================================================
+   Brutus chat — rules NOT already in paper.css.
+   Transcribed from docs/paper-extract/09-brutus-chat.jsx,
+   16-brutus-chat-empty.jsx, and 11-brutus-conversations.jsx.
+   Alpha-cream literals (#FFF8EF24 / #FFF8EF29 / #FFF8EF6B / #FFF8EF70 /
+   #FFF8EF94 / #FFF8EFB8) are written as-is; paper.css has no tokens for
+   them (same approach as upload.css).
+   ========================================================================== */
+
+/* Fragment root fills the p-view-bleed section. A grid keeps the mandated
+   DOM order (header, rail, transcript, composer) while letting the 11 rail
+   span the full column height beside the header. */
+.p-chat {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  flex: 1 1 0%;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* --- screen header (09/16) ----------------------------------------------- */
+/* 72px, padding-inline 56, bottom hairline #FFF8EF24. */
+.p-chat-head {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  height: 72px;
+  padding-inline: 56px;
+  border-bottom: 1px solid #FFF8EF24;
+}
+
+/* Left cell of the header: 180x44 (09/16). 11 adds a matching 180px spacer
+   on the right, which is not reproduced. */
+.p-chat-head-side {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 180px;
+  height: 44px;
+}
+
+.p-chat-menu {
+  display: flex;
+  flex-shrink: 0;
+}
+
+/* 11: with the conversations rail open, the hamburger stroke is #FF6550. */
+.p-chat-menu[aria-expanded="true"] svg path {
+  stroke: #FF6550;
+}
+
+/* Centred title: 24px/30 cream, wrapping (09/16). */
+.p-chat-title {
+  display: flex;
+  flex: 1 1 0%;
+  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
+  font-size: 24px;
+  line-height: 30px;
+  color: var(--p-cream);
+}
+
+/* --- conversations rail (11) --------------------------------------------- */
+/* 256px, full column height, right hairline #FFF8EF24, padding 20/14/16,
+   gap 10. Spans all grid rows like the 900px-tall rail in the artboard. */
+.p-convos {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 10px;
+  width: 256px;
+  min-height: 0;
+  padding: 20px 14px 16px;
+  background-color: #000000;
+  border-right: 1px solid #FFF8EF24;
+}
+
+/* The hidden attribute must beat the display:flex above. */
+.p-convos[hidden] {
+  display: none;
+}
+
+/* "CONVERSATIONS" row: 38px, padding-inline 12; 13px/18, 0.08em, #FFF8EFB8. */
+.p-convos-head {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 38px;
+  padding-inline: 12px;
+}
+
+.p-convos-title {
+  margin: 0;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: 0.08em;
+  color: #FFF8EFB8;
+}
+
+/* Search box: 42px, border #FFF8EF29, radius 8, padding-inline 12;
+   14px/18 with #FFF8EF70 placeholder. Focus treatment mirrors the
+   paper.css .p-input orange-border convention (the JSX shows none). */
+.p-convos-search {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 42px;
+  padding-inline: 12px;
+  background: none;
+  border: 1px solid #FFF8EF29;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-cream);
+  outline: none;
+}
+
+.p-convos-search::placeholder {
+  color: #FFF8EF70;
+}
+
+.p-convos-search:focus {
+  border-color: var(--p-orange);
+}
+
+/* New-conversation row: 30px, plus glyph right-aligned. */
+.p-convos-new {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  width: 100%;
+  height: 30px;
+}
+
+/* Row stack. The JSX artboard is static; overflow-y is the functional
+   adaptation for lists taller than the rail. */
+.p-convo-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* One row: 42px, padding-inline 12, 14px/18 #FFF8EFB8. The transparent
+   border keeps inactive rows the same 42px border-box as the active one. */
+.p-convo-row {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 42px;
+  padding-inline: 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 18px;
+  color: #FFF8EFB8;
+}
+
+/* Active row: bg #211A17, border #3B2D29, cream text. */
+.p-convo-row.active {
+  background-color: #211A17;
+  border-color: #3B2D29;
+  color: var(--p-cream);
+}
+
+/* --- transcript column (09/16) ------------------------------------------- */
+.p-chat-transcript {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding-inline: clamp(20px, 4vw, 96px);
+  padding-top: 44px;
+}
+
+.p-chat-greeting,
+.p-chat-empty {
+  flex-shrink: 0;
+}
+
+/* Heading: 58px/64, letter-spacing -0.025em, cream. Real h1/h2 must not
+   add browser margin or synthetic bold (Gideon Roman ships one weight). */
+.p-chat-h1 {
+  margin: 0;
+  font-weight: 400;
+  font-size: 58px;
+  line-height: 64px;
+  letter-spacing: -0.025em;
+  color: var(--p-cream);
+}
+
+/* Subline container: padding-top 10, 760 wide. */
+.p-chat-subwrap {
+  width: 100%;
+  max-width: 100%;
+  padding-top: 10px;
+}
+
+/* Subline: 20px/28, #FFF8EF94. */
+.p-chat-sub {
+  margin: 0;
+  font-size: 20px;
+  line-height: 28px;
+  color: #FFF8EF94;
+}
+
+/* Suggestion chip stack. Not in 09/16 — mandated by the app.js contract.
+   Values borrowed from transcribed JSX: 316px is the 01-home-dashboard rail
+   content width (340 − 24 padding), 8px its stack gap, 50px the 09 gap
+   between the subline and the block below it. Chips use .p-suggestion. */
+.p-chat-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 316px;
+  max-width: 100%;
+  padding-top: 50px;
+}
+
+/* Scrolling message column (09): gap 26, padding-top 50, 1024 wide.
+   This element is the scroller — app.js sets its scrollTop. */
+.p-chat-messages {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  gap: 26px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding-top: 50px;
+  overflow-y: auto;
+}
+
+/* State swap: 09 draws the greeting when messages exist; 16 draws the
+   empty copy when none do. app.js only appends to #chat-messages, so the
+   child count is the state. Engines without :has() show both blocks. */
+.p-chat-transcript:has(#chat-messages:empty) .p-chat-greeting {
+  display: none;
+}
+
+.p-chat-transcript:has(#chat-messages:not(:empty)) #chat-empty {
+  display: none;
+}
+
+/* --- message rows (09) ---------------------------------------------------- */
+/* User: row pushed to the right edge; 460px right-aligned text, 18/26 cream.
+   No background, border, radius, or padding — the JSX draws bare text. */
+.p-msg-user {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.p-msg-user-text {
+  width: 100%;
+  max-width: min(70%, 100%);
+  text-align: right;
+  font-size: 18px;
+  line-height: 26px;
+  color: var(--p-cream);
+}
+
+/* Brutus: left-aligned column, gap 10; 700px main text, 18/27 cream. */
+.p-msg-brutus {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-shrink: 0;
+  gap: 10px;
+  width: 100%;
+}
+
+.p-msg-brutus-text {
+  width: 100%;
+  max-width: 100%;
+  font-size: 18px;
+  line-height: 27px;
+  color: var(--p-cream);
+}
+
+/* The second, quoted paragraph of the 09 Brutus reply: 17px/26 #FFF8EFB8,
+   padding-top 2. paperChatMessage(role, text) has no slot for it; the class
+   is provided so richer replies can transcribe it. */
+.p-msg-brutus-quote {
+  width: 100%;
+  max-width: 100%;
+  padding-top: 2px;
+  font-size: 17px;
+  line-height: 26px;
+  color: #FFF8EFB8;
+}
+
+/* --- composer (09/16) ----------------------------------------------------- */
+/* 110px end-aligned bar: padding-bottom 28, padding-inline 96. */
+.p-chat-composerbar {
+  grid-column: 2;
+  grid-row: 3;
+  display: flex;
+  align-items: flex-end;
+  height: 110px;
+  padding-bottom: 28px;
+  padding-inline: clamp(20px, 4vw, 96px);
+}
+
+/* 60px pill: radius 18, border #FFF8EF29, black bg, padding 7, gap 7,
+   1024 wide. */
+.p-chat-composer {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 7px;
+  width: 100%;
+  max-width: 100%;
+  height: 60px;
+  padding: 7px;
+  background-color: #000000;
+  border: 1px solid #FFF8EF29;
+  border-radius: 18px;
+}
+
+/* Input region: flex-grow with 9px left padding; 16px/20, #FFF8EF6B
+   placeholder. */
+.p-chat-composer input {
+  flex: 1 1 0%;
+  min-width: 0;
+  padding-left: 9px;
+  background: none;
+  border: 0;
+  outline: none;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-cream);
+}
+
+.p-chat-composer input::placeholder {
+  color: #FFF8EF6B;
+}
+
+/* Send: 44x44, radius 14, #FF6550. */
+.p-chat-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background-color: var(--p-orange);
+}
+
+/* The conversations rail takes its own column. Messages and the composer
+   stay the full width of whatever space is left, on a large monitor or a
+   narrow window. */
+
+/* --- decorative plate (09/16/11) ------------------------------------------ */
+/* Paper chat frames (09/16/11): 168×95, right 28 / bottom 142.
+   contain fits the mascot in that box without stretching him.
+   pointer-events:none keeps the overlay from blocking the transcript. */
+.p-chat-decal {
+  position: absolute;
+  right: 28px;
+  bottom: 142px;
+  width: 168px;
+  height: 95px;
+  background-image: url("brutus-mascot.png");
+  background-position: 50%;
+  background-repeat: no-repeat;
+  background-size: contain;
+  pointer-events: none;
+  opacity: 1;
+  mix-blend-mode: normal;
+}
+
+.p-chat-decal.is-off {
+  display: none;
+}
+
+/* One mascot only. The chat column must not paint a second copy.
+   Desktop draws him in his own always-on-top window at this same 168×95 size. */
+.p-chat-decal {
+  display: none !important;
+}
+
+/* ==========================================================================
+   ROLEPLAY — 07-roleplay-setup.jsx / 17-roleplay-headphones.jsx / 18-roleplay-active.jsx / 19-roleplay-results.jsx
+   (merged from .paper-build/roleplay.css)
+   ========================================================================== */
+
+/* ==========================================================================
+   Roleplay lane — rules NOT already in paper.css.
+   Transcribed from docs/paper-extract/
+     07-roleplay-setup.jsx   (setup / planning screen)
+     17-roleplay-headphones.jsx (headphones dialog)
+     18-roleplay-active.jsx  (live stage)
+     19-roleplay-results.jsx (results screen)
+
+   The overlay screens (17/18/19) use cream-alpha inks (#FFF8EF29/24/20,
+   #FFF8EFB8/8F/70/66) instead of the app grays; those hexes are kept
+   literally, as in the JSX.
+   ========================================================================== */
+
+/* --- view frame ----------------------------------------------------------
+   07's main block is paddingBlock 30 / paddingInline 34 / gap 22, not the
+   32/36/28 + 24 that .view.active applies. The fragment can't put a class
+   on the <section> it is spliced into, so the override targets the id. */
+#roleplays-view.active {
+  gap: 22px;
+  padding: 30px 34px;
+}
+
+/* JSX 07 page title is 32px/40 with NO letter-spacing; .p-t-32 carries
+   -0.02em from other artboards. */
+.p-rp-title {
+  letter-spacing: normal;
+}
+
+/* Headings are divs in the JSX; real h1/h2 must not add margin/bold. */
+#roleplays-view h1,
+#roleplays-view h2,
+.p-rp-results h2,
+.p-rp-modal h2 {
+  margin: 0;
+  font-weight: 400;
+}
+.p-rp-modal p {
+  margin: 0;
+}
+
+/* Bumps .p-label-orange (0.1em) to the 0.12em the 07 card eyebrow uses. */
+.p-rp-track12 {
+  letter-spacing: 0.12em;
+}
+
+/* --- setup: launcher card + plan column (07) ----------------------------- */
+/* JSX: flex, gap 24, fixed 388px row. */
+.p-rp-split {
+  display: flex;
+  flex-shrink: 0;
+  gap: 24px;
+  height: 388px;
+}
+
+/* Launcher card: 360px, #3A302C border, radius 10, padding 24, gap 18. */
+.p-rp-launch {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 18px;
+  width: 360px;
+  padding: 24px;
+  border: 1px solid var(--p-line-2);
+  border-radius: 10px;
+}
+
+/* Scenario title 23px/30 cream; description 13px/20 #A9A09A. */
+.p-rp-scenario {
+  font-size: 23px;
+  line-height: 30px;
+  color: var(--p-cream);
+}
+.p-rp-scenario-sub {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--p-text-2);
+}
+
+/* Voice picker: 40px, #4A3A35 border, radius 7, padding-inline 12; value
+   13/16 cream, ⌄ chevron 13/16 #766B65. The JSX draws a closed select;
+   the real <select> is stripped of its native chrome and the JSX chevron
+   overlaid. Focus ring reuses the token layer's orange border. */
+.p-rp-voice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 40px;
+  border: 1px solid var(--p-line-3);
+  border-radius: 7px;
+}
+.p-rp-voice:focus-within {
+  border-color: var(--p-orange);
+}
+.p-rp-voice select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 100%;
+  padding-inline: 12px;
+  background: none;
+  border: 0;
+  outline: none;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-cream);
+  cursor: pointer;
+}
+.p-rp-voice select option {
+  background-color: #000000;
+  color: var(--p-cream);
+}
+.p-rp-voice-chev {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-text-4);
+}
+
+/* Start button: 44px, orange, radius 8, centered 14/18 black text.
+   The JSX shows only the enabled state; disabled reuses the token
+   layer's .p-btn-disabled treatment (design-system.jsx). */
+.p-rp-start {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 44px;
+  border-radius: 8px;
+  background-color: var(--p-orange);
+  font-size: 14px;
+  line-height: 18px;
+  color: #000000;
+}
+.p-rp-start:disabled {
+  background-color: var(--p-bg-panel);
+  color: var(--p-text-5);
+  cursor: default;
+}
+
+/* Plan column: left hairline #2A2320, padding-left 24, gap 14. */
+.p-rp-plan {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-width: 0;
+  gap: 14px;
+  padding-left: 24px;
+  border-left: 1px solid var(--p-line);
+}
+
+/* Planning conversation. app.js appends .chat-message nodes (avatar +
+   content + time); restyled here to the 07 message: 30px orange circle
+   with a 16/20 black initial, #171414 bubble radius 8 padding 12/14,
+   text 13/19 #D8CEC6. The JSX shows no timestamps, so .message-time is
+   suppressed. The JSX has no user message; user messages get the same
+   avatar/bubble treatment. */
+.p-rp-plan-messages {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 1;
+  gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
+}
+.p-rp-plan-messages .chat-message {
+  display: flex;
+  align-items: flex-start;
+  flex-shrink: 0;
+  gap: 12px;
+}
+.p-rp-plan-messages .message-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background-color: var(--p-orange);
+  font-size: 16px;
+  line-height: 20px;
+  color: #000000;
+}
+.p-rp-plan-messages .message-content {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background-color: var(--p-bg-panel);
+}
+.p-rp-plan-messages .message-text {
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--p-text-bright);
+}
+.p-rp-plan-messages .message-time {
+  display: none;
+}
+
+/* Suggestion chips (07): wrap gap 8; chip padding 8/10, radius 7,
+   #3A302C border, 12/16 #A9A09A. Styled on the app.js contract class. */
+.p-rp-chiprow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rp-plan-suggestion {
+  display: inline-flex;
+  padding: 8px 10px;
+  border: 1px solid var(--p-line-2);
+  border-radius: 7px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-2);
+}
+
+/* --- setup: recent sessions list (07) ------------------------------------ */
+.p-rp-sessions {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 72px row, hairline top (bottom on the last). */
+.p-rp-session {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 72px;
+  border-top: 1px solid var(--p-line);
+}
+.p-rp-session:last-child {
+  border-bottom: 1px solid var(--p-line);
+}
+
+/* Turns pill: 52x42, radius 999; muted #3A302C/#A9A09A, or the orange
+   #623B34/#FF8A78 variant for drilled sessions. Value 16/20. */
+.p-rp-session-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 52px;
+  height: 42px;
+  border: 1px solid var(--p-line-2);
+  border-radius: 999px;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-text-2);
+}
+.p-rp-session-pill-drilled {
+  border-color: var(--p-orange-border);
+  color: var(--p-orange-text);
+}
+
+.p-rp-session-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-width: 0;
+  gap: 5px;
+  padding-left: 14px;
+}
+
+/* Duration column 120px 12/16 #A9A09A; chevron column 30px 16/20 #766B65. */
+.p-rp-session-dur {
+  flex-shrink: 0;
+  width: 120px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-2);
+}
+.p-rp-session-chev {
+  flex-shrink: 0;
+  width: 30px;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-text-4);
+}
+
+/* --- modal chrome (17) ---------------------------------------------------- */
+/* Dialog: 470px, black, #FFF8EF29 border, radius 14, padding 28, gap 18. */
+.p-rp-modal {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 18px;
+  width: 470px;
+  padding: 28px;
+  background-color: #000000;
+  border: 1px solid #FFF8EF29;
+  border-radius: 14px;
+}
+/* Title 28/36 cream; body 14/23 #FFF8EFB8; note 13/21 #FFF8EF70. */
+.p-rp-modal-title {
+  font-size: 28px;
+  line-height: 36px;
+  color: var(--p-cream);
+}
+.p-rp-modal-body {
+  font-size: 14px;
+  line-height: 23px;
+  color: #FFF8EFB8;
+}
+.p-rp-modal-note {
+  font-size: 13px;
+  line-height: 21px;
+  color: #FFF8EF70;
+}
+/* Actions: gap 10, right-aligned. */
+.p-rp-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+/* Cancel: 40px, #FFF8EF29 border, radius 8, padding-inline 16, 14/18 cream.
+   (The primary "Go anyway" is exactly .p-btn-cta.) */
+.p-rp-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding-inline: 16px;
+  border: 1px solid #FFF8EF29;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-cream);
+}
+
+/* --- live stage (18) ------------------------------------------------------ */
+/* Full-frame overlay; the 18 artboard draws the stage inside the shell,
+   but this build shows it as its own fixed frame. Below the 100-z
+   overlays so the headphones dialog can sit on top. */
+.p-rp-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  background-color: #000000;
+}
+
+/* Header: 72px, gap 16, padding-inline 44, hairline #FFF8EF24. */
+.p-rp-stage-bar {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 16px;
+  height: 72px;
+  padding-inline: 44px;
+  border-bottom: 1px solid #FFF8EF24;
+}
+
+/* ROLEPLAY badge: 28px, #FF6550 border, radius 7, padding-inline 10,
+   12/16 #FF6550 tracked 0.08em. */
+.p-rp-stage-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 28px;
+  padding-inline: 10px;
+  border: 1px solid var(--p-orange);
+  border-radius: 7px;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  color: var(--p-orange);
+}
+
+/* Phase: 12/16 #FFF8EF8F tracked 0.08em. Uppercased so app.js's
+   lowercase phase values render as the JSX's "DRILL". */
+.p-rp-stage-phase {
+  flex-shrink: 0;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #FFF8EF8F;
+}
+
+/* Persona title: 16/20 cream. */
+.p-rp-stage-title {
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-cream);
+}
+
+/* Header buttons: 36px, radius 8, padding-inline 13, 13/16.
+   Dim = #FFF8EF29 border / cream text (Pause + coach me, results Close);
+   End = #FF6550 border and text. The JSX shows no disabled state;
+   disabled dims to the overlay palette's #FFF8EF70. */
+.p-rp-btn-dim {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 36px;
+  padding-inline: 13px;
+  border: 1px solid #FFF8EF29;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-cream);
+}
+.p-rp-btn-dim:disabled {
+  color: #FFF8EF70;
+  cursor: default;
+}
+.p-rp-btn-end {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 36px;
+  padding-inline: 13px;
+  border: 1px solid var(--p-orange);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-orange);
+}
+.p-rp-btn-end:disabled {
+  border-color: #FFF8EF29;
+  color: #FFF8EF70;
+  cursor: default;
+}
+/* 19's Close uses 14px inline padding where 18's buttons use 13px. */
+.p-rp-results-close {
+  padding-inline: 14px;
+}
+
+/* Stage body: column, gap 24, padding 34/64/30. */
+.p-rp-stage-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  gap: 24px;
+  padding: 34px 64px 30px;
+}
+
+/* Visualizer cards: two flex-1 cards, gap 18; #FFF8EF20 border,
+   radius 12, padding 18, column gap 12. */
+.p-rp-viz-row {
+  display: flex;
+  flex-shrink: 0;
+  gap: 18px;
+}
+.p-rp-viz-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-width: 0;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #FFF8EF20;
+  border-radius: 12px;
+}
+.p-rp-viz-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+/* Card label: 13/16 #FFF8EF8F tracked 0.08em (YOU / BRUTUS · PROSPECT). */
+.p-rp-viz-label {
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  color: #FFF8EF8F;
+}
+/* Voice tag: 12/16 #FFF8EF70 (VOICE · MARK). */
+.p-rp-viz-voice {
+  font-size: 12px;
+  line-height: 16px;
+  color: #FFF8EF70;
+}
+
+/* Mic badge: 12/16; JSX shows the live state as "MIC LIVE" in #FF6550.
+   Uppercased so app.js's lowercase labels render like the JSX. The
+   muted/thinking inks are not on the artboard; they step down the
+   overlay palette (muted #FFF8EF70, thinking #FFF8EFB8). */
+.p-rp-mic {
+  font-size: 12px;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+.rp-mic-live {
+  color: var(--p-orange);
+}
+.rp-mic-muted {
+  color: #FFF8EF70;
+}
+.rp-mic-thinking {
+  color: #FFF8EFB8;
+}
+
+/* Bar lane: 42px tall, bottom-aligned, gap 6. Bars are 7px wide;
+   rep #FFF8EFB8, Brutus #FF6550B8, square-cornered. app.js creates the
+   .rp-bar children and sets each height inline (4–35px). */
+.p-rp-viz {
+  display: flex;
+  align-items: flex-end;
+  flex-shrink: 0;
+  gap: 6px;
+  height: 42px;
+  overflow: hidden;
+}
+.p-rp-viz .rp-bar {
+  flex-shrink: 0;
+  width: 7px;
+  height: 4px;
+  background-color: #FFF8EFB8;
+}
+.p-rp-viz-brutus .rp-bar {
+  background-color: #FF6550B8;
+}
+
+/* Hairline between visualizers and transcript: 1px #FFF8EF20. */
+.p-rp-stage-rule {
+  flex-shrink: 0;
+  height: 1px;
+  background-color: #FFF8EF20;
+}
+
+/* Transcript: column, gap 22, padding 12/34. The JSX artboard clips
+   overflow; live it must scroll (app.js pins scrollTop to the bottom). */
+.p-rp-transcript {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  gap: 22px;
+  padding: 12px 34px;
+  overflow-y: auto;
+}
+
+/* Transcript lines — the structure app.js appends (rpAppendMessage) and
+   paperRoleplayTranscriptLine emits: a label span then a text node,
+   stacked by the flex column with the JSX's 6px gap.
+   Brutus/coach lines: 640px; rep lines: 580px, right-aligned.
+   Text 19/28 cream; coach text 17/26 #FFF8EFB8 under a #FF6550 label.
+   Labels 12/16 #FFF8EF70 tracked 0.08em, uppercased so app.js's
+   lowercase labels render like the JSX's YOU / BRUTUS · COACH. */
+.rp-msg {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 6px;
+  width: 640px;
+  max-width: 100%;
+  font-size: 19px;
+  line-height: 28px;
+  color: var(--p-cream);
+}
+.rp-msg-label {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #FFF8EF70;
+}
+.rp-msg-rep {
+  align-self: flex-end;
+  width: 580px;
+  max-width: 100%;
+  text-align: right;
+}
+.rp-msg-coach {
+  font-size: 17px;
+  line-height: 26px;
+  color: #FFF8EFB8;
+}
+.rp-msg-coach .rp-msg-label {
+  color: var(--p-orange);
+}
+
+/* Transcript empty state (app.js contract; not on the artboard —
+   borrows the status line's 13/16 #FFF8EF70 centered treatment). */
+.rp-active-empty {
+  margin: auto;
+  font-size: 13px;
+  line-height: 16px;
+  text-align: center;
+  color: #FFF8EF70;
+}
+
+/* Status line: 28px, centered wrapped text, 13/16 #FFF8EF70. The .error
+   state is not drawn in the JSX; it takes the lane's critical #FF6550. */
+.p-rp-status {
+  display: flex;
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  height: 28px;
+  font-size: 13px;
+  line-height: 16px;
+  text-align: center;
+  color: #FFF8EF70;
+}
+.p-rp-status.error {
+  color: var(--p-orange);
+}
+
+/* End-of-session card app.js injects into the transcript
+   (rpRenderSummary). Not on an artboard — composed from 19's hot
+   weakness card (bg #211A17, 3px #FF6550 left border, radius 7,
+   padding 14) and 19's type inks. */
+.rp-summary-inline {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 6px;
+  width: 640px;
+  max-width: 100%;
+  padding: 14px;
+  background-color: var(--p-bg-active);
+  border-left: 3px solid var(--p-orange);
+  border-radius: 7px;
+}
+.rp-summary-inline h3 {
+  margin: 0;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 18px;
+  color: var(--p-cream);
+}
+.rp-summary-persona {
+  font-size: 13px;
+  line-height: 16px;
+  color: #FFF8EF8F;
+}
+.rp-summary-grid {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  line-height: 16px;
+  color: #FFF8EF8F;
+}
+.rp-summary-grid strong {
+  margin-left: 6px;
+  font-weight: 400;
+  color: var(--p-cream);
+}
+.rp-summary-roast {
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--p-cream);
+}
+
+/* --- results panel (19) --------------------------------------------------- */
+/* In-view panel; shown/hidden via the hidden attribute (per contract). */
+.p-rp-results {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+}
+.p-rp-results[hidden] {
+  display: none;
+}
+
+/* Header: 72px, gap 18, padding-inline 52, hairline #FFF8EF24;
+   title 24/30 cream, meta 13/16 #FFF8EF70. */
+.p-rp-results-bar {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 18px;
+  height: 72px;
+  padding-inline: 52px;
+  border-bottom: 1px solid #FFF8EF24;
+}
+.p-rp-results-title {
+  font-size: 24px;
+  line-height: 30px;
+  color: var(--p-cream);
+}
+.p-rp-results-meta {
+  font-size: 13px;
+  line-height: 16px;
+  color: #FFF8EF70;
+}
+
+/* Body: 3 columns, gap 20, padding 32/38. */
+.p-rp-results-body {
+  display: flex;
+  flex: 1 1 0%;
+  min-height: 0;
+  gap: 20px;
+  padding: 32px 38px;
+  overflow-y: auto;
+}
+
+/* Shared overlay eyebrow: 12/16 #FFF8EF70 tracked 0.08em
+   (PERSONA / OVERALL / TURN-BY-TURN TRANSCRIPT). */
+.p-rp-overlay-label {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  color: #FFF8EF70;
+}
+
+/* Persona rail: 280px, right hairline #FFF8EF20, padding 22, gap 18. */
+.p-rp-res-rail {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 18px;
+  width: 280px;
+  padding: 22px;
+  border-right: 1px solid #FFF8EF20;
+}
+.p-rp-res-persona {
+  font-size: 24px;
+  line-height: 31px;
+  color: var(--p-cream);
+}
+.p-rp-res-sub {
+  font-size: 14px;
+  line-height: 22px;
+  color: #FFF8EFB8;
+}
+.p-rp-res-rule {
+  flex-shrink: 0;
+  height: 1px;
+  background-color: #FFF8EF20;
+}
+/* Stat rows: space-between, both cells 14/18 cream. */
+.p-rp-res-stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-cream);
+}
+
+/* Middle column: 500px, padding 4/18, gap 17. */
+.p-rp-res-main {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 17px;
+  width: 500px;
+  padding: 4px 18px;
+}
+/* Overall roast: 27/36 cream. */
+.p-rp-res-roast {
+  font-size: 27px;
+  line-height: 36px;
+  color: var(--p-cream);
+}
+/* Section headings: 18/22 cream (Weakness exposure / Action items). */
+.p-rp-res-h {
+  font-size: 18px;
+  line-height: 22px;
+  color: var(--p-cream);
+}
+/* Weakness cards: radius 7, padding 14, 3px left border. Hot (handled)
+   = #211A17 bg + #FF6550 border; otherwise bare with #FFF8EF66 border.
+   Title 15/18 cream, sub 13/16 #FFF8EF8F. */
+.p-rp-weakness {
+  padding: 14px;
+  border-left: 3px solid #FFF8EF66;
+  border-radius: 7px;
+}
+.p-rp-weakness-hot {
+  background-color: var(--p-bg-active);
+  border-left-color: var(--p-orange);
+}
+.p-rp-weakness-t {
+  font-size: 15px;
+  line-height: 18px;
+  color: var(--p-cream);
+}
+.p-rp-weakness-s {
+  font-size: 13px;
+  line-height: 16px;
+  color: #FFF8EF8F;
+}
+/* Action items: 14/24 #FFF8EFB8, pre-wrap (JSX Roman-numeral lines). */
+.p-rp-res-actions {
+  font-size: 14px;
+  line-height: 24px;
+  white-space: pre-wrap;
+  color: #FFF8EFB8;
+}
+
+/* Right column: flex 1, left hairline #FFF8EF20, padding 4/0/4/18, gap 14. */
+.p-rp-res-transcript {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-width: 0;
+  gap: 14px;
+  padding-block: 4px;
+  padding-left: 18px;
+  border-left: 1px solid #FFF8EF20;
+}
+/* Turn cards: padding 12, 3px left border — #FF6550 for Brutus/coach
+   turns, #FFF8EF8F for rep turns. Label 11/14 #FFF8EF70, text 14/21
+   cream. */
+.p-rp-turn {
+  flex-shrink: 0;
+  padding: 12px;
+  border-left: 3px solid var(--p-orange);
+}
+.p-rp-turn-rep {
+  border-left-color: #FFF8EF8F;
+}
+.p-rp-turn-label {
+  font-size: 11px;
+  line-height: 14px;
+  color: #FFF8EF70;
+}
+.p-rp-turn-text {
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--p-cream);
+}
+
+/* ==========================================================================
+   RESEARCH — 08-research.jsx
+   (merged from .paper-build/research.css)
+   ========================================================================== */
+
+/* =========================================================================
+   research.css — Prospect research screen.
+   Transcribed from docs/paper-extract/08-research.jsx (second frame; the
+   first frame differs only in copy — see research.html header comment).
+   Reuses paper.css tokens/utilities; everything here is genuinely absent
+   from paper.css (different metrics from the shared .p-search/.p-btn-ghost
+   /.p-tag treatments, 7px input radius, 38px field height, 23/28 title…).
+   ========================================================================= */
+
+/* Page frame. The JSX content column (08 line 317) uses paddingBlock 30 /
+   paddingInline 34 and gap 22 instead of the shared .view.active frame.
+   A fragment cannot class its host <section>, so the id is targeted. */
+#research-view.active {
+  gap: 22px;
+  padding: 30px 34px;
+}
+
+/* --- toolbar row (from the research JSX topbar, 08 lines 300–316) -------- */
+.p-research-bar {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+/* Search: 390px wide, 40px tall, gap 9, 13px inline padding, #4A3A35
+   border. (paper.css .p-search is the 430px/#3A302C dashboard variant.) */
+.p-research-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 9px;
+  width: 390px;
+  height: 40px;
+  padding-inline: 13px;
+  border: 1px solid var(--p-line-3);
+  border-radius: 8px;
+}
+
+.p-research-search svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.p-research-search input {
+  flex: 1 1 0%;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: none;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-cream);
+}
+
+.p-research-search input::placeholder {
+  color: var(--p-text-3);
+}
+
+/* Export report: 38px, #4A3A35 border, 12/16 cream (08 lines 311–315).
+   (.p-btn-ghost is the #3A302C/#D8CEC6 13px variant — different.) */
+.p-research-export {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding-inline: 14px;
+  border: 1px solid var(--p-line-3);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-cream);
+}
+
+/* Page title: 32/40 with no letter-spacing (08 line 320 — .p-t-32 carries
+   the -0.02em tracking of another screen, so it is not reused). */
+.p-research-title {
+  margin: 0;
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 40px;
+  color: var(--p-cream);
+}
+
+/* --- two-column body (08 line 331) --------------------------------------- */
+.p-research-body {
+  display: flex;
+  flex: 1 1 0%;
+  min-height: 0;
+  gap: 28px;
+}
+
+/* Form column: 430px, right hairline, 28px right padding, gap 14. */
+.p-research-form {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 14px;
+  width: 430px;
+  padding-right: 28px;
+  border-right: 1px solid var(--p-line);
+}
+
+/* PROSPECT INFO eyebrow: 11/14, 0.12em tracking, #FF8A78 (08 line 333). */
+.p-research-eyebrow {
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.12em;
+  color: var(--p-orange-text);
+}
+
+.p-research-pair {
+  display: flex;
+  gap: 12px;
+}
+
+.p-research-field {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  gap: 6px;
+}
+
+/* Field label: 11/14 #8E837D (08 line 339). */
+.p-research-label {
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--p-text-3);
+}
+
+/* Field input: 38px, radius 7, 11px inline padding, 13/16 text.
+   The JSX draws two states: empty fields have a #3A302C border with grey
+   text, filled fields a #4A3A35 border with cream text — mapped to
+   :placeholder-shown / :not(:placeholder-shown) plus :focus. */
+.p-research-input {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 38px;
+  padding-inline: 11px;
+  border: 1px solid var(--p-line-2);
+  border-radius: 7px;
+  background: none;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-cream);
+  outline: none;
+}
+
+.p-research-input::placeholder {
+  color: var(--p-text-3);
+}
+
+.p-research-input:focus,
+.p-research-input:not(:placeholder-shown) {
+  border-color: var(--p-line-3);
+}
+
+/* Context / notes: 88px box, 11px padding, 13/19 #D8CEC6 (08 lines 406–409). */
+.p-research-notes {
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+  height: 88px;
+  padding: 11px;
+  border: 1px solid var(--p-line-2);
+  border-radius: 7px;
+  background: none;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--p-text-bright);
+  outline: none;
+  resize: vertical;
+}
+
+.p-research-notes::placeholder {
+  color: var(--p-text-3);
+}
+
+.p-research-notes:focus,
+.p-research-notes:not(:placeholder-shown) {
+  border-color: var(--p-line-3);
+}
+
+/* Context chips (08 lines 412–423): 999px pill, 6px/8px padding, 11/14.
+   Neutral: #3A302C border, #A9A09A text. Orange: #623B34 / #FF8A78. */
+.p-research-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.research-hint-btn {
+  border: 1px solid var(--p-line-2);
+  border-radius: 999px;
+  padding: 6px 8px;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--p-text-2);
+}
+
+.research-hint-btn.p-hint-orange {
+  border-color: var(--p-orange-border);
+  color: var(--p-orange-text);
+}
+
+/* Submit: 44px #FF6550 bar, centred black 14/18 text (08 lines 425–429).
+   Disabled state reuses the design system's disabled button treatment. */
+.p-research-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 44px;
+  border-radius: 8px;
+  background-color: var(--p-orange);
+  font-size: 14px;
+  line-height: 18px;
+  color: #000000;
+  text-align: center;
+}
+
+.p-research-submit:disabled {
+  background-color: var(--p-bg-panel);
+  color: var(--p-text-5);
+  cursor: default;
+}
+
+/* --- right column (08 lines 431–509) ------------------------------------- */
+.p-research-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-width: 0;
+  gap: 18px;
+  overflow: clip;
+}
+
+/* The saved-research container app.js fills. The JSX right column stacks
+   its content with gap 18; the list scrolls because live data outgrows
+   the fixed 828px artboard. */
+.p-research-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  gap: 18px;
+  overflow-y: auto;
+}
+
+/* Footer: hairline top, 14px top padding (08 lines 501–508). */
+.p-research-foot {
+  display: flex;
+  justify-content: space-between;
+  flex-shrink: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--p-line);
+}
+
+/* --- saved-brief templates (research.js) --------------------------------- */
+
+/* Collapsible card wrapper. app.js's toggle-card action toggles .expanded
+   on it; the collapsed state shows only the header row. */
+.p-rcard {
+  flex-shrink: 0;
+}
+
+.p-rcard-body {
+  display: none;
+}
+
+.p-rcard.expanded .p-rcard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: 18px;
+}
+
+/* Header row of a saved brief. Reuses the design system's hairline row
+   (.p-row) plus a pointer, since 08 draws no list rows of its own. */
+.p-rrow {
+  cursor: pointer;
+}
+
+/* Brief detail (08 lines 432–499). */
+.p-rbrief {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.p-rbrief-head {
+  display: flex;
+  justify-content: space-between;
+}
+
+.p-rbrief-headtext {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Brief title: 23/28 cream (08 line 435 — 23px is not in the shared scale). */
+.p-rbrief-title {
+  font-size: 23px;
+  line-height: 28px;
+  color: var(--p-cream);
+}
+
+/* Status pill: 26px tall, 5px/8px padding, #623B34 border, #FF8A78 11/14
+   ("DONE", 08 lines 441–445). The muted variant (statuses the JSX does not
+   draw) takes the neutral chip colours from the same screen. */
+.p-rbrief-pill {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 26px;
+  padding: 5px 8px;
+  border: 1px solid var(--p-orange-border);
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--p-orange-text);
+}
+
+.p-rbrief-pill--muted {
+  border-color: var(--p-line-2);
+  color: var(--p-text-2);
+}
+
+/* Two-up labelled sections (08 lines 448–484). */
+.p-rbrief-grid {
+  display: flex;
+  gap: 24px;
+}
+
+.p-rbrief-sec {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  gap: 8px;
+}
+
+.p-rbrief-k {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  color: var(--p-orange-text);
+}
+
+.p-rbrief-v {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--p-text-bright);
+}
+
+/* QUESTIONS TO ASK block (08 lines 486–499). */
+.p-rbrief-qs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.p-rbrief-q {
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--p-cream);
+}
+
+/* Unstructured results blob (live data is one text field): the JSX's
+   section-body treatment, preserving line breaks. */
+.p-rbrief-text {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--p-text-bright);
+  white-space: pre-wrap;
+}
+
+/* ==========================================================================
+   ACCOUNT + BILLING + DELETE FLOW — 21-account.jsx / 22-account-delete.jsx
+   (merged from .paper-build/account.css)
+   ========================================================================== */
+
+/* =========================================================================
+   account.css — Account screen, billing card (credits view), and the
+   delete-account overlays.
+   Transcribed from docs/paper-extract/21-account.jsx and
+   docs/paper-extract/22-account-delete.jsx.
+
+   The account artboard uses a translucent-cream palette that appears
+   nowhere else in the set, so the hex-with-alpha values stay literal here
+   rather than becoming global tokens:
+     #FFF8EF24 card border · #FFF8EF29 input border · #FFF8EF40 button
+     border · #FFF8EF20 divider · #FFF8EF70 secondary text · #FFF8EF8F
+     section label · #E23B2F destructive red.
+   ========================================================================= */
+
+/* Page frames. The account artboard body (21 line 91) uses padding
+   34px/44px/38px, gap 24, and lays its cards out as a row. The billing
+   card shares the same frame. A fragment cannot class its host <section>,
+   so the ids are targeted. */
+#profile-view.active {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 34px 44px 38px;
+}
+
+#settings-view.active {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 34px 44px 38px;
+}
+
+#credits-view.active {
+  gap: 24px;
+  padding: 34px 44px 38px;
+}
+
+/* Card columns: JSX card widths 520 (account) and 584 (billing). */
+.p-acct-col {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 24px;
+}
+
+.p-acct-col-left { width: 520px; }
+.p-acct-col-right { width: 584px; }
+
+/* --- card chrome (21 line 92): #FFF8EF24 border, radius 12, pad 24 ------- */
+.p-acct-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid #FFF8EF24;
+  border-radius: 12px;
+}
+
+.p-acct-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Section label: 13/18, 0.08em, #FFF8EF8F (21 line 93). */
+.p-acct-label {
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: 0.08em;
+  color: #FFF8EF8F;
+}
+
+/* Card heading: 30/38 cream (21 line 96). */
+.p-acct-title {
+  font-size: 30px;
+  line-height: 38px;
+  color: var(--p-cream);
+}
+
+.p-acct-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Field: 12/16 #FFF8EF70 label over a 42px #FFF8EF29 input (21 99–108). */
+.p-acct-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.p-acct-field-label {
+  font-size: 12px;
+  line-height: 16px;
+  color: #FFF8EF70;
+}
+
+.p-acct-input {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 42px;
+  padding-inline: 12px;
+  border: 1px solid #FFF8EF29;
+  border-radius: 8px;
+  background: none;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-cream);
+  outline: none;
+}
+
+.p-acct-input::placeholder {
+  color: #FFF8EF70;
+}
+
+.p-acct-input:focus {
+  border-color: #FFF8EF40;
+}
+
+.p-acct-range {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 42px;
+}
+
+.p-acct-range input[type="range"] {
+  flex: 1 1 0%;
+  min-width: 0;
+  accent-color: var(--p-orange);
+}
+
+.p-acct-range-value {
+  flex-shrink: 0;
+  min-width: 44px;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-cream);
+  text-align: right;
+}
+
+/* Select: the JSX coaching-style field (21 lines 123–130) — the input box
+   with the value left and an orange ⌄ right. */
+.p-acct-select {
+  position: relative;
+  display: flex;
+}
+
+.p-acct-select select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 42px;
+  padding-inline: 12px;
+  padding-right: 34px;
+  border: 1px solid #FFF8EF29;
+  border-radius: 8px;
+  background-color: var(--p-bg);
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-cream);
+  outline: none;
+  cursor: pointer;
+}
+
+.p-acct-select select:focus {
+  border-color: #FFF8EF40;
+}
+
+.p-acct-chev {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-orange);
+  pointer-events: none;
+}
+
+/* Save button: 160×42 #FF6550, black 14/18 (21 lines 132–136). */
+.p-acct-save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 160px;
+  height: 42px;
+  border-radius: 8px;
+  background-color: var(--p-orange);
+  font-size: 14px;
+  line-height: 18px;
+  color: #000000;
+}
+
+.p-acct-save:disabled {
+  background-color: var(--p-bg-panel);
+  color: var(--p-text-5);
+  cursor: default;
+}
+
+/* Divider: #FFF8EF20 hairline (21 line 137). */
+.p-acct-rule {
+  flex-shrink: 0;
+  height: 1px;
+  background-color: #FFF8EF20;
+}
+
+/* Body note: 13/20 #FFF8EF70 (21 lines 138–140). */
+.p-acct-note {
+  font-size: 13px;
+  line-height: 20px;
+  color: #FFF8EF70;
+}
+
+/* Inline status message. app.js toggles style.display and sets its own
+   colours; hidden at rest. */
+.p-acct-msg {
+  display: none;
+  font-size: 13px;
+  line-height: 16px;
+}
+
+/* Bordered button: 36px, #FFF8EF40 border, 13/16 cream — the account
+   screen's "Manage subscription" treatment (21 lines 181–185). Reused for
+   log out, reset profile, data export, save settings, and download links. */
+.p-acct-ghost {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 36px;
+  padding-inline: 14px;
+  border: 1px solid #FFF8EF40;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-cream);
+}
+
+.p-acct-ghost:disabled {
+  color: var(--p-text-5);
+  border-color: #FFF8EF20;
+  cursor: default;
+}
+
+/* Self-employed checkbox row (legacy field; orange accent). */
+.p-acct-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 16px;
+  color: #FFF8EF70;
+  cursor: pointer;
+}
+
+.p-acct-check input {
+  accent-color: var(--p-orange);
+}
+
+/* Business-name reveal — app.js drives style.display. */
+#profile-businessname-wrap {
+  display: none;
+}
+
+/* Row text pair: 15/18 cream over 12/16 #FFF8EF70 — the auto top-up row's
+   own type (21 lines 231–236). */
+.p-acct-t15 {
+  display: block;
+  font-size: 15px;
+  line-height: 18px;
+  color: var(--p-cream);
+}
+
+.p-acct-t12 {
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+  color: #FFF8EF70;
+}
+
+/* AI profile summary: 14/21 bright; stats: 13/18 dim. */
+.p-acct-summary {
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--p-text-bright);
+}
+
+.p-acct-dim {
+  font-size: 13px;
+  line-height: 18px;
+  color: #FFF8EF70;
+}
+
+/* --- switch (21 lines 238–240) -------------------------------------------
+   42×22 track: #211A17 fill, #3B2D29 border, radius 11, 2px padding;
+   16×16 radius-8 knob. The JSX draws only the ON state (knob right,
+   #FF6550); OFF mirrors it left with the palette's muted #766B65 —
+   reported as an approximation. */
+.p-acct-toggle-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+}
+
+.p-acct-toggle-text {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.p-switch {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.p-switch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.p-switch-track {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 22px;
+  padding: 2px;
+  background-color: var(--p-bg-active);
+  border: 1px solid var(--p-line-active);
+  border-radius: 11px;
+}
+
+.p-switch-knob {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background-color: var(--p-text-4);
+}
+
+.p-switch-input:checked + .p-switch-track {
+  justify-content: flex-end;
+}
+
+.p-switch-input:checked + .p-switch-track .p-switch-knob {
+  background-color: var(--p-orange);
+}
+
+/* Keyboard focus ring for the hidden checkbox (accessibility only). */
+.p-switch-input:focus-visible + .p-switch-track {
+  border-color: var(--p-orange);
+}
+
+/* --- danger zone (21 lines 141–155) -------------------------------------- */
+.p-acct-danger {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #E23B2F;
+  border-radius: 12px;
+}
+
+.p-acct-danger-title {
+  font-size: 22px;
+  line-height: 28px;
+  color: #E23B2F;
+}
+
+.p-acct-danger-copy {
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--p-cream);
+}
+
+.p-acct-danger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 180px;
+  height: 44px;
+  border-radius: 8px;
+  background-color: #E23B2F;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-cream);
+}
+
+/* =========================================================================
+   Billing card — credits view (the right card of 21-account.jsx,
+   lines 157–245).
+   ========================================================================= */
+.p-bill-card {
+  width: 584px;
+  gap: 15px;
+}
+
+/* Head: label + 42/50 balance left, note right, bottom-aligned. */
+.p-bill-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.p-bill-balance {
+  font-size: 42px;
+  line-height: 50px;
+  color: var(--p-cream);
+}
+
+/* 13/18 #FFF8EF70 note ("starter active" slot, 21 lines 167–169). */
+.p-bill-note {
+  font-size: 13px;
+  line-height: 18px;
+  color: #FFF8EF70;
+}
+
+/* Low-balance warning — not drawn in the JSX; takes the palette's orange
+   text. app.js toggles style.display. */
+.p-bill-warning {
+  display: none;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-orange-text);
+}
+
+/* Subscription row (21 lines 172–186): 14px block padding. */
+.p-bill-subrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 14px;
+}
+
+.p-bill-sub-title {
+  font-size: 16px;
+  line-height: 22px;
+  color: var(--p-cream);
+}
+
+.p-bill-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Token packs (21 lines 190–214): 170px cards, #FFF8EF24 border, pad 14. */
+.p-bill-packs {
+  display: flex;
+  gap: 10px;
+}
+
+.pack-card {
+  flex-shrink: 0;
+  width: 170px;
+  padding: 14px;
+  border: 1px solid #FFF8EF24;
+  border-radius: 8px;
+}
+
+.pack-card:disabled {
+  color: var(--p-text-5);
+  cursor: default;
+}
+
+.pack-price {
+  font-size: 22px;
+  line-height: 28px;
+  color: var(--p-cream);
+}
+
+.pack-desc {
+  font-size: 12px;
+  line-height: 16px;
+  color: #FFF8EF70;
+}
+
+/* Custom top-up row (21 lines 215–227): 40px input + orange button. */
+.p-bill-topup {
+  display: flex;
+  gap: 10px;
+}
+
+.p-bill-input {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0%;
+  min-width: 0;
+  height: 40px;
+  padding-inline: 12px;
+  border: 1px solid #FFF8EF29;
+  border-radius: 8px;
+  background: none;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-cream);
+  outline: none;
+}
+
+.p-bill-input::placeholder {
+  color: #FFF8EF70;
+}
+
+.p-bill-input:focus {
+  border-color: #FFF8EF40;
+}
+
+.p-bill-btn {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 40px;
+  padding-inline: 18px;
+  border-radius: 8px;
+  background-color: var(--p-orange);
+  font-size: 14px;
+  line-height: 18px;
+  color: #000000;
+}
+
+.p-bill-btn:disabled {
+  background-color: var(--p-bg-panel);
+  color: var(--p-text-5);
+  cursor: default;
+}
+
+/* Auto top-up amount/threshold fields — not drawn in the JSX; the field
+   treatment is the billing card's own input at full width. */
+.p-bill-fields {
+  display: flex;
+  gap: 10px;
+}
+
+.p-bill-field {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  gap: 7px;
+}
+
+/* "settings saved." — app.js toggles style.display. Confirmation takes the
+   palette's orange text (no green exists in the design system). */
+.p-bill-success {
+  display: none;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-orange-text);
+}
+
+/* Saved-card hint — app.js toggles style.display. */
+.p-bill-hint {
+  display: none;
+  font-size: 12px;
+  line-height: 18px;
+  color: #FFF8EF70;
+}
+
+/* Footer copy: 12/18 #FFF8EF70 (21 lines 242–244). */
+.p-bill-foot {
+  font-size: 12px;
+  line-height: 18px;
+  color: #FFF8EF70;
+}
+
+/* Desktop download CTAs (hidden until app.js unhides them). */
+#credits-download-ctas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.p-bill-dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* =========================================================================
+   Delete-account overlays — 22-account-delete.jsx.
+   The JSX draws one stage: the password confirm — a 520px #E23B2F-border
+   card centred on a solid #000000 field. The survey, progress-recap, and
+   export stages reuse the same card treatment.
+   ========================================================================= */
+.pd-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3550;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000000;
+}
+
+/* Card (22 line 87): 520px, #E23B2F border, radius 12, pad 28, gap 16. */
+.pd-card {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 16px;
+  width: 520px;
+  padding: 28px;
+  border: 1px solid #E23B2F;
+  border-radius: 12px;
+  background-color: #000000;
+}
+
+/* Head row. The JSX has no close affordance; the contract's ✕ buttons
+   take the modal-close treatment from the design system. */
+.pd-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pd-title {
+  font-size: 28px;
+  line-height: 34px;
+  color: #E23B2F;
+}
+
+.pd-sub {
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-text-3);
+}
+
+.pd-close {
+  flex-shrink: 0;
+  font-size: 22px;
+  line-height: 22px;
+  color: var(--p-text-3);
+}
+
+/* Body copy: 16/24 cream (22 lines 91–93). */
+.pd-copy {
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--p-cream);
+}
+
+/* Prompt: 14/18 #8E837D (22 lines 94–96). */
+.pd-label {
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-text-3);
+}
+
+/* Password input: 44px, #3A302C border, 14px inline padding, 16/20
+   (22 lines 97–101). */
+.pd-input {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 44px;
+  padding-inline: 14px;
+  border: 1px solid var(--p-line-2);
+  border-radius: 8px;
+  background: none;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-cream);
+  outline: none;
+}
+
+.pd-input::placeholder {
+  color: var(--p-text-3);
+}
+
+.pd-input:focus {
+  border-color: var(--p-line-3);
+}
+
+/* Action row: equal-width 44px buttons, gap 12 (22 lines 102–113).
+   Ghost = #3A302C border, cream text. Danger = #E23B2F fill, cream text. */
+.pd-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.pd-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0%;
+  height: 44px;
+  border-radius: 8px;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-cream);
+  text-align: center;
+}
+
+.pd-btn-ghost {
+  border: 1px solid var(--p-line-2);
+}
+
+.pd-btn-danger {
+  background-color: #E23B2F;
+}
+
+.pd-btn:disabled {
+  background-color: var(--p-bg-panel);
+  border-color: transparent;
+  color: var(--p-text-5);
+  cursor: default;
+}
+
+/* Survey reason rows — the JSX draws no radio treatment; each row takes
+   the confirm card's input treatment with an orange-accent radio. */
+.pd-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pd-reason {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 10px;
+  height: 44px;
+  padding-inline: 14px;
+  border: 1px solid var(--p-line-2);
+  border-radius: 8px;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-cream);
+  cursor: pointer;
+}
+
+.pd-reason input {
+  accent-color: var(--p-orange);
+}
+
+/* Progress-recap stats — the account screen's pack-card stat treatment
+   (22 draws no stats stage). */
+.pd-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.pd-stat {
+  padding: 14px;
+  border: 1px solid #FFF8EF24;
+  border-radius: 8px;
+}
+
+.pd-stat-num {
+  font-size: 22px;
+  line-height: 28px;
+  color: var(--p-cream);
+}
+
+.pd-stat-label {
+  font-size: 12px;
+  line-height: 16px;
+  color: #FFF8EF70;
+}
+
+/* Error / success lines — app.js toggles the .visible class. */
+.pd-error {
+  display: none;
+  font-size: 13px;
+  line-height: 18px;
+  color: #E23B2F;
+}
+
+.pd-error.visible {
+  display: block;
+}
+
+.pd-success {
+  display: none;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-orange-text);
+}
+
+.pd-success.visible {
+  display: block;
+}
+
+/* Export stage: the post-download button row starts hidden; app.js swaps
+   the two rows with style.display. */
+#delete-export-buttons-after {
+  display: none;
+}
+
+/* ==========================================================================
+   ONBOARDING — onboarding-02…07.jsx / onboarding-09-paywall.jsx
+   (merged from .paper-build/onboarding.css)
+   ========================================================================== */
+
+/* ==========================================================================
+   ONBOARDING — six questions + paywall.
+   Transcribed from docs/paper-extract/onboarding-02…07.jsx and
+   onboarding-09-paywall.jsx. Layers on top of paper.css: the .p-ob frame,
+   .p-input, .p-t-* / .p-c-* utilities, .p-between, .p-logo and the button
+   reset all come from there. Every value below is from the JSX.
+
+   The JSX centres a fixed column (560px questions / 640px paywall) on the
+   1440x900 artboard. Per the paper.css convention the artboard height is
+   the viewport; centring uses margin-block auto inside a scroll container
+   so short viewports scroll instead of clipping the top of the column.
+   ========================================================================== */
+
+/* --- shared frame -------------------------------------------------------- */
+/* Direct children of .p-ob (flex). Fills the fixed overlay and centres the
+   column both ways (JSX: align-items center + justify-content center). */
+.p-ob-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* 560px question column, gap 20 (onboarding-02…07). */
+.p-ob-col {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 20px;
+  width: 560px;
+  margin-block: auto;
+}
+
+/* --- progress ------------------------------------------------------------ */
+/* 3px track (#2A2320) with an orange fill. app.js drives the fill's
+   style.width as a percentage; no width is declared here so nothing
+   competes with it. The JSX fill widths (93/185/280/375/465/560 of 560)
+   are exactly step/6, matching app.js's formula. */
+.p-ob-progress {
+  display: flex;
+  flex-shrink: 0;
+  height: 3px;
+  width: 100%;
+  background-color: var(--p-line);
+}
+
+.p-ob-progress-fill {
+  flex-shrink: 0;
+  height: 3px;
+  background-color: var(--p-orange);
+}
+
+/* --- step panels ---------------------------------------------------------- */
+/* app.js hides every .ob-step then sets style.display = 'block' on the
+   active one, so: hidden via a plain class rule (overridable, no
+   !important), and internal spacing via margins because the shown panel is
+   display:block, not flex. */
+.p-ob .ob-step {
+  display: none;
+}
+
+.p-ob .ob-step > * + * {
+  margin-top: 20px;
+}
+
+/* Question headline: 36px/44, cream. Used on the <label> of steps 1-2 and
+   the <legend> of steps 3-6. (Distinct from .p-t-36, which is 36/42 with
+   -0.02em tracking — this JSX has 36/44 and no tracking.) */
+.p-ob-title {
+  display: block;
+  font-size: 36px;
+  line-height: 44px;
+  color: var(--p-cream);
+}
+
+/* Subtitle is .p-t-16-24 .p-c-3 from paper.css; this only resets <p>. */
+.p-ob-sub {
+  margin: 0;
+}
+
+/* Field / option stack under the subtitle: flex column, gap 10. */
+.p-ob-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* --- fieldset neutralisation (steps 3-6) ---------------------------------- */
+/* Real fieldset/legend for the radio groups. The legend is floated full
+   width so it flows like a normal block (legends are otherwise pulled out
+   of flow), and the 20px column rhythm is rebuilt with margins. */
+.p-ob-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.p-ob-fieldset > legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 20px;
+  padding: 0;
+}
+
+.p-ob-fieldset > legend + * {
+  clear: both;
+}
+
+.p-ob-fieldset > .p-ob-sub {
+  margin-bottom: 20px;
+}
+
+.p-ob-fieldset > .p-ob-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* --- option cards (steps 3-6) --------------------------------------------- */
+/* Card: 1px #3A302C border, radius 8, padding 14/16, column gap 4. The
+   native radio is visually hidden inside the label; the selected treatment
+   from the JSX (onboarding-07 "Balanced") is the border turning #FF6550 —
+   nothing else changes. */
+.p-ob-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  padding: 14px 16px;
+  border: 1px solid var(--p-line-2);
+  border-radius: var(--p-radius);
+  cursor: pointer;
+}
+
+/* Keyboard cue for the hidden radio: the same brighter hairline paper.css
+   uses for focused search (#4A3A35). Declared before the :checked rule so
+   a checked card stays orange. */
+.p-ob-option:has(input:focus-visible) {
+  border-color: var(--p-line-3);
+}
+
+.p-ob-option:has(input:checked) {
+  border-color: var(--p-orange);
+}
+
+/* Option description (step 6 only): 13px/18, #8E837D. (.p-t-13-19 in
+   paper.css is 13/19; this JSX is 13/18.) */
+.p-ob-option-desc {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--p-text-3);
+}
+
+/* --- self-employed checkbox (step 2) --------------------------------------- */
+.p-ob-checkrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 16x16, radius 3. The JSX only shows the checked state (solid #FF6550);
+   unchecked approximates with the input hairline (#3A302C). */
+.p-ob-check {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border: 1px solid var(--p-line-2);
+  border-radius: 3px;
+  background: none;
+  cursor: pointer;
+}
+
+.p-ob-check:checked {
+  border-color: var(--p-orange);
+  background-color: var(--p-orange);
+}
+
+.p-ob-check:focus-visible {
+  outline: 2px solid var(--p-orange);
+  outline-offset: 2px;
+}
+
+/* Business-name wrapper: hidden until app.js flips its style.display to
+   'block' when Self-employed is checked (plain class rule so the inline
+   style wins). */
+.p-ob-bizwrap {
+  display: none;
+}
+
+/* --- footer (shared Skip / Next) ------------------------------------------- */
+/* Next: 48px tall, padding-inline 28, radius 8, orange with cream 16/20
+   text (unlike .p-btn-primary's black 13px text). app.js writes lowercase
+   'next' / 'finish' / 'saving...' into it; capitalize restores the JSX
+   casing. Disabled state (during save) borrows the established
+   .p-auth-submit:disabled treatment — the JSX shows none. */
+.p-ob-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 48px;
+  padding-inline: 28px;
+  border-radius: var(--p-radius);
+  background-color: var(--p-orange);
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--p-cream);
+  text-transform: capitalize;
+}
+
+.p-ob-next:disabled {
+  background-color: var(--p-bg-panel);
+  color: var(--p-text-5);
+  cursor: default;
+}
+
+/* ==========================================================================
+   PAYWALL — onboarding-09-paywall.jsx. 640px column, gap 12.
+   ========================================================================== */
+
+/* Hidden by default; wired separately (plain class rule, overridable). */
+.p-ob-pay {
+  display: none;
+  width: 100%;
+}
+
+.p-ob-col-pay {
+  gap: 12px;
+  width: 640px;
+}
+
+/* Brand row: gap 14. */
+.p-ob-pay-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Back chevron circle: 36px, 1px #3A302C, radius 18. */
+.p-ob-pay-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--p-line-2);
+  border-radius: 18px;
+}
+
+/* Title: 36px/42, cream, no tracking (.p-t-36 carries -0.02em). */
+.p-ob-pay-title {
+  margin: 0;
+  font-size: 36px;
+  line-height: 42px;
+  font-weight: 400;
+  color: var(--p-cream);
+}
+
+/* Subtitle is 560px wide inside the 640 column. */
+.p-ob-pay-sub {
+  margin: 0;
+  width: 560px;
+  max-width: 100%;
+}
+
+/* Starter card: 1px #FF6550 border, radius 12, padding 16, column gap 12. */
+.p-ob-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--p-orange);
+  border-radius: 12px;
+}
+
+.p-ob-plan-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Decorative selected-radio visual: 22px ring (2px #FF6550, radius 11)
+   with a 10px orange dot (radius 5). */
+.p-ob-plan-radio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--p-orange);
+  border-radius: 11px;
+}
+
+.p-ob-plan-radio-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: var(--p-orange);
+}
+
+.p-ob-plan-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* STARTER eyebrow: 12/16, 2px tracking, pure #FF6550 (not the #FF8A78 of
+   .p-eyebrow). */
+.p-ob-pay-plan {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 2px;
+  color: var(--p-orange);
+}
+
+.p-ob-plan-priceline {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+/* $10: 32/36 cream, no tracking (.p-t-32 is 32/40 with -0.02em). */
+.p-ob-pay-price {
+  font-size: 32px;
+  line-height: 36px;
+  color: var(--p-cream);
+}
+
+/* Feature list: column gap 6; rows gap 10 around a 6px orange square
+   (radius 3). */
+.p-ob-plan-feats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.p-ob-plan-feat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.p-ob-pay-dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background-color: var(--p-orange);
+}
+
+/* Feature text: 16/22 (paper.css has 16/20 and 16/24 only). */
+.p-ob-pay-feat {
+  font-size: 16px;
+  line-height: 22px;
+  color: var(--p-cream);
+}
+
+/* Add-ons header: baseline-of-block alignment (JSX alignItems: end). */
+.p-ob-addons-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.p-ob-addons-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* "One-time add-ons": 14/18 in the chip tone #C7BDB6 (no .p-c-* utility
+   exists for it). */
+.p-ob-addons-title {
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-text-chip);
+}
+
+/* OPTIONAL: 11/14, 1px tracking, pure #FF6550 (.p-label-orange is 0.1em
+   #FF8A78). */
+.p-ob-pay-optional {
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 1px;
+  color: var(--p-orange);
+}
+
+/* Pack rows: 28px tall, hairline #2A2320 underneath, fixed 140/400 text
+   boxes and the + on the right. */
+.p-ob-pack {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  height: 28px;
+  border-bottom: 1px solid var(--p-line);
+}
+
+.p-ob-pack-name {
+  flex-shrink: 0;
+  width: 140px;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--p-text-chip);
+}
+
+.p-ob-pack-price {
+  flex-shrink: 0;
+  width: 400px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-text-3);
+}
+
+.p-ob-pack-add {
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--p-text-3);
+}
+
+/* Fine print reset; type comes from .p-t-12-18 .p-c-3. */
+.p-ob-pay-fine {
+  margin: 0;
+}
+
+/* CTA: 52px, radius 12, orange, 18/22 cream text, full column width.
+   Disabled state mirrors .p-auth-submit:disabled for app.js's
+   'opening checkout...' phase (not depicted in the JSX). */
+.p-ob-pay-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  background-color: var(--p-orange);
+  font-size: 18px;
+  line-height: 22px;
+  color: var(--p-cream);
+}
+
+.p-ob-pay-cta:disabled {
+  background-color: var(--p-bg-panel);
+  color: var(--p-text-5);
+  cursor: default;
+}
+
+/* Footer rows: centred, gap 28. */
+.p-ob-pay-links {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+}
+
+.p-ob-pay-terms {
+  display: flex;
+  justify-content: center;
+}
+
+/* White background toggle. Off unless html.p-white-bg is set from settings. */
+html.p-white-bg {
+  color-scheme: light;
+  --p-bg: #F4EFE8;
+  --p-cream: #000000;
+  /* Muted inks were tuned for black. Darken them so they stay readable on white. */
+  --p-text-bright: #2A2420;
+  --p-text-chip: #3A322E;
+  --p-text-2: #403832;
+  --p-text-3: #4E453F;
+  --p-text-4: #5C514C;
+  --p-text-5: #6B5F59;
+  /* Action fills stay #FF6550. This is text only — #FF8A78 is too faint on white. */
+  --p-orange-text: #C63B2A;
+  background-color: #F4EFE8;
+  color: #000000;
+}
+
+html.p-white-bg body {
+  background-color: #F4EFE8;
+  color: #000000;
+}
+
+html.p-white-bg .p-auth,
+html.p-white-bg .p-calldetail,
+html.p-white-bg .p-ob,
+html.p-white-bg .p-filter-dropdown,
+html.p-white-bg .p-dropzone,
+html.p-white-bg .p-del-modal,
+html.p-white-bg .p-convos,
+html.p-white-bg .p-chat-composer,
+html.p-white-bg .p-rp-voice select option,
+html.p-white-bg .p-rp-modal,
+html.p-white-bg .p-rp-stage,
+html.p-white-bg .pd-overlay,
+html.p-white-bg .pd-card,
+html.p-white-bg .p-modal,
+html.p-white-bg .p-panel,
+html.p-white-bg .p-nav-item.active,
+html.p-white-bg .p-chip.active,
+html.p-white-bg .p-co-filter.active,
+html.p-white-bg .p-convo-row.active,
+html.p-white-bg .p-ts-speaker.active {
+  background-color: #FFFFFF;
+}
+
+html.p-white-bg .p-filter-option {
+  color: #000000;
+}
+
+html.p-white-bg .p-filter-option.active {
+  color: #FF6550;
+}
+
+html.p-white-bg .p-oauth-google {
+  background-color: #FFF8EF;
+}
+
+html.p-white-bg .p-oauth-apple {
+  border-color: #FFF8EF;
+}
+
+html.p-white-bg .p-oauth-apple .p-c-cream {
+  color: #FFF8EF;
+}
+
+html.p-white-bg .p-filter-clear,
+html.p-white-bg .p-upload-formats,
+html.p-white-bg .p-dropzone-sub,
+html.p-white-bg .p-dropzone-note,
+html.p-white-bg .p-upload-foot,
+html.p-white-bg .p-ts-jump,
+html.p-white-bg .p-cd-rail--notes .p-cd-kicker,
+html.p-white-bg .p-nt-score-sub,
+html.p-white-bg .p-nt-railnote,
+html.p-white-bg .p-nt-counts,
+html.p-white-bg .p-nt-tag--manual,
+html.p-white-bg .p-nt-foot,
+html.p-white-bg .p-nt-summary,
+html.p-white-bg .p-nt-kf,
+html.p-white-bg .p-nt-note,
+html.p-white-bg .p-rec-kicker,
+html.p-white-bg .p-rec-meta,
+html.p-white-bg .p-rec-times,
+html.p-white-bg .p-rec-ts-hint,
+html.p-white-bg .p-rec-speaker,
+html.p-white-bg .p-rec-text,
+html.p-white-bg .p-del-text,
+html.p-white-bg .p-convos-title,
+html.p-white-bg .p-convos-search::placeholder,
+html.p-white-bg .p-convo-row,
+html.p-white-bg .p-chat-sub,
+html.p-white-bg .p-msg-brutus-quote,
+html.p-white-bg .p-chat-composer input::placeholder,
+html.p-white-bg .p-rp-modal-body,
+html.p-white-bg .p-rp-modal-note,
+html.p-white-bg .p-rp-stage-phase,
+html.p-white-bg .p-rp-btn-dim:disabled,
+html.p-white-bg .p-rp-btn-end:disabled,
+html.p-white-bg .p-rp-viz-label,
+html.p-white-bg .p-rp-viz-voice,
+html.p-white-bg .rp-mic-muted,
+html.p-white-bg .rp-mic-thinking,
+html.p-white-bg .rp-msg-label,
+html.p-white-bg .rp-msg-coach,
+html.p-white-bg .rp-active-empty,
+html.p-white-bg .p-rp-status,
+html.p-white-bg .rp-summary-persona,
+html.p-white-bg .rp-summary-grid,
+html.p-white-bg .p-rp-results-meta,
+html.p-white-bg .p-rp-overlay-label,
+html.p-white-bg .p-rp-res-sub,
+html.p-white-bg .p-rp-weakness-s,
+html.p-white-bg .p-rp-res-actions,
+html.p-white-bg .p-rp-turn-label,
+html.p-white-bg .p-acct-label,
+html.p-white-bg .p-acct-field-label,
+html.p-white-bg .p-acct-input::placeholder,
+html.p-white-bg .p-acct-note,
+html.p-white-bg .p-acct-check,
+html.p-white-bg .p-acct-t12,
+html.p-white-bg .p-acct-dim,
+html.p-white-bg .p-bill-note,
+html.p-white-bg .pack-desc,
+html.p-white-bg .p-bill-input::placeholder,
+html.p-white-bg .p-bill-hint,
+html.p-white-bg .p-bill-foot,
+html.p-white-bg .pd-stat-label {
+  color: #000000;
+}
+
+html.p-white-bg .p-rp-status.error {
+  color: #FF6550;
+}
+
+html.p-white-bg [style*="color:#fff"],
+html.p-white-bg [style*="color: #fff"],
+html.p-white-bg [style*="color:#FFF8EF"],
+html.p-white-bg [style*="color: #FFF8EF"],
+html.p-white-bg [style*="color:#ffffff"],
+html.p-white-bg [style*="color: #ffffff"],
+html.p-white-bg [style*="color:white"],
+html.p-white-bg [style*="color: white"] {
+  color: #000000 !important;
+}
+
+/* Auth form sits above a black photo scrim. Give the column an opaque
+   white plate so fields are not drawn on black. */
+html.p-white-bg .p-auth-panel {
+  background-color: #FFFFFF;
+}
+
+/* Fields. Cream-alpha borders (#FFF8EF29) and native dark-mode controls
+   vanish on white. Light fill, dark ink, solid border, readable placeholder. */
+html.p-white-bg input,
+html.p-white-bg textarea,
+html.p-white-bg select {
+  color: #161311;
+  -webkit-text-fill-color: #161311;
+  caret-color: #161311;
+}
+
+html.p-white-bg input[type="checkbox"],
+html.p-white-bg input[type="radio"],
+html.p-white-bg input[type="range"],
+html.p-white-bg input[type="file"],
+html.p-white-bg input[type="hidden"] {
+  color: inherit;
+  -webkit-text-fill-color: currentColor;
+  caret-color: auto;
+}
+
+html.p-white-bg .p-input,
+html.p-white-bg .p-textarea,
+html.p-white-bg .p-convos-search,
+html.p-white-bg .p-research-input,
+html.p-white-bg .p-research-notes,
+html.p-white-bg .p-acct-input,
+html.p-white-bg .p-acct-select select,
+html.p-white-bg .p-bill-input,
+html.p-white-bg .pd-input,
+html.p-white-bg .p-search,
+html.p-white-bg .p-research-search,
+html.p-white-bg .p-composer,
+html.p-white-bg .p-chat-composer,
+html.p-white-bg .p-rp-voice {
+  background-color: #F4EFE8;
+  border-color: #6E625C;
+}
+
+html.p-white-bg .p-search input,
+html.p-white-bg .p-research-search input,
+html.p-white-bg .p-composer input,
+html.p-white-bg .p-chat-composer input,
+html.p-white-bg .p-rp-voice select {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+html.p-white-bg .p-input:focus,
+html.p-white-bg .p-textarea:focus,
+html.p-white-bg .p-convos-search:focus,
+html.p-white-bg .p-research-input:focus,
+html.p-white-bg .p-research-notes:focus,
+html.p-white-bg .p-acct-input:focus,
+html.p-white-bg .p-acct-select select:focus,
+html.p-white-bg .p-bill-input:focus,
+html.p-white-bg .pd-input:focus,
+html.p-white-bg .p-search:focus-within,
+html.p-white-bg .p-research-search:focus-within,
+html.p-white-bg .p-composer:focus-within,
+html.p-white-bg .p-chat-composer:focus-within,
+html.p-white-bg .p-rp-voice:focus-within {
+  border-color: #FF6550;
+}
+
+html.p-white-bg input::placeholder,
+html.p-white-bg textarea::placeholder {
+  color: #5C514C;
+  -webkit-text-fill-color: #5C514C;
+  opacity: 1;
+}
+
+html.p-white-bg select option {
+  background-color: #FFFFFF;
+  color: #161311;
+}
+
+html.p-white-bg input:-webkit-autofill,
+html.p-white-bg input:-webkit-autofill:hover,
+html.p-white-bg input:-webkit-autofill:focus,
+html.p-white-bg textarea:-webkit-autofill {
+  -webkit-text-fill-color: #161311;
+  caret-color: #161311;
+  box-shadow: 0 0 0 1000px #F4EFE8 inset;
+}
+
+html.p-white-bg .p-search svg,
+html.p-white-bg .p-research-search svg {
+  stroke: #4E453F;
+}
+
+/* Cream strokes (sidebar, chat menu, paywall chevron) disappear on white.
+   Apple's mark uses fill, not stroke, and stays cream on its black button. */
+html.p-white-bg svg [stroke="#FFF8EF"] {
+  stroke: #161311;
+}
+
+/* Orange used as text (not as a fill). #FF6550 / #FF8A78 fail on white. */
+html.p-white-bg .p-nt-tag--ai,
+html.p-white-bg .p-nt-ready,
+html.p-white-bg .p-rec-hot,
+html.p-white-bg .p-del-warn,
+html.p-white-bg .p-del-confirm,
+html.p-white-bg .p-rp-stage-badge,
+html.p-white-bg .p-rp-btn-end,
+html.p-white-bg .rp-mic-live,
+html.p-white-bg .rp-msg-coach .rp-msg-label,
+html.p-white-bg .p-rp-status.error,
+html.p-white-bg .p-acct-chev,
+html.p-white-bg .p-ob-pay-plan,
+html.p-white-bg .p-ob-pay-optional {
+  color: var(--p-orange-text);
+}
+
+html.p-white-bg .p-kind-warning {
+  color: #6E4E38;
+}
+
+/* Sidebar / auth bust. The PNG is a coral plate with transparent corners
+   (no opaque black). Multiply drops any white matte against the white page
+   and leaves the mark. Dark theme is unchanged. */
+html.p-white-bg .p-logo-img {
+  mix-blend-mode: multiply;
+}
+
+/* Colored mascot. Multiply made the costume see-through on the beige page.
+   He stays fully opaque in both themes. Desktop draws the one copy in the
+   floating window; this rule keeps a shown decal from blending too. */
+html.p-white-bg .p-chat-decal {
+  opacity: 1;
+  mix-blend-mode: normal;
+}
+
+/* Roleplay on white. Start stays the orange action; plan bubbles were the
+   dark panel fill with the darkened ink token (black on black). */
+html.p-white-bg .p-rp-start {
+  background-color: #FF6550;
+  color: #FFF8EF;
+}
+
+html.p-white-bg .p-rp-plan-messages .message-content {
+  background-color: #FFFFFF;
+  color: #161311;
+}
+
+html.p-white-bg .p-rp-plan-messages .message-text {
+  color: #161311;
+}

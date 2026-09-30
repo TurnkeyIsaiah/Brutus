@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+Astra 6 reviews this app (web and desktop) and should read HANDOFF.md at the repo root first. It is the live redesign handoff. Claude's separate job is a later motion-design demo video of the marketing site, not this review.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
