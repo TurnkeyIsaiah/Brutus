@@ -6,6 +6,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
+    "test": "node --test \"test/*.test.js\"",
     "build": "electron-builder --config electron-builder.config.js",
     "build:win": "electron-builder --win --config electron-builder.config.js",
     "build:mac": "electron-builder --mac --config electron-builder.config.js",
@@ -71,6 +72,7 @@
   },
   "devDependencies": {
     "electron": "^44.5.1",
-    "electron-builder": "^26.17.0"
+    "electron-builder": "^26.17.0",
+    "playwright-core": "^1.63.0"
   }
 }

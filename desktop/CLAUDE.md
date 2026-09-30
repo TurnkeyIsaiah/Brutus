@@ -136,11 +136,16 @@ Main process (`src/main.js`) exposes handlers via `ipcMain.handle()`:
 - Events from main to renderer use `webContents.send()` for monitoring state changes
 
 Key IPC channels:
-- Auth: `get-auth`, `set-auth`, `clear-auth`
+- Auth: `get-auth`, `set-auth`, `clear-auth` (clear-auth ends a live call first)
 - Window: `minimize-window`, `close-window`, `quit-app`
-- Monitoring: `start-monitoring`, `stop-monitoring`, `is-monitoring`
-- Overlay: `move-overlay`, `resize-overlay`
+- Monitoring: `start-monitoring` (returns `{ok, reason}`; refused while signed out or while the last call is saving), `stop-monitoring` (fire and forget), `end-monitoring` (waits until the overlay has closed the session; used by logout and account deletion), `is-monitoring`, `get-monitoring-state` (`idle|live|stopping`)
+- Overlay handshake: `overlay-ready`, `capture-state`, `overlay-stopped` (overlay → main, sender-checked)
+- Capture: `get-screen-sources`, `set-capture-intent` (overlay only; see Screen Capture)
+- Overlay: `move-overlay`, `resize-overlay`, gesture channels
 - Settings: `get-settings`, `set-settings`
+- Main → main window: `monitoring-started`, `monitoring-stopped`, `monitoring-finished` (call saved or failed)
+
+Preload callbacks receive only the payload, never the IPC event, and each `on*` subscription returns an unsubscribe function.
 
 ### Feedback Classification
 
@@ -177,11 +182,7 @@ View switching uses a combination of CSS classes and `!important` rules:
 
 ### Monitoring State Management
 
-The monitoring state (`isMonitoring`) is managed in the main process and synchronized across windows:
-- Main window shows start/stop button with status indicator
-- Overlay window only shown when monitoring is active
-- System tray menu updates to reflect current state
-- State persists across window closes/opens
+`src/monitoringController.js` owns monitoring state in the main process (`idle | live | stopping`). Every way of leaving a call goes through its `requestStop()`, which asks the overlay to stop and waits (up to 45s) for `overlay-stopped`: the Stop button, tray, logout, account deletion, API URL change, quitting (before-quit is held until the call is saved), "Restart now" for an update (the update prompt is also deferred until no call is live), and Alt+F4 on the overlay (the overlay is hidden, not destroyed). If the overlay renderer crashes, main ends the session itself with `/live/end` and builds a fresh overlay on the next start. A start requested while the overlay page is loading is delivered once, on `overlay-ready`.
 
 ### Audio Chunk Timing
 
@@ -194,36 +195,31 @@ Audio is recorded continuously but sent in discrete chunks:
 
 ### Screen Capture Implementation
 
-Screen capture runs in parallel with audio capture:
-- The user selects a source via `desktopCapturer` (exposed through the preload script); `getDisplayMedia` provides the video/system-audio stream
-- Screenshots are captured on demand on every 4th audio chunk (~2 minutes), not on a separate timer
-- Each screenshot is drawn to a canvas, downscaled to max 960×540, and converted to JPEG base64
-- When that chunk is sent, the screenshot is included in the payload (otherwise `screenshot` is null)
-- Gracefully degrades to audio-only if screen/system audio capture fails
-- All screen streams are properly cleaned up on session end
+- The overlay tells main exactly what it wants right before each `getDisplayMedia` call (`set-capture-intent`: `{screenSourceId|null, systemAudio}`). `src/displayMediaIntent.js` turns that into the display-media answer; an intent is single-use and expires after 30s, and a request without one is denied. There is **no fallback to the first screen**.
+- "Screen" off or "skip — call audio only": no window is watched and no screenshots are taken, but the computer's call audio is still recorded (product rule). Chromium needs a video source anyway, so the overlay window is used as the carrier and its video track is stopped at once.
+- Turning Screen back on mid-call goes through the picker and requests video only.
+- Screenshots: every 4th audio chunk (~2 minutes), only while a picked window's video track is live; downscaled to max 960×540 JPEG.
 
 ### Session Lifecycle
 
-1. User clicks "Start Monitoring" → `startMonitoring()`
-2. Main process shows overlay window
-3. For live/cold-call sessions, the overlay shows a recording-consent notice (`showConsentNotice()`, audit BR-03) instructing the user to get the prospect's consent; declining calls `stopMonitoring()` and aborts the start. Roleplay (AI persona, no third party) skips this gate.
-4. Overlay calls `POST /live/start` → receives `sessionId`
-5. WebSocket connection established; client sends `{ type: 'auth', token }`
-6. Audio capture begins (rep mic + optional prospect/system audio)
-7. Screen capture begins (optional)
-8. Every 30 seconds: rep + prospect audio chunks (screenshot every 4th chunk) sent via WebSocket
-9. User clicks "Stop Monitoring" → `stopMonitoring()`
-10. A final audio flush is sent, audio/screen capture stops, interval timers cleared
-11. Overlay calls `POST /live/end` with `sessionId`
-12. WebSocket disconnected
-13. Overlay window hidden
+`renderer/capture/capture-session.js` runs one session: `idle → consenting → picking → starting → live → stopping → idle`. `renderer/overlay.js` is only the UI around it. Both load in Node for tests (UMD).
+
+1. Start Monitoring → main shows the overlay → `monitoring-started`
+2. Recording-consent notice (audit BR-03); declining stops monitoring
+3. Source picker (if Screen is on)
+4. Auth and API URL are read now and snapshotted for the whole session
+5. `POST /live/start` → `sessionId`; then the mic (failure → `/live/cancel` and a real message)
+6. WebSocket `{type:'auth', token, client}`; the `connected` reply may list `capabilities: ['chunk_ack']`
+7. Every 30s the rep + prospect chunks go into `renderer/capture/chunk-outbox.js` with a per-session `seq`; unacked chunks are replayed in order after a reconnect (memory only, max 20)
+8. Stop: final flush → wait for every chunk to be acked (20s; old backends without acks get an 8s grace) → `POST /live/end {sessionId, lastSeq}` (90s timeout, one retry) → socket closed
+
+Stop at any step cancels cleanly: a generation counter is checked after every await, a late `/live/start` is cancelled with `/live/cancel`, and a late mic grant is released. Close code 4001 (token revoked) ends the session instead of reconnecting. Out-of-tokens / subscription errors end the session and show the server's message.
 
 ### Error Handling
 
-- Authentication failures clear stored tokens and show login
-- WebSocket errors trigger auto-reconnect with exponential backoff (capped at 30s) if the session is active
-- Microphone access denial shows critical feedback to user
-- API errors display in UI error message components
+- Start failures show the actual reason (signed out, out of tokens, subscription required, archived mode, no mic, no network) and leave the overlay open to show it
+- `/live/end`, notes and research check the response; a failed save is shown as a failure
+- A "reconnecting… / N unsent" line under the metrics shows delivery trouble instead of silently dropping audio
 
 ## Backend Requirements
 

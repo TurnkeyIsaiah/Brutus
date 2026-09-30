@@ -1356,20 +1356,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (monitorBtn && window.brutus && window.brutus.startMonitoring) {
         monitorBtn.classList.remove('hidden');
         const syncMonitor = async () => {
-            const on = await window.brutus.isMonitoring();
-            monitorBtn.textContent = on ? 'Stop monitoring' : 'Start monitoring';
+            const state = window.brutus.getMonitoringState
+                ? await window.brutus.getMonitoringState()
+                : (await window.brutus.isMonitoring() ? 'live' : 'idle');
+            const on = state === 'live';
+            monitorBtn.textContent = on ? 'Stop monitoring' : state === 'stopping' ? 'Saving call…' : 'Start monitoring';
+            monitorBtn.disabled = state === 'stopping';
             if (lilSession.monitoring === on) return;
             lilSession.monitoring = on;
             pushLilSession('monitoring');
         };
         monitorBtn.addEventListener('click', async () => {
-            const on = await window.brutus.isMonitoring();
+            const state = window.brutus.getMonitoringState ? await window.brutus.getMonitoringState() : null;
+            if (state === 'stopping') return;
+            const on = state ? state === 'live' : await window.brutus.isMonitoring();
             if (on) await window.brutus.stopMonitoring();
             else await window.brutus.startMonitoring();
             syncMonitor();
         });
         window.brutus.onMonitoringStarted(syncMonitor);
         window.brutus.onMonitoringStopped(syncMonitor);
+        if (window.brutus.onMonitoringFinished) window.brutus.onMonitoringFinished(syncMonitor);
         syncMonitor();
     }
 

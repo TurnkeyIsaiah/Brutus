@@ -19,6 +19,8 @@ const fs = require('fs');
 const Store = require('electron-store');
 const { autoUpdater } = require('electron-updater');
 const { clipLilBrutusToMascot } = require('./lil-brutus-shape');
+const { createIntentStore, resolveDisplayMedia } = require('./displayMediaIntent');
+const { createMonitoringController } = require('./monitoringController');
 
 // Dev builds can run beside the installed app (which holds the single-instance
 // lock on the shared userData folder) by pointing at their own profile.
@@ -45,8 +47,9 @@ let mascotGesture = null;
 let mascotWanted = false;
 let appIsQuitting = false;
 let tray = null;
-let isMonitoring = false;
-let selectedSourceId = null;
+let overlayReady = false;
+let quitAfterStop = false;
+const captureIntents = createIntentStore();
 
 // Paper chat decal (09/16/11): 168×95. The floating window matches that box.
 const LIL_BRUTUS_W = 168;
@@ -203,26 +206,34 @@ function createOverlayWindow() {
   });
 
   overlayWindow.webContents.on('did-start-loading', () => {
+    overlayReady = false;
     endOverlayGesture();
   });
-  overlayWindow.webContents.on('render-process-gone', () => {
+  overlayWindow.webContents.on('render-process-gone', (event, details) => {
+    console.error('[overlay] renderer gone:', details && details.reason);
+    overlayReady = false;
     endOverlayGesture();
+    monitoring.onOverlayGone();
+    // A dead renderer cannot be reused; the next Start builds a fresh overlay.
+    const dead = overlayWindow;
+    overlayWindow = null;
+    if (dead && !dead.isDestroyed()) dead.destroy();
   });
 
   overlayWindow.loadFile(path.join(__dirname, '../renderer/overlay.html'));
   overlayWindow.setIgnoreMouseEvents(false);
 
-  // Grant screen capture permission — uses user-selected source if set, else first screen
+  // Only what the overlay asked for right before this request is granted
+  // (see displayMediaIntent.js). No intent, no capture.
+  const carrierSourceId = overlayWindow.getMediaSourceId();
   overlayWindow.webContents.session.setDisplayMediaRequestHandler((request, callback) => {
+    const intent = captureIntents.take();
+    if (!intent) {
+      callback({});
+      return;
+    }
     desktopCapturer.getSources({ types: ['screen', 'window'] }).then((sources) => {
-      let source;
-      if (selectedSourceId) {
-        source = sources.find(s => s.id === selectedSourceId) || sources[0];
-        selectedSourceId = null; // reset after use
-      } else {
-        source = sources[0];
-      }
-      callback({ video: source, audio: 'loopback' });
+      callback(resolveDisplayMedia(intent, sources, carrierSourceId));
     }).catch(() => {
       callback({});
     });
@@ -241,12 +252,22 @@ function createOverlayWindow() {
     overlayWindow.restore();
   });
 
+  // Alt+F4 (or anything else closing the frameless overlay) must not drop a
+  // live call: end it properly and keep the window around, hidden, for reuse.
+  overlayWindow.on('close', (event) => {
+    if (appIsQuitting) return;
+    event.preventDefault();
+    if (monitoring.needsStop()) {
+      monitoring.requestStop({ reason: 'overlay-closed' }).finally(hideOverlay);
+    } else {
+      hideOverlay();
+    }
+  });
+
   overlayWindow.on('closed', () => {
     endOverlayGesture();
+    overlayReady = false;
     overlayWindow = null;
-    isMonitoring = false;
-    if (mainWindow) mainWindow.webContents.send('monitoring-stopped');
-    updateTrayMenu();
   });
 
   applyOverlayOpacity();
@@ -303,34 +324,12 @@ function createTray() {
         }
       }
     },
-    {
-      label: 'Start Monitoring',
-      click: () => {
-        if (isMonitoring) {
-          stopMonitoring();
-        } else {
-          startMonitoring();
-        }
-      }
-    },
-    {
-      label: 'Settings',
-      click: () => {
-        openInAppSettings();
-      }
-    },
-    { type: 'separator' },
-    {
-      label: 'Quit',
-      click: () => {
-        app.quit();
-      }
-    }
   ]);
-  
+
   tray.setToolTip('Brutus AI - Sales Coach');
   tray.setContextMenu(contextMenu);
-  
+  updateTrayMenu();
+
   tray.on('click', () => {
     if (mainWindow) {
       mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
@@ -340,93 +339,98 @@ function createTray() {
   });
 }
 
+function showMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) createMainWindow();
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
+
 function updateTrayMenu() {
   if (!tray) return;
-
+  const current = monitoring.state();
   const template = [
-    {
-      label: 'Open Brutus',
-      click: () => {
-        if (mainWindow) {
-          mainWindow.show();
-        } else {
-          createMainWindow();
-        }
-      }
-    }
+    { label: 'Open Brutus', click: showMainWindow }
   ];
-
-  if (isMonitoring) {
-    template.push({
-      label: 'Show Overlay',
-      click: () => {
-        showOverlay();
-      }
-    });
+  if (current === 'live') {
+    template.push({ label: 'Show Overlay', click: () => showOverlay() });
   }
-
   template.push(
     {
-      label: isMonitoring ? 'Stop Monitoring' : 'Start Monitoring',
+      label: current === 'live' ? 'Stop Monitoring' : current === 'stopping' ? 'Saving call…' : 'Start Monitoring',
+      enabled: current !== 'stopping',
       click: () => {
-        if (isMonitoring) {
-          stopMonitoring();
-        } else {
-          startMonitoring();
-        }
+        if (monitoring.state() === 'live') stopMonitoring();
+        else startMonitoring();
       }
     },
-    {
-      label: 'Settings',
-      click: () => {
-        openInAppSettings();
-      }
-    },
+    { label: 'Settings', click: () => openInAppSettings() },
     { type: 'separator' },
-    {
-      label: 'Quit',
-      click: () => {
-        app.quit();
-      }
-    }
+    { label: 'Quit', click: () => app.quit() }
   );
-
-  const contextMenu = Menu.buildFromTemplate(template);
-  
-  tray.setContextMenu(contextMenu);
+  tray.setContextMenu(Menu.buildFromTemplate(template));
 }
 
 // ==================== MONITORING CONTROL ====================
 
-function startMonitoring() {
-  isMonitoring = true;
-  showOverlay();
-  updateTrayMenu();
-  
-  if (overlayWindow) {
-    overlayWindow.webContents.send('monitoring-started');
+function readAuthToken() {
+  return decryptToken(store.get('authToken')) ?? memoryToken;
+}
+
+// Used only when the overlay renderer died mid-call and cannot end its own
+// session. Whatever audio already reached the server is kept.
+async function endSessionFromMain(sessionId) {
+  const token = readAuthToken();
+  if (!token || !sessionId) return;
+  const apiUrl = String(readSettings().apiUrl || 'https://api.brutusai.coach').replace(/\/+$/, '');
+  try {
+    await fetch(`${apiUrl}/live/end`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'X-Brutus-Client': 'brutus-desktop'
+      },
+      body: JSON.stringify({ sessionId })
+    });
+  } catch (err) {
+    console.error('[monitoring] could not end session after overlay crash:', err?.message || err);
   }
 }
 
-function stopMonitoring() {
-  // Idempotent: a renderer-side bug (or impatient user) can fire this IPC
-  // multiple times during the slow /live/end window. Without this guard,
-  // each call sends another monitoring-stopped event, the renderer fires
-  // stopSession multiple times, and the backend can create duplicate Call
-  // rows under READ COMMITTED isolation.
-  if (!isMonitoring) return;
-  isMonitoring = false;
-  updateTrayMenu();
+function sendToMainWindow(channel, payload) {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload);
+}
 
-  // The renderer owns whether this stop should hide the overlay. Normal
-  // cold-call/roleplay stops can keep summaries visible; the overlay X sets an
-  // explicit end-and-hide intent.
-  if (overlayWindow) {
-    overlayWindow.webContents.send('monitoring-stopped');
+const monitoring = createMonitoringController({
+  showOverlay,
+  sendToOverlay: (channel, payload) => {
+    if (overlayWindow && !overlayWindow.isDestroyed()) overlayWindow.webContents.send(channel, payload);
+  },
+  isOverlayReady: () => !!(overlayReady && overlayWindow && !overlayWindow.isDestroyed()),
+  hasAuth: () => !!readAuthToken(),
+  endSessionRemote: endSessionFromMain,
+  onChange: (state) => {
+    updateTrayMenu();
+    sendToMainWindow(state === 'live' ? 'monitoring-started' : 'monitoring-stopped');
+  },
+  onFinished: (info) => {
+    sendToMainWindow('monitoring-finished', info || {});
+    showPendingUpdatePrompt();
   }
-  if (mainWindow) {
-    mainWindow.webContents.send('monitoring-stopped');
+});
+
+function startMonitoring() {
+  const result = monitoring.start();
+  if (!result.ok && result.reason === 'signed_out') {
+    // Tray Start while signed out: bring up the window so they can log in.
+    showMainWindow();
   }
+  return result;
+}
+
+function stopMonitoring(reason) {
+  return monitoring.requestStop({ reason: reason || 'user' });
 }
 
 // ==================== AUTH TOKEN ENCRYPTION ====================
@@ -456,7 +460,7 @@ function decryptToken(stored) {
 
 ipcMain.handle('get-auth', () => {
   return {
-    token: decryptToken(store.get('authToken')) ?? memoryToken,
+    token: readAuthToken(),
     user: store.get('user')
   };
 });
@@ -475,10 +479,14 @@ ipcMain.handle('set-auth', (event, { token, user }) => {
   return true;
 });
 
-ipcMain.handle('clear-auth', () => {
+ipcMain.handle('clear-auth', async () => {
+  // Normally the renderer already ended monitoring (end-monitoring) before
+  // revoking its token; this covers any path that did not.
+  if (monitoring.needsStop()) await monitoring.requestStop({ reason: 'signed-out' });
   memoryToken = null;
   store.delete('authToken');
   store.delete('user');
+  if (overlayWindow && !overlayWindow.isDestroyed()) overlayWindow.webContents.send('auth-cleared');
   return true;
 });
 
@@ -495,17 +503,53 @@ ipcMain.handle('quit-app', () => {
 });
 
 ipcMain.handle('start-monitoring', () => {
-  startMonitoring();
-  return true;
+  return startMonitoring();
 });
 
+// Returns as soon as the stop is requested. The overlay calls this for stops
+// it starts itself, so it must never wait on its own completion.
 ipcMain.handle('stop-monitoring', () => {
   stopMonitoring();
   return true;
 });
 
+// Ends monitoring and waits until the overlay has closed the session (or the
+// timeout passes). Logout and account deletion call this before touching auth.
+ipcMain.handle('end-monitoring', async (event, options) => {
+  const opts = options && typeof options === 'object' ? options : {};
+  const reason = typeof opts.reason === 'string' ? opts.reason : 'user';
+  await monitoring.requestStop({ reason, mode: opts.mode === 'cancel' ? 'cancel' : 'end' });
+  return true;
+});
+
 ipcMain.handle('is-monitoring', () => {
-  return isMonitoring;
+  return monitoring.isActive();
+});
+
+ipcMain.handle('get-monitoring-state', () => {
+  return monitoring.state();
+});
+
+// Overlay handshake: its listeners exist, so a pending start can be delivered.
+ipcMain.on('overlay-ready', (event) => {
+  if (!overlaySender(event)) return;
+  overlayReady = true;
+  monitoring.overlayReady();
+});
+
+ipcMain.on('capture-state', (event, state) => {
+  if (!overlaySender(event)) return;
+  monitoring.onCaptureState(state);
+});
+
+ipcMain.on('overlay-stopped', (event, info) => {
+  if (!overlaySender(event)) return;
+  monitoring.onOverlayStopped(info && typeof info === 'object' ? info : {});
+});
+
+ipcMain.handle('set-capture-intent', (event, intent) => {
+  if (!overlaySender(event)) return false;
+  return captureIntents.set(intent);
 });
 
 ipcMain.handle('show-overlay', () => {
@@ -1075,7 +1119,7 @@ ipcMain.handle('get-settings', () => {
   return readSettings();
 });
 
-ipcMain.handle('set-settings', (event, settings) => {
+ipcMain.handle('set-settings', async (event, settings) => {
   const existing = readSettings();
   const patch = (settings && typeof settings === 'object') ? settings : {};
   const next = { ...existing, ...patch };
@@ -1086,13 +1130,13 @@ ipcMain.handle('set-settings', (event, settings) => {
     next.whiteBackground = !!patch.whiteBackground;
   }
   if (typeof patch.apiUrl === 'string' && patch.apiUrl !== existing.apiUrl) {
-    // Backend origin changed — clear stored token and invalidate all live renderer sessions
+    // Backend origin changed. End any live call against the old backend first
+    // (it still holds the old token), then drop the token everywhere.
+    if (monitoring.needsStop()) await monitoring.requestStop({ reason: 'api-url-changed' });
     memoryToken = null;
     store.delete('authToken');
     store.delete('user');
     if (mainWindow) mainWindow.webContents.send('auth-cleared');
-    // Also stop monitoring and notify overlay so its in-memory session is cleared too
-    if (isMonitoring) stopMonitoring();
     if (overlayWindow) overlayWindow.webContents.send('auth-cleared');
   }
   store.set('settings', next);
@@ -1137,16 +1181,43 @@ ipcMain.handle('get-screen-sources', async () => {
   }
 });
 
-ipcMain.handle('set-selected-source', (event, sourceId) => {
-  selectedSourceId = sourceId;
-  return true;
-});
-
 // ==================== AUTO UPDATE ====================
 // Polls the GitHub Releases for this repo (configured in package.json build.publish)
 // for a `latest.yml` with a newer version. Downloads silently in the background;
 // prompts the user to restart when an update is ready. Skipped in dev (npm start)
 // because the updater requires a packaged app.
+
+let pendingUpdate = null;
+let updatePromptOpen = false;
+
+async function promptForUpdate(info) {
+  if (updatePromptOpen) return;
+  updatePromptOpen = true;
+  try {
+    const choice = await dialog.showMessageBox({
+      type: 'info',
+      title: 'Update ready',
+      message: `Brutus AI ${info?.version || 'update'} has been downloaded.`,
+      detail: 'Restart to install it now, or it installs the next time Brutus quits.',
+      buttons: ['Restart now', 'Later'],
+      defaultId: 0,
+      cancelId: 1
+    });
+    if (choice.response !== 0) return;
+    // A call may have started while the dialog was open.
+    if (monitoring.needsStop()) await monitoring.requestStop({ reason: 'update' });
+    autoUpdater.quitAndInstall();
+  } finally {
+    updatePromptOpen = false;
+  }
+}
+
+function showPendingUpdatePrompt() {
+  if (!pendingUpdate || monitoring.needsStop()) return;
+  const info = pendingUpdate;
+  pendingUpdate = null;
+  promptForUpdate(info);
+}
 
 function setupAutoUpdate() {
   if (!app.isPackaged) return;
@@ -1162,19 +1233,14 @@ function setupAutoUpdate() {
     console.log('[autoUpdater] update available:', info?.version);
   });
 
-  autoUpdater.on('update-downloaded', async (info) => {
-    const choice = await dialog.showMessageBox({
-      type: 'info',
-      title: 'Update ready',
-      message: `Brutus AI ${info?.version || 'update'} has been downloaded.`,
-      detail: 'Restart to install. Your current session will end.',
-      buttons: ['Restart now', 'Later'],
-      defaultId: 0,
-      cancelId: 1
-    });
-    if (choice.response === 0) {
-      autoUpdater.quitAndInstall();
+  autoUpdater.on('update-downloaded', (info) => {
+    // Never pop a dialog over a live call (it would show in a screen share).
+    // Ask once the call is over; it also installs on the next normal quit.
+    if (monitoring.needsStop()) {
+      pendingUpdate = info || {};
+      return;
     }
+    promptForUpdate(info);
   });
 
   autoUpdater.checkForUpdatesAndNotify().catch((err) => {
@@ -1203,7 +1269,15 @@ app.on('window-all-closed', () => {
   // Keep running in tray
 });
 
-app.on('before-quit', () => {
+app.on('before-quit', (event) => {
+  // Quitting mid-call ends the call properly first (final audio + /live/end),
+  // then quits for real.
+  if (!quitAfterStop && monitoring.needsStop()) {
+    event.preventDefault();
+    quitAfterStop = true;
+    monitoring.requestStop({ reason: 'quit' }).finally(() => app.quit());
+    return;
+  }
   appIsQuitting = true;
   endOverlayGesture();
   endLilBrutusGesture(true);

@@ -406,6 +406,12 @@
         
         // Logout
         document.getElementById('logout-btn').addEventListener('click', async () => {
+            // End a live call and a running roleplay first: logout revokes the
+            // token, after which neither could be saved.
+            if (window.brutus && window.brutus.endMonitoring) {
+                try { await window.brutus.endMonitoring({ reason: 'logout' }); } catch (_) {}
+            }
+            try { await rpEndSession(); } catch (_) {}
             let revoked = false;
             try {
                 await apiCall('/auth/logout', { method: 'POST' });
@@ -1101,6 +1107,12 @@
             confirmBtn.textContent = 'deleting...';
 
             try {
+                // Nothing from this account should still be recording while it is
+                // deleted: cancel (not save) any live call and roleplay first.
+                if (window.brutus && window.brutus.endMonitoring) {
+                    try { await window.brutus.endMonitoring({ reason: 'account-deleted', mode: 'cancel' }); } catch (_) {}
+                }
+                try { rpDismissDrillOverlay(); } catch (_) {}
                 await apiCall('/user/account', {
                     method: 'DELETE',
                     body: JSON.stringify({ password })
@@ -1582,13 +1594,9 @@
             el.textContent = next || el.dataset.paper || '';
         }
 
-        if (window.brutus && typeof window.brutus.onMonitoringStopped === 'function') {
-            window.brutus.onMonitoringStopped(() => {
-                // Overlay /live/end writes the call after this event. A fast
-                // analysis lands on the first refresh; a slow one on the second.
-                setTimeout(() => { loadDashboard(); }, 8000);
-                setTimeout(() => { loadDashboard(); }, 20000);
-            });
+        if (window.brutus && typeof window.brutus.onMonitoringFinished === 'function') {
+            // Sent once the overlay has saved (or failed to save) the call.
+            window.brutus.onMonitoringFinished(() => { if (authToken) loadDashboard(); });
         }
         
         function escapeHtml(str) {
