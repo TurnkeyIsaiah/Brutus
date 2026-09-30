@@ -16,8 +16,6 @@ permissions:
 jobs:
   release:
     name: Build & publish (${{ matrix.os }})
-    # A manual run only rebuilds macOS. Tag pushes still build every OS.
-    if: github.event_name != 'workflow_dispatch' || matrix.os == 'macos-latest'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -29,6 +27,8 @@ jobs:
             platform: "--mac"
           - os: ubuntu-latest
             platform: "--linux"
+    # A manual run only rebuilds macOS. Tag pushes still build every OS.
+    if: github.event_name != 'workflow_dispatch' || matrix.os == 'macos-latest'
 
     defaults:
       run:
