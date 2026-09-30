@@ -167,14 +167,14 @@ Hardware acceleration is disabled to prevent GPU-related crashes:
 
 ### Security model
 
-- **Windows**: every BrowserWindow uses  in : sandbox on, contextIsolation on, nodeIntegration off, webSecurity on, DevTools only in unpackaged builds (F12 / Ctrl+Shift+I likewise). The backend's CORS allows the null origin the file:// renderer sends, so webSecurity stays on.
-- **Navigation**:  keeps every window on our own  pages, denies popups and webviews; the main window hands https links to the system browser.
-- **IPC**: every channel is registered through  / , which refuse any sender that is not one of the named windows showing one of our own pages (). There is no unguarded  registration.
-- **Permissions**:  allows the microphone for the main window (roleplay) and overlay, screen capture for the overlay only, and denies everything else.
-- **Content-Security-Policy**  on every page: scripts only from local files (no inline scripts or handlers anywhere), connections only to the API (plus localhost for dev) and PostHog ingest/config in the main window, fonts from Google Fonts. Remote images used by the Paper design are shipped locally (, ).
-- **Analytics**: PostHog runs in the main window only, from the local  bundle with ; autocapture and session replay mask all text and inputs; events are tagged ; dev builds are marked internal. The overlay has no analytics.
-- **Settings**:  allow-lists the keys  accepts. The installed app only ever uses  (the API URL field is hidden); dev builds may also use .
-- **Overlay**:  keeps it out of screen shares and Brutus's own screenshots.
+- **Windows**: every BrowserWindow uses `secureWebPreferences()` in `src/main.js`: sandbox on, contextIsolation on, nodeIntegration off, webSecurity on, DevTools only in unpackaged builds (F12 / Ctrl+Shift+I likewise). The backend's CORS allows the null origin the file:// renderer sends, so webSecurity stays on.
+- **Navigation**: `lockNavigation()` keeps every window on our own `renderer/` pages and denies popups and webviews; the main window hands https links to the system browser.
+- **IPC**: every channel is registered through `handle(channel, [windows], fn)` / `listen(...)`, which refuse any sender that is not one of the named windows showing one of our own pages (`src/ipcGuard.js`). There is no unguarded `ipcMain` registration.
+- **Permissions**: `installPermissionPolicy()` allows the microphone for the main window (roleplay) and the overlay, screen capture for the overlay only, and denies everything else.
+- **Content-Security-Policy** `<meta>` on every page: scripts only from local files (no inline scripts or handlers anywhere), connections only to the API (plus localhost for dev) and PostHog ingest/config in the main window, fonts from Google Fonts. Images the Paper design used to load from app.paper.design ship locally (`renderer/app/logo.png`, `renderer/app/auth-photo.jpg`).
+- **Analytics**: PostHog runs in the main window only, from the local `posthog-js/dist/array.full.no-external.js` bundle with `disable_external_dependency_loading`; autocapture and session replay mask all text and inputs; events are tagged `app: 'desktop'`; dev builds are marked internal. The overlay has no analytics.
+- **Settings**: `src/settingsPolicy.js` allow-lists the keys `set-settings` accepts. The installed app only ever uses `https://api.brutusai.coach` (the API URL field is hidden); dev builds may also use `http://localhost:*`.
+- **Overlay**: `setContentProtection(true)` keeps it out of screen shares and out of Brutus's own screenshots.
 
 ### CSS View Switching
 
