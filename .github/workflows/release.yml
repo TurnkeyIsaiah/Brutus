@@ -66,6 +66,8 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           set -euo pipefail
+          # Print Apple's real notarization error. electron-builder hides it.
+          xcrun notarytool history --apple-id "${APPLE_ID}" --password "${APPLE_APP_SPECIFIC_PASSWORD}" --team-id "${APPLE_TEAM_ID}"
           cert_path="${RUNNER_TEMP}/certificate.p12"
           keychain_path="${RUNNER_TEMP}/build.keychain"
           keychain_password="$(uuidgen)"
@@ -116,6 +118,8 @@ jobs:
       - name: Build and publish (macOS, signed + notarized)
         run: |
           set -euo pipefail
+          # Print Apple's real notarization error. electron-builder hides it.
+          xcrun notarytool history --apple-id "${APPLE_ID}" --password "${APPLE_APP_SPECIFIC_PASSWORD}" --team-id "${APPLE_TEAM_ID}"
           cert_path="${RUNNER_TEMP}/certificate.p12"
           keychain_path="${RUNNER_TEMP}/build.keychain"
           keychain_password="$(uuidgen)"
