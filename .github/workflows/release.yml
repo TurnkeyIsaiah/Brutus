@@ -7,6 +7,7 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
 
 # electron-builder needs write access to create the GitHub Release and upload assets.
 permissions:
@@ -15,6 +16,8 @@ permissions:
 jobs:
   release:
     name: Build & publish (${{ matrix.os }})
+    # A manual run only rebuilds macOS. Tag pushes still build every OS.
+    if: github.event_name != 'workflow_dispatch' || matrix.os == 'macos-latest'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -54,11 +57,33 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # macOS: code-signed (Developer ID) + notarized. CSC_LINK expects the
-      # base64-encoded .p12; the Apple credentials drive notarytool.
+      # macOS: code-signed (Developer ID) + notarized.
+      # electron-builder 24 passes the .p12 password to set-key-partition-list.
+      # macOS 26 rejects that even when the certificate password is right
+      # (electron-builder#10066). Import the cert into our own keychain, then
+      # hide CSC_LINK so electron-builder uses that identity.
       - name: Build and publish (macOS, signed + notarized)
         if: runner.os == 'macOS'
-        run: npx --no-install electron-builder ${{ matrix.platform }} --config electron-builder.config.js --publish always
+        run: |
+          set -euo pipefail
+          cert_path="${RUNNER_TEMP}/certificate.p12"
+          keychain_path="${RUNNER_TEMP}/build.keychain"
+          keychain_password="$(uuidgen)"
+          printf '%s' "${CSC_LINK}" | tr -d '[:space:]' | base64 -D > "${cert_path}"
+          security create-keychain -p "${keychain_password}" "${keychain_path}"
+          security set-keychain-settings -lut 3600 "${keychain_path}"
+          security unlock-keychain -p "${keychain_password}" "${keychain_path}"
+          security import "${cert_path}" -k "${keychain_path}" -P "${CSC_KEY_PASSWORD}" -T /usr/bin/codesign -T /usr/bin/productbuild
+          security set-key-partition-list -S apple-tool:,apple: -s -k "${keychain_password}" "${keychain_path}"
+          security list-keychains -d user -s "${keychain_path}" $(security list-keychains -d user | tr -d '"')
+          identity_count="$(security find-identity -v -p codesigning "${keychain_path}" | grep -c 'Developer ID Application' || true)"
+          if [ "${identity_count}" -lt 1 ]; then
+            echo "No Developer ID Application identity in the signing keychain." >&2
+            security find-identity -v -p codesigning "${keychain_path}" >&2 || true
+            exit 1
+          fi
+          unset CSC_LINK CSC_KEY_PASSWORD
+          npx --no-install electron-builder ${{ matrix.platform }} --config electron-builder.config.js --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
