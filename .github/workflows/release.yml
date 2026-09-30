@@ -14,7 +14,39 @@ permissions:
   contents: write
 
 jobs:
+  # Nothing is built or published unless the unit tests and the Windows smoke
+  # test (the real app launched with Playwright) pass on this exact commit.
+  test:
+    name: Tests (unit + Windows smoke)
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      # Electron 42+ downloads its binary on first use; the smoke test triggers it.
+      - name: Smoke test (launch the app)
+        run: npm run test:smoke
+
   release:
+    needs: test
     name: Build & publish (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -36,10 +68,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "22"
           cache: "npm"
@@ -96,6 +128,7 @@ jobs:
 
   rebuild-mac:
     name: Rebuild macOS installers
+    needs: test
     if: github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
     defaults:
@@ -103,14 +136,27 @@ jobs:
         working-directory: desktop
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: desktop/package-lock.json
+
+      # A manual rebuild republishes Mac installers under package.json's version.
+      # It must run on exactly that version's tag, or Mac would ship different
+      # code than Windows under the same version number.
+      - name: Require the release tag
+        run: |
+          set -euo pipefail
+          tag="v$(node -p "require('./package.json').version")"
+          git fetch --depth=1 origin "refs/tags/$tag:refs/tags/$tag"
+          if [ "$(git rev-parse HEAD)" != "$(git rev-list -n1 "$tag")" ]; then
+            echo "::error::Run this workflow from tag $tag (Actions > Run workflow > Use workflow from: $tag)."
+            exit 1
+          fi
 
       - name: Install dependencies
         run: npm ci

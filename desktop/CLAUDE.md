@@ -31,7 +31,16 @@ Build output is placed in the `dist/` directory.
 
 ### Releasing (CI)
 
-Pushing a version tag (`vX.Y.Z`) triggers `.github/workflows/release.yml`, which builds the Windows/macOS/Linux installers on their native runners and publishes them — plus the `latest*.yml` feeds that `electron-updater` reads — to a GitHub Release for that tag. Typical flow: bump the version in `package.json` (and the settings "About" label), commit, then `git tag vX.Y.Z && git push origin vX.Y.Z`. The workflow uses the default `GITHUB_TOKEN`. macOS builds are code-signed (Developer ID) and notarized using the `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_ID`, `APPLE_ID_PASSWORD`, and `APPLE_TEAM_ID` repo secrets (scoped to the macOS runner). Build config is wrapped by `desktop/electron-builder.config.js`, which enables notarization (passing the Team ID explicitly to notarytool) only when those Apple credentials are present in the environment, and otherwise builds unsigned — so local `npm run build` still works without certs. Windows builds are currently unsigned.
+Pushing a version tag (`vX.Y.Z`) triggers `.github/workflows/release.yml`, which builds the Windows/macOS/Linux installers on their native runners and publishes them — plus the `latest*.yml` feeds that `electron-updater` reads — to a GitHub Release for that tag. Typical flow: bump the version in `package.json` (and the settings "About" label), commit, then `git tag vX.Y.Z && git push origin vX.Y.Z`. The workflow uses the default `GITHUB_TOKEN`. macOS builds are code-signed (Developer ID) and notarized using the `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_ID`, `APPLE_ID_PASSWORD`, and `APPLE_TEAM_ID` repo secrets (scoped to the macOS runner). Build config is wrapped by `desktop/electron-builder.config.js`, which turns on notarization only when those Apple credentials are present (electron-builder 26 reads them from the environment), and otherwise builds unsigned, so local `npm run build` still works without certs. Mac builds produce DMG + ZIP; the ZIP is what Mac auto-update installs. Windows builds are currently unsigned (no certificate yet), so Windows shows a SmartScreen warning on first install.
+
+The workflow's `test` job (Windows runner: `npm test` then `npm run test:smoke`, which launches the real app with Playwright) must pass before any build job runs. Third-party actions are pinned to commit SHAs. The manual `rebuild-mac` run refuses to publish unless it runs on exactly the tag matching `package.json`'s version.
+
+### Tests
+
+```bash
+npm test             # unit tests (node:test): capture session, outbox, capture intent, monitoring controller, main.js IPC/security against a fake electron
+npm run test:smoke   # launches the real app (Playwright) and checks pages, bridges, CSP and settings policy
+```
 
 ## Architecture
 

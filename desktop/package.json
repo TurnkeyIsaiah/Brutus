@@ -7,6 +7,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test \"test/*.test.js\"",
+    "test:smoke": "node --test \"test/smoke/*.test.js\"",
     "build": "electron-builder --config electron-builder.config.js",
     "build:win": "electron-builder --win --config electron-builder.config.js",
     "build:mac": "electron-builder --mac --config electron-builder.config.js",
