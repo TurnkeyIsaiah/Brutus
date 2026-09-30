@@ -27,8 +27,8 @@ jobs:
             platform: "--mac"
           - os: ubuntu-latest
             platform: "--linux"
-    # A manual run only rebuilds macOS. Tag pushes still build every OS.
-    if: github.event_name != 'workflow_dispatch' || matrix.os == 'macos-latest'
+    # Tag pushes build every OS. A manual run uses the mac job below.
+    if: github.event_name == 'push'
 
     defaults:
       run:
@@ -84,6 +84,56 @@ jobs:
           fi
           unset CSC_LINK CSC_KEY_PASSWORD
           npx --no-install electron-builder ${{ matrix.platform }} --config electron-builder.config.js --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+  rebuild-mac:
+    name: Rebuild macOS installers
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and publish (macOS, signed + notarized)
+        run: |
+          set -euo pipefail
+          cert_path="${RUNNER_TEMP}/certificate.p12"
+          keychain_path="${RUNNER_TEMP}/build.keychain"
+          keychain_password="$(uuidgen)"
+          printf '%s' "${CSC_LINK}" | tr -d '[:space:]' | base64 -D > "${cert_path}"
+          security create-keychain -p "${keychain_password}" "${keychain_path}"
+          security set-keychain-settings -lut 3600 "${keychain_path}"
+          security unlock-keychain -p "${keychain_password}" "${keychain_path}"
+          security import "${cert_path}" -k "${keychain_path}" -P "${CSC_KEY_PASSWORD}" -T /usr/bin/codesign -T /usr/bin/productbuild
+          security set-key-partition-list -S apple-tool:,apple: -s -k "${keychain_password}" "${keychain_path}"
+          security list-keychains -d user -s "${keychain_path}" $(security list-keychains -d user | tr -d '"')
+          identity_count="$(security find-identity -v -p codesigning "${keychain_path}" | grep -c 'Developer ID Application' || true)"
+          if [ "${identity_count}" -lt 1 ]; then
+            echo "No Developer ID Application identity in the signing keychain." >&2
+            security find-identity -v -p codesigning "${keychain_path}" >&2 || true
+            exit 1
+          fi
+          unset CSC_LINK CSC_KEY_PASSWORD
+          npx --no-install electron-builder --mac --config electron-builder.config.js --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
