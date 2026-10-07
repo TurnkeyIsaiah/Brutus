@@ -179,7 +179,7 @@ a {
   overflow: clip;
 }
 
-/* Sidebar — 224px, collapses to 72px (10-home-collapsed-sidebar). */
+/* Sidebar — 224px, collapses to a 72px icon rail. */
 .p-sidebar {
   display: flex;
   flex-direction: column;
@@ -345,35 +345,56 @@ a {
   gap: 2px;
 }
 
-/* Collapsed sidebar (10-home-collapsed-sidebar.jsx): 72px, gap 12px, the
-   nav/discipline blocks and the wordmark go display:none, and the head
-   becomes a 44px-wide centred column. */
+/* Collapsed sidebar: 72px icon rail. That width is the sidebar's 14px
+   horizontal padding plus a nav button (12px padding, 16px icon, 12px
+   padding, and the 1px borders). Labels, the wordmark, discipline, and
+   the beta pill hide. Rows with no line icon (Spawn Lil Brutus, Cold
+   calls) stay hidden. Settings keeps its icon when the row is shown. */
 .p-app.p-collapsed .p-sidebar {
   width: var(--p-sidebar-collapsed-w);
   gap: 12px;
 }
 .p-app.p-collapsed .p-sidebar-head {
   flex-direction: column;
+  align-items: center;
   justify-content: center;
   gap: 6px;
-  width: 44px;
+  width: 100%;
   height: 84px;
   padding-inline: 0;
 }
 .p-app.p-collapsed .p-wordmark,
-.p-app.p-collapsed .p-nav,
 .p-app.p-collapsed .p-sidebar .p-rule,
 .p-app.p-collapsed .p-sidebar-block,
 .p-app.p-collapsed .p-tokens-row,
-.p-app.p-collapsed .p-user-meta,
-.p-app.p-collapsed #nav-settings,
-.p-app.p-collapsed #nav-lil-brutus {
+.p-app.p-collapsed .p-nav-item-label,
+.p-app.p-collapsed .p-pill-beta,
+.p-app.p-collapsed .p-nav-item:not(:has(.p-nav-icon)) {
   display: none;
 }
+.p-app.p-collapsed .p-nav-item {
+  justify-content: center;
+}
 .p-app.p-collapsed .p-sidebar-foot {
-  align-items: center;
-  width: 44px;
+  align-items: stretch;
+  width: auto;
+  padding-inline: 0;
   border-top-color: transparent;
+}
+.p-app.p-collapsed .p-user-row {
+  position: relative;
+  justify-content: center;
+}
+.p-app.p-collapsed .p-user-meta {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Main column. */
@@ -449,7 +470,7 @@ a {
   min-height: 0;
   gap: 24px;
   padding: 32px 36px 28px;
-  overflow-y: auto;
+  overflow-y: scroll;
 }
 
 /* 02-calls-library uses gap 18px and 30/26 vertical padding. */
@@ -1257,7 +1278,7 @@ html.p-white-bg .p-verify-banner .p-btn-ghost {
   min-height: 0;
   gap: 24px;
   padding: 32px 36px 28px;
-  overflow-y: auto;
+  overflow-y: scroll;
 }
 
 /* Screens whose own JSX sets the frame (upload, chat, roleplay stage) opt out
@@ -1265,7 +1286,8 @@ html.p-white-bg .p-verify-banner .p-btn-ghost {
 .view.active.p-view-bleed {
   gap: 0;
   padding: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 
 #main-content.hidden {
@@ -1283,6 +1305,8 @@ html.p-white-bg .p-verify-banner .p-btn-ghost {
   display: flex;
   flex-direction: column;
   background-color: #000000;
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 
 .p-app.p-collapsed ~ .p-calldetail {
@@ -2957,6 +2981,63 @@ html.p-white-bg .p-calls-page .p-trow {
   flex-shrink: 0;
   height: 1px;
   background-color: #FFF8EF20;
+}
+
+/* Call detail matches the homepage cards: 16px radius, #F2EEE514 fill,
+   no section hairlines. The active tab underline stays. */
+.p-calldetail .p-cd-crumbbar,
+.p-calldetail .p-cd-head {
+  border-bottom: 0;
+}
+
+.p-calldetail .p-cd-cols {
+  gap: 16px;
+  padding: 4px 20px 16px;
+}
+
+.p-calldetail .p-cd-rail,
+.p-calldetail .p-cd-main,
+.p-calldetail .p-nt-main,
+.p-calldetail .p-cd-right,
+.p-calldetail .p-cd-footbar,
+.p-calldetail .p-rec {
+  border: 0;
+  border-radius: 16px;
+  background-color: #F2EEE514;
+}
+
+.p-calldetail .p-cd-footbar {
+  height: auto;
+  min-height: 56px;
+  margin: 0 20px 16px;
+  padding-block: 12px;
+}
+
+.p-calldetail .p-rec {
+  margin: 4px 20px 16px;
+}
+
+.p-calldetail .p-rule,
+.p-calldetail .p-nt-rule,
+.p-calldetail .p-rec-rule {
+  display: none;
+}
+
+.p-calldetail .p-cd-read,
+.p-calldetail .p-co-moment,
+.p-calldetail .p-ts-match,
+.p-calldetail .p-nt-row {
+  border-top: 0;
+  border-bottom: 0;
+}
+
+.p-calldetail .p-cd-read,
+.p-calldetail .p-ts-match {
+  padding-top: 0;
+}
+
+.p-calldetail .p-cd-main--coaching {
+  gap: 12px;
 }
 
 .p-rec-ts-head {
@@ -4735,6 +4816,7 @@ html.p-white-bg .p-calls-page .p-trow {
    so the ids are targeted. */
 #profile-view.active {
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: flex-start;
   gap: 24px;
   padding: 34px 44px 38px;
@@ -6043,6 +6125,20 @@ html.p-white-bg .p-ts-speaker.active {
   background-color: #FFFFFF;
 }
 
+/* Call detail sits on the same beige as the rest of the app, with white cards. */
+html.p-white-bg .p-calldetail {
+  background-color: #F4EFE8;
+}
+
+html.p-white-bg .p-calldetail .p-cd-rail,
+html.p-white-bg .p-calldetail .p-cd-main,
+html.p-white-bg .p-calldetail .p-nt-main,
+html.p-white-bg .p-calldetail .p-cd-right,
+html.p-white-bg .p-calldetail .p-cd-footbar,
+html.p-white-bg .p-calldetail .p-rec {
+  background-color: #FFFFFF;
+}
+
 html.p-white-bg .p-filter-option {
   color: #000000;
 }
@@ -6295,4 +6391,395 @@ html.p-white-bg .p-rp-plan-messages .message-content {
 
 html.p-white-bg .p-rp-plan-messages .message-text {
   color: #161311;
+}
+
+/* --- sidebar icons, account sub-nav, billing plans, quiet motion -------- */
+.p-nav-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--p-cream);
+}
+
+/* Bust from the logo, same mark as the mobile Brutus tab. Masked so it
+   follows the nav color: cream at rest, coral when the page is open. */
+.p-nav-mark {
+  display: block;
+  width: 18px;
+  height: 22px;
+  background-color: currentColor;
+  -webkit-mask: url("nav-brutus.png") center / contain no-repeat;
+  mask: url("nav-brutus.png") center / contain no-repeat;
+}
+
+.p-nav-item.active .p-nav-icon {
+  color: var(--p-orange);
+}
+
+.p-acct-subnav {
+  display: flex;
+  flex: 0 0 auto;
+  width: 100%;
+  gap: 8px;
+}
+
+.p-acct-subnav-btn {
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--p-text-3);
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.p-acct-subnav-btn.is-active {
+  color: var(--p-cream);
+  background: var(--p-bg-active);
+  border-color: var(--p-line-2);
+}
+
+/* Press + lift. Hover rises 2px. Coral buttons brighten; outlined buttons
+   lighten their border. Click presses down to 98% and darkens. 140ms so a
+   button you hit often still feels instant. */
+button:not(:disabled),
+a.p-acct-ghost,
+.p-chip,
+.p-pager-btn {
+  transition:
+    transform 140ms cubic-bezier(0.2, 0, 0, 1),
+    filter 140ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 140ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+button:not(:disabled):hover,
+a.p-acct-ghost:hover,
+.p-chip:hover,
+.p-pager-btn:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+.p-btn-cta:hover,
+.p-btn-primary:hover,
+.p-acct-save:hover,
+.p-bill-btn:hover,
+.p-chat-send:hover {
+  filter: brightness(1.08);
+}
+
+.p-btn-ghost:hover,
+.p-nav-item:hover:not(.active),
+.p-chip:hover,
+.p-pager-btn:not(:disabled):hover,
+.p-acct-ghost:hover,
+.outcome-btn:hover,
+.p-cd-showrec:hover,
+.p-nt-showts:hover,
+.p-suggestion:hover {
+  border-color: var(--p-line-3);
+}
+
+button:not(:disabled):active,
+a.p-acct-ghost:active,
+.p-chip:active,
+.p-pager-btn:not(:disabled):active {
+  transform: translateY(1px) scale(0.98);
+  filter: brightness(0.88);
+}
+
+/* Same press and lift on the rounded cards. A card that contains a button
+   stays put while that button moves. Only cards you can open press down. */
+.p-stat,
+.p-home-chartblock,
+.p-home-recent,
+.p-rail,
+.p-calls-page .p-chip-row,
+.p-calldetail .p-cd-rail,
+.p-calldetail .p-cd-main,
+.p-calldetail .p-nt-main,
+.p-calldetail .p-cd-right,
+.p-calldetail .p-cd-footbar,
+.p-trow,
+.p-rrow,
+.p-co-moment {
+  transition:
+    transform 140ms cubic-bezier(0.2, 0, 0, 1),
+    filter 140ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.p-stat:hover,
+.p-home-chartblock:hover,
+.p-home-recent:hover:not(:has(button:hover)),
+.p-rail:hover:not(:has(button:hover)),
+.p-calls-page .p-chip-row:hover:not(:has(button:hover)),
+.p-calldetail .p-cd-rail:hover:not(:has(button:hover, .p-co-moment:hover)),
+.p-calldetail .p-cd-main:hover:not(:has(button:hover, .p-co-moment:hover)),
+.p-calldetail .p-nt-main:hover:not(:has(button:hover)),
+.p-calldetail .p-cd-right:hover:not(:has(button:hover)),
+.p-calldetail .p-cd-footbar:hover,
+.p-trow:hover,
+.p-rrow:hover,
+.p-row:hover,
+.p-suggestion:hover,
+.p-co-moment:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.p-trow,
+.p-rrow {
+  cursor: pointer;
+}
+
+.p-trow:active,
+.p-rrow:active,
+.p-co-moment:active {
+  transform: translateY(1px) scale(0.98);
+  filter: brightness(0.88);
+}
+
+.view.active {
+  animation: p-view-in 200ms ease-out;
+}
+
+.p-bar {
+  transform-origin: center bottom;
+  animation: p-bar-rise 420ms ease-out;
+}
+
+.p-cd-tab {
+  transition: color 180ms ease, border-bottom-color 180ms ease;
+}
+
+.p-cd-body > :not([hidden]) {
+  animation: p-view-in 180ms ease-out;
+}
+
+.p-chat-in {
+  animation: p-rise-in 200ms ease-out;
+}
+
+.p-overlay:not(.hidden),
+.pd-overlay:not(.hidden) {
+  animation: p-fade 150ms ease-out;
+}
+
+.p-overlay:not(.hidden) > *,
+.pd-overlay:not(.hidden) > * {
+  animation: p-card-in 180ms ease-out;
+}
+
+.p-ob .ob-step {
+  animation: p-rise-in 220ms ease-out;
+}
+
+.p-ob-plan {
+  transition: border-color 200ms ease;
+}
+
+@keyframes p-view-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes p-rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes p-bar-rise {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes p-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes p-card-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+/* The page scrollbar scrolls the whole page. Cards and columns keep their
+   own overflow, capped so a long list still scrolls inside the box. */
+.p-home-main,
+.p-home-recent {
+  flex-shrink: 0;
+}
+
+.p-home-rows {
+  flex: 0 1 auto;
+  max-height: 640px;
+}
+
+.p-cd-body,
+.p-cd-panel,
+.p-cd-cols {
+  flex: 1 0 auto;
+}
+
+.p-calldetail .p-cd-rail,
+.p-calldetail .p-cd-main,
+.p-calldetail .p-nt-main,
+.p-calldetail .p-cd-right {
+  max-height: 72vh;
+  overflow-y: auto;
+}
+
+/* Skeleton loaders. Same rounded cards as the rest of the app, shown
+   while a page's data is still on the way. */
+.p-bone {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background-color: #F2EEE514;
+}
+
+.p-bone::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(242, 238, 229, 0.16), transparent);
+  transform: translateX(-100%);
+  animation: p-skel 1.15s cubic-bezier(0.2, 0, 0, 1) infinite;
+}
+
+@keyframes p-skel {
+  to { transform: translateX(100%); }
+}
+
+.p-bone-line { height: 14px; }
+.p-bone-w80 { width: 80%; }
+.p-bone-w60 { width: 60%; }
+.p-bone-w40 { width: 40%; }
+.p-bone-eyebrow { width: 160px; height: 12px; }
+.p-bone-title { width: min(320px, 72%); height: 32px; border-radius: 10px; }
+.p-bone-sub { width: min(460px, 88%); height: 14px; }
+.p-bone-stat { height: 88px; border-radius: 16px; }
+.p-bone-row { width: 100%; height: 62px; border-radius: 16px; }
+.p-bone-field { width: 100%; height: 42px; border-radius: 10px; }
+.p-bone-chip { width: 108px; height: 34px; border-radius: 999px; }
+.p-bone-bar { width: 18px; border-radius: 6px; align-self: flex-end; }
+
+.p-skel-bars .p-bone-bar:nth-child(1) { height: 42%; }
+.p-skel-bars .p-bone-bar:nth-child(2) { height: 68%; }
+.p-skel-bars .p-bone-bar:nth-child(3) { height: 50%; }
+.p-skel-bars .p-bone-bar:nth-child(4) { height: 86%; }
+.p-skel-bars .p-bone-bar:nth-child(5) { height: 46%; }
+.p-skel-bars .p-bone-bar:nth-child(6) { height: 74%; }
+.p-skel-bars .p-bone-bar:nth-child(7) { height: 58%; }
+
+.p-skel-screen { display: none; flex-direction: column; gap: 16px; width: 100%; }
+.view.p-loading > :not(.p-skel-screen) { display: none !important; }
+.view.active.p-loading > .p-skel-screen { display: flex !important; flex: 1 0 auto; }
+
+.p-skel-head,
+.p-skel-stack,
+.p-skel-rows,
+.p-skel-inline,
+.p-skel-chat,
+.p-skel-msg { display: flex; flex-direction: column; gap: 12px; }
+
+.p-skel-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.p-skel-split,
+.p-skel-cols { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+.p-skel-cols { grid-template-columns: 1fr 1.3fr 0.9fr; }
+.p-skel-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.p-skel-bars { display: flex; align-items: flex-end; gap: 14px; height: 120px; }
+
+.p-skel-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background-color: #F2EEE514;
+}
+
+.p-skel-rail { min-height: 280px; }
+.p-skel-drop { min-height: 280px; align-items: center; justify-content: center; }
+.p-skel-chat { max-width: 640px; padding-top: 28px; gap: 16px; }
+.p-skel-msg {
+  width: min(520px, 100%);
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 16px;
+  background-color: #F2EEE514;
+}
+
+.p-dropzone .p-skel-inline { display: none; width: min(420px, 80%); }
+.p-dropzone.uploading .p-skel-inline { display: flex; }
+.p-dropzone.uploading > svg,
+.p-dropzone.uploading > .p-dropzone-sub,
+.p-dropzone.uploading > .p-dropzone-btn,
+.p-dropzone.uploading > .p-dropzone-note { display: none; }
+
+html.p-white-bg .p-bone,
+html.p-white-bg .p-skel-card,
+html.p-white-bg .p-skel-msg { background-color: #E7E0D6; }
+html.p-white-bg .p-skel-card .p-bone,
+html.p-white-bg .p-skel-msg .p-bone { background-color: #F4EFE8; }
+html.p-white-bg .p-bone::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+}
+
+@media (max-width: 900px) {
+  .p-skel-stats { grid-template-columns: 1fr 1fr; }
+  .p-skel-split,
+  .p-skel-cols { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view.active,
+  .p-bar,
+  .p-cd-body > :not([hidden]),
+  .p-chat-in,
+  .p-overlay:not(.hidden),
+  .pd-overlay:not(.hidden),
+  .p-overlay:not(.hidden) > *,
+  .pd-overlay:not(.hidden) > *,
+  .p-bone::after,
+  .p-ob .ob-step {
+    animation: none;
+  }
+
+  .p-cd-tab,
+  .p-ob-plan,
+  button:not(:disabled),
+  a.p-acct-ghost,
+  .p-chip,
+  .p-pager-btn {
+    transition: none;
+  }
+
+  button:not(:disabled):hover,
+  button:not(:disabled):active,
+  a.p-acct-ghost:hover,
+  a.p-acct-ghost:active,
+  .p-chip:hover,
+  .p-chip:active,
+  .p-pager-btn:hover,
+  .p-pager-btn:active,
+  .p-stat:hover,
+  .p-home-chartblock:hover,
+  .p-home-recent:hover,
+  .p-rail:hover,
+  .p-calls-page .p-chip-row:hover,
+  .p-calldetail .p-cd-rail:hover,
+  .p-calldetail .p-cd-main:hover,
+  .p-calldetail .p-nt-main:hover,
+  .p-calldetail .p-cd-right:hover,
+  .p-calldetail .p-cd-footbar:hover,
+  .p-trow:hover,
+  .p-trow:active,
+  .p-rrow:hover,
+  .p-rrow:active,
+  .p-co-moment:hover,
+  .p-co-moment:active {
+    transform: none;
+  }
 }

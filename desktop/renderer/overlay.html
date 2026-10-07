@@ -199,6 +199,35 @@
       transition: height 0.05s ease;
     }
 
+    .audio-visualizer.is-listening .audio-bar {
+      animation: brutus-listen 2s ease-in-out infinite;
+    }
+
+    .audio-visualizer.is-listening .audio-bar:nth-child(odd) {
+      animation-delay: 0.45s;
+    }
+
+    .feedback-item.p-settle {
+      animation: brutus-settle 200ms ease-out;
+    }
+
+    @keyframes brutus-listen {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes brutus-settle {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .audio-visualizer.is-listening .audio-bar,
+      .feedback-item.p-settle {
+        animation: none;
+      }
+    }
+
     /* Feedback / chat list (JSX chat area: column, grow, gap 14) */
     .feedback-container {
       flex: 1;

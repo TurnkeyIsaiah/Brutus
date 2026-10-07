@@ -427,6 +427,7 @@
             // machine is not merged into their profile.
             if (window.brutusReset) window.brutusReset();
             resetNotesTranscriptState();
+            resetPageSkeletons();
             stopVerifyBannerPoll();
 
             authModal.classList.remove('hidden');
@@ -483,6 +484,7 @@
         }
 
         async function loadBalance() {
+            const skel = beginPageLoad('credits-view');
             try {
                 const data = await apiCall('/billing/balance');
                 const balance = parseInt(data.tokenBalance);
@@ -547,6 +549,8 @@
                 return data;
             } catch (e) {
                 console.error('Failed to load balance:', e);
+            } finally {
+                if (skel) endPageLoad('credits-view', skel);
             }
         }
 
@@ -1352,6 +1356,7 @@
 
         async function loadProfilePage() {
             if (!currentUser) return;
+            const skel = beginPageLoad('profile-view');
             const s = currentUser.settings || {};
             const heading = document.getElementById('account-heading-name');
             if (heading) heading.textContent = currentUser.name || '';
@@ -1380,6 +1385,8 @@
             } catch (_) {
                 document.getElementById('ai-profile-summary').textContent = 'Could not load coaching profile.';
                 document.getElementById('ai-profile-stats').textContent = '';
+            } finally {
+                if (skel) endPageLoad('profile-view', skel);
             }
         }
 
@@ -1492,8 +1499,106 @@
             });
         });
         
+        // ==================== SKELETONS ====================
+        const pageReady = Object.create(null);
+        const pageLoadGen = Object.create(null);
+
+        function pageSkeletonMarkup(kind) {
+            const head = '<div class="p-skel-head"><span class="p-bone p-bone-eyebrow"></span><span class="p-bone p-bone-title"></span><span class="p-bone p-bone-sub"></span></div>';
+            const row = '<span class="p-bone p-bone-row"></span>';
+            const rows = (n) => `<div class="p-skel-rows">${row.repeat(n)}</div>`;
+            const card = '<div class="p-skel-card"><span class="p-bone p-bone-line p-bone-w40"></span><span class="p-bone p-bone-field"></span><span class="p-bone p-bone-field"></span><span class="p-bone p-bone-line p-bone-w60"></span></div>';
+            const bars = `<div class="p-skel-bars">${'<span class="p-bone p-bone-bar"></span>'.repeat(7)}</div>`;
+            if (kind === 'dashboard') {
+                return `${head}<div class="p-skel-stats">${'<span class="p-bone p-bone-stat"></span>'.repeat(4)}</div><div class="p-skel-split"><div class="p-skel-stack"><div class="p-skel-card"><span class="p-bone p-bone-line p-bone-w40"></span>${bars}</div><div class="p-skel-card">${rows(4)}</div></div><div class="p-skel-card p-skel-rail"><span class="p-bone p-bone-line p-bone-w80"></span><span class="p-bone p-bone-line p-bone-w60"></span><span class="p-bone p-bone-field"></span><span class="p-bone p-bone-field"></span><span class="p-bone p-bone-field"></span></div></div>`;
+            }
+            if (kind === 'progress' || kind === 'notes' || kind === 'cold-calls') {
+                return `${head}<div class="p-skel-chips">${'<span class="p-bone p-bone-chip"></span>'.repeat(5)}</div>${rows(5)}`;
+            }
+            if (kind === 'brutus') {
+                return `<div class="p-skel-chat"><span class="p-bone p-bone-title"></span><span class="p-bone p-bone-sub"></span><span class="p-bone p-bone-chip"></span><span class="p-bone p-bone-chip"></span><span class="p-bone p-bone-chip"></span><span class="p-bone p-bone-field"></span></div>`;
+            }
+            if (kind === 'upload') {
+                return `${head}<div class="p-skel-card p-skel-drop"><span class="p-bone p-bone-title"></span><span class="p-bone p-bone-sub"></span><span class="p-bone p-bone-chip"></span></div>`;
+            }
+            if (kind === 'roleplays') return `${head}${card}${rows(3)}`;
+            if (kind === 'research') return `${head}<div class="p-skel-split">${card}<div class="p-skel-stack">${rows(3)}</div></div>`;
+            if (kind === 'profile' || kind === 'settings') return `${head}<div class="p-skel-split">${card}${card}</div>`;
+            if (kind === 'credits') return `${head}<div class="p-skel-card"><span class="p-bone p-bone-title"></span><span class="p-bone p-bone-sub"></span>${row.repeat(4)}</div>`;
+            return `${head}${rows(4)}`;
+        }
+
+        function beginPageLoad(viewId) {
+            if (pageReady[viewId]) return 0;
+            const view = document.getElementById(viewId);
+            if (!view) return 0;
+            pageLoadGen[viewId] = (pageLoadGen[viewId] || 0) + 1;
+            if (!view.querySelector(':scope > .p-skel-screen')) {
+                const screen = document.createElement('div');
+                screen.className = 'p-skel-screen';
+                screen.setAttribute('aria-hidden', 'true');
+                screen.innerHTML = pageSkeletonMarkup(viewId.replace(/-view$/, ''));
+                view.prepend(screen);
+            }
+            view.classList.add('p-loading');
+            view.setAttribute('aria-busy', 'true');
+            return pageLoadGen[viewId];
+        }
+
+        function endPageLoad(viewId, gen) {
+            if (gen && pageLoadGen[viewId] !== gen) return;
+            pageReady[viewId] = true;
+            const view = document.getElementById(viewId);
+            if (!view) return;
+            view.classList.remove('p-loading');
+            view.removeAttribute('aria-busy');
+        }
+
+        function resetPageSkeletons() {
+            Object.keys(pageReady).forEach((key) => { delete pageReady[key]; });
+            Object.keys(pageLoadGen).forEach((key) => { delete pageLoadGen[key]; });
+            document.querySelectorAll('.view.p-loading').forEach((view) => {
+                view.classList.remove('p-loading');
+                view.removeAttribute('aria-busy');
+            });
+        }
+
+        function linesSkeletonHtml() {
+            return '<div class="p-skel-inline"><span class="p-bone p-bone-line p-bone-w80"></span><span class="p-bone p-bone-line p-bone-w60"></span><span class="p-bone p-bone-line p-bone-w40"></span><span class="p-bone p-bone-row"></span></div>';
+        }
+
+        function columnsSkeletonHtml() {
+            const card = '<div class="p-skel-card"><span class="p-bone p-bone-line p-bone-w40"></span><span class="p-bone p-bone-line p-bone-w80"></span><span class="p-bone p-bone-line p-bone-w60"></span><span class="p-bone p-bone-row"></span></div>';
+            return `<div class="p-skel-cols">${card}${card}${card}</div>`;
+        }
+
+        function paintCallHeadingSkeleton() {
+            const title = document.getElementById('call-detail-title');
+            const crumb = document.getElementById('call-detail-crumb-name');
+            const meta = document.getElementById('call-modal-meta');
+            if (title) title.innerHTML = '<span class="p-bone p-bone-title"></span>';
+            if (crumb) crumb.innerHTML = '<span class="p-bone p-bone-line p-bone-w60"></span>';
+            if (meta) meta.innerHTML = '<span class="p-bone p-bone-line p-bone-w40"></span>';
+        }
+
+        function mountChatSkeleton() {
+            const host = document.getElementById('chat-messages');
+            if (!host) return null;
+            const el = document.createElement('div');
+            el.className = 'p-skel-msg';
+            el.setAttribute('aria-hidden', 'true');
+            el.innerHTML = '<span class="p-bone p-bone-line p-bone-w80"></span><span class="p-bone p-bone-line p-bone-w60"></span>';
+            host.appendChild(el);
+            host.scrollTop = host.scrollHeight;
+            return el;
+        }
+
+        window.beginPageLoad = beginPageLoad;
+        window.endPageLoad = endPageLoad;
+
         // ==================== DASHBOARD ====================
         async function loadDashboard() {
+            const skel = beginPageLoad('dashboard-view');
             try {
                 const data = await apiCall('/user/dashboard');
                 
@@ -1559,9 +1664,12 @@
                 }
 
                 applyDisciplineLine(data.recentCalls);
+                playHomeFiguresOnce();
 
             } catch (error) {
                 console.error('Failed to load dashboard:', error);
+            } finally {
+                if (skel) endPageLoad('dashboard-view', skel);
             }
         }
 
@@ -1689,6 +1797,7 @@
         let allCalls = [];
 
         async function loadCallHistory() {
+            const skel = beginPageLoad('progress-view');
             try {
                 // Exclude cold-call aggregate rows from the standard call history —
                 // those have their own "cold calls" + "roleplays" tabs with per-attempt drill-down.
@@ -1698,6 +1807,8 @@
                 refreshCalls();
             } catch (error) {
                 console.error('Failed to load call history:', error);
+            } finally {
+                if (skel) endPageLoad('progress-view', skel);
             }
         }
 
@@ -1917,7 +2028,7 @@
         async function loadColdCallSessions() {
             const list = document.getElementById('cold-call-sessions-list');
             if (!list) return;
-            list.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.5);margin-top:20px;">loading...</p>';
+            const skel = beginPageLoad('cold-calls-view');
             try {
                 const data = await apiCall('/coldcall/sessions?limit=50');
                 const sessions = data.sessions || [];
@@ -1947,6 +2058,8 @@
             } catch (err) {
                 console.error('Failed to load cold call sessions:', err);
                 list.innerHTML = '<p style="text-align:center;color:#ff5050;margin-top:20px;">failed to load — try again</p>';
+            } finally {
+                if (skel) endPageLoad('cold-calls-view', skel);
             }
         }
 
@@ -1972,7 +2085,7 @@
             const body = document.getElementById('cold-call-modal-body');
             const meta = document.getElementById('cold-call-modal-meta');
 
-            body.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.4);padding:40px 0;">loading...</p>';
+            body.innerHTML = linesSkeletonHtml();
             overlay.classList.remove('hidden');
 
             try {
@@ -2067,7 +2180,7 @@
         async function loadRoleplaySessions() {
             const list = document.getElementById('roleplay-sessions-list');
             if (!list) return;
-            list.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.5);margin-top:20px;">loading...</p>';
+            const skel = beginPageLoad('roleplays-view');
             try {
                 const data = await apiCall('/roleplay/sessions?limit=50');
                 const sessions = data.sessions || [];
@@ -2083,6 +2196,8 @@
             } catch (err) {
                 console.error('Failed to load roleplay sessions:', err);
                 list.innerHTML = '<p style="text-align:center;color:#ff5050;margin-top:20px;">failed to load — try again</p>';
+            } finally {
+                if (skel) endPageLoad('roleplays-view', skel);
             }
         }
 
@@ -2129,7 +2244,7 @@
             const panel = document.getElementById('rp-results');
             const body = document.getElementById('rp-results-body');
             if (panel && body) {
-                body.innerHTML = '<p class="p-t-14 p-c-3">loading...</p>';
+                body.innerHTML = columnsSkeletonHtml();
                 panel.hidden = false;
             }
 
@@ -3289,7 +3404,8 @@
 
             openCallId = id;
             document.getElementById('call-delete-overlay')?.classList.add('hidden');
-            body.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.4);padding:40px 0;">loading...</p>';
+            paintCallHeadingSkeleton();
+            body.innerHTML = columnsSkeletonHtml();
             overlay.classList.remove('hidden');
 
             try {
@@ -3411,6 +3527,12 @@
                     </div>` : ''}
                 `;
             } catch (err) {
+                const title = document.getElementById('call-detail-title');
+                const crumb = document.getElementById('call-detail-crumb-name');
+                const metaEl = document.getElementById('call-modal-meta');
+                if (title && title.querySelector('.p-bone')) title.textContent = 'Call';
+                if (crumb && crumb.querySelector('.p-bone')) crumb.textContent = 'Call';
+                if (metaEl && metaEl.querySelector('.p-bone')) metaEl.textContent = '';
                 body.innerHTML = `<p style="text-align:center;color:#ff5050;padding:40px 0;">${escapeHtml(err.message || 'failed to load call details')}</p>`;
             }
         }
@@ -3550,6 +3672,7 @@
                 }
                 if (viewName === 'cold-calls') loadColdCallSessions();
                 if (viewName === 'roleplays') loadRoleplaySessions();
+                syncAccountSubnav(viewName);
             });
         });
         
@@ -3794,7 +3917,10 @@
             if (typeof paperChatMessage === 'function') {
                 const wrap = document.createElement('div');
                 wrap.innerHTML = paperChatMessage(isUser ? 'user' : 'brutus', text);
-                if (wrap.firstElementChild) chatMessages.appendChild(wrap.firstElementChild);
+                if (wrap.firstElementChild) {
+                    if (!isUser) wrap.firstElementChild.classList.add('p-chat-in');
+                    chatMessages.appendChild(wrap.firstElementChild);
+                }
                 chatMessages.scrollTop = chatMessages.scrollHeight;
                 return;
             }
@@ -3816,6 +3942,16 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
         
+        function syncAccountSubnav(viewName) {
+            if (viewName !== 'profile' && viewName !== 'credits') return;
+            document.querySelectorAll('[data-account-view]').forEach((btn) => {
+                const on = btn.dataset.accountView === viewName;
+                btn.classList.toggle('is-active', on);
+                if (on) btn.setAttribute('aria-current', 'page');
+                else btn.removeAttribute('aria-current');
+            });
+        }
+
         function switchToView(viewName) {
             document.querySelectorAll('.nav-item').forEach(i => {
                 if (i.getAttribute('id') === 'nav-lil-brutus') return;
@@ -3826,6 +3962,40 @@
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             const targetView = document.getElementById(viewName + '-view');
             if (targetView) targetView.classList.add('active');
+            syncAccountSubnav(viewName);
+        }
+
+        document.querySelectorAll('[data-account-view]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const viewName = btn.dataset.accountView;
+                switchToView(viewName);
+                if (viewName === 'credits') loadBalance();
+                if (viewName === 'profile') loadProfilePage();
+            });
+        });
+
+        let homeFiguresPlayed = false;
+        function playHomeFiguresOnce() {
+            if (homeFiguresPlayed) return;
+            homeFiguresPlayed = true;
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            ['overall-score', 'close-rate', 'talk-ratio', 'calls-analyzed'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const raw = String(el.textContent || '');
+                const match = raw.match(/\d+/);
+                if (!match) return;
+                const target = Number(match[0]);
+                const start = performance.now();
+                function frame(now) {
+                    const t = Math.min(1, (now - start) / 420);
+                    const eased = 1 - Math.pow(1 - Math.min(1, t), 3);
+                    el.textContent = raw.replace(match[0], String(Math.round(target * eased)));
+                    if (t < 1) requestAnimationFrame(frame);
+                }
+                el.textContent = raw.replace(match[0], '0');
+                requestAnimationFrame(frame);
+            });
         }
 
         function toggleCard(id) {
@@ -3854,6 +4024,7 @@
             addChatMessage(text, true);
             chatInput.value = '';
             chatSendBtn.disabled = true;
+            const chatSkel = mountChatSkeleton();
 
             try {
                 const data = await apiCall('/calls/chat', {
@@ -3865,6 +4036,7 @@
             } catch (error) {
                 addChatMessage(billingGateText(error) || 'sorry, something went wrong. try again.', false);
             } finally {
+                if (chatSkel) chatSkel.remove();
                 chatSendBtn.disabled = false;
             }
         }
@@ -4191,6 +4363,7 @@
             // overlapping load racing a newer one for the same account.
             const gen = authGeneration;
             const seq = ++notesLoadSeq;
+            const skel = beginPageLoad('notes-view');
             try {
                 const data = await apiCall('/notes');
                 // A stale response — issued before a logout, or superseded by a
@@ -4246,6 +4419,8 @@
                 if (gen !== authGeneration || seq !== notesLoadSeq) return;
                 const notesList = document.getElementById('notes-list');
                 if (notesList) notesList.innerHTML = '<p style="text-align: center; color: #ff5050; margin-top: 20px;">failed to load notes</p>';
+            } finally {
+                if (skel && gen === authGeneration && seq === notesLoadSeq) endPageLoad('notes-view', skel);
             }
         }
 
@@ -4340,6 +4515,7 @@
         }
 
         async function loadResearch() {
+            const skel = beginPageLoad('research-view');
             try {
                 const data = await apiCall('/research');
                 allResearch = data.research || [];
@@ -4360,6 +4536,8 @@
             } catch (error) {
                 console.error('Failed to load research:', error);
                 document.getElementById('research-list').innerHTML = '<p style="text-align: center; color: #ff5050; margin-top: 20px;">failed to load research</p>';
+            } finally {
+                if (skel) endPageLoad('research-view', skel);
             }
         }
 

@@ -1460,6 +1460,7 @@ document.addEventListener('DOMContentLoaded', () => {
         desktopSettingsReady = false;
         clearTimeout(opacitySaveTimer);
         desktopSettingsLoad = (async () => {
+            const skel = window.beginPageLoad && window.beginPageLoad('settings-view');
             const epochAtLoad = whiteBgEpoch;
             try {
                 const settings = await window.brutus.getSettings();
@@ -1492,6 +1493,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {
                 if (seq !== desktopLoadSeq) return;
                 showDesktopSettingsMsg(err && err.message ? err.message : 'Could not load settings.', false);
+            } finally {
+                if (skel && window.endPageLoad) window.endPageLoad('settings-view', skel);
             }
         })();
         return desktopSettingsLoad;

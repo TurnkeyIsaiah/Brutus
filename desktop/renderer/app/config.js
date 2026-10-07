@@ -19,9 +19,9 @@
   // Update the URLs below when a newer release ships.
   window.BRUTUS_DOWNLOADS_ENABLED = true;
   window.BRUTUS_DOWNLOAD_URLS = {
-    windows: 'https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.4.0/Brutus-AI-Setup-1.4.0.exe',
-    macArm: 'https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.4.0/Brutus-AI-1.4.0-arm64.dmg',
-    macIntel: 'https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.4.0/Brutus-AI-1.4.0.dmg'
+    windows: 'https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.5.0/Brutus-AI-Setup-1.5.0.exe',
+    macArm: 'https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.5.0/Brutus-AI-1.5.0-arm64.dmg',
+    macIntel: 'https://github.com/TurnkeyIsaiah/Brutus/releases/download/v1.5.0/Brutus-AI-1.5.0.dmg'
   };
   // Both mac builds ship LSMinimumSystemVersion 12.0, and the arm64 dmg carries an
   // arm64-only binary that will not launch on an Intel mac. Surfaced next to every

@@ -88,13 +88,15 @@
       if (ttsEnabled && headphonesConnected) speakFeedback(short);
     }
     hideEmptyState();
+    const visualizer = $('audio-visualizer');
+    if (visualizer) visualizer.classList.remove('is-listening');
     const container = $('feedback-container');
     const timeStr = new Date().toLocaleTimeString('en-US', {
       hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
     });
 
     const item = document.createElement('div');
-    item.className = 'feedback-item';
+    item.className = 'feedback-item p-settle';
     const header = document.createElement('div');
     header.className = 'feedback-header';
     const typeSpan = document.createElement('span');
@@ -138,9 +140,11 @@
     const score = analysis.overallScore || 0;
     const scoreClass = score >= 70 ? 'good' : score >= 50 ? 'warning' : 'bad';
     hideEmptyState();
+    const visualizer = $('audio-visualizer');
+    if (visualizer) visualizer.classList.remove('is-listening');
     const container = $('feedback-container');
     const item = document.createElement('div');
-    item.className = 'feedback-item';
+    item.className = 'feedback-item p-settle';
     const header = document.createElement('div');
     header.className = 'feedback-header';
     const typeSpan = document.createElement('span');
@@ -170,6 +174,7 @@
   function initAudioBars() {
     const visualizer = $('audio-visualizer');
     visualizer.innerHTML = '';
+    visualizer.classList.add('is-listening');
     for (let i = 0; i < 32; i++) {
       const bar = document.createElement('div');
       bar.className = 'audio-bar';
@@ -178,10 +183,17 @@
   }
 
   function updateAudioBars(dataArray) {
-    document.querySelectorAll('.audio-bar').forEach((bar, i) => {
+    const bars = document.querySelectorAll('.audio-bar');
+    let loud = false;
+    bars.forEach((bar, i) => {
       const value = (dataArray && dataArray[i]) || 0;
+      if (value > 8) loud = true;
       bar.style.height = Math.max(4, (value / 255) * 35) + 'px';
     });
+    const visualizer = $('audio-visualizer');
+    if (visualizer && !document.querySelector('.feedback-item')) {
+      visualizer.classList.toggle('is-listening', !loud);
+    }
   }
 
   function updateTalkRatio(ratio) {
