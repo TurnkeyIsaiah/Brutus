@@ -60,7 +60,7 @@ npm start
 ```
 Desktop App (Electron)
 ├── Captures rep mic + optional prospect/system audio
-├── Records both channels in 30-second chunks
+├── Records both channels in short chunks that end on speech pauses
 ├── Sends chunks (with periodic screenshot) to backend via WebSocket
 │
 Backend

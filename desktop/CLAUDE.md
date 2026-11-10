@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Astra 6 reviews this app (web and desktop) and should read HANDOFF.md at the repo root first. It is the live redesign handoff. Claude's separate job is a later motion-design demo video of the marketing site, not this review.
+Astra 6 reviews this app (web and desktop) and should read HANDOFF.md at the repo root first. It is the live redesign handoff.
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -76,11 +76,11 @@ Each window has its own preload (`src/preload-main.js`, `src/preload-overlay.js`
    - Falls back to rep-only audio if screen/system audio capture is unavailable
 
 3. **Overlay window captures screenshots** via the selected screen source
-   - A screenshot is taken on every 4th audio chunk (~2 minutes)
+   - A screenshot rides on the first audio chunk after 2 minutes have passed since the last one
    - Drawn to a canvas and converted to JPEG base64, downscaled to max 960×540
    - Screenshot is omitted (null) when screen capture is disabled or fails
 
-4. **Dual MediaRecorders record in 30-second chunks**
+4. **Dual MediaRecorders record in short chunks that end when someone stops talking** (see Audio Chunk Timing)
    - Format: `audio/webm;codecs=opus`
    - Rep and prospect channels are recorded separately and base64-encoded
    - Sent (with an optional screenshot) via WebSocket to the backend as `monitoring_data`
@@ -113,6 +113,10 @@ Every backend request carries an `X-Brutus-Client: brutus-desktop` header so the
   - `timeIntoCall`: Seconds elapsed since monitoring started
   - `aiNotesEnabled`: whether the AI notes toggle is on
 - Receives `brutus_feedback` (shown only when `payload.coach === true`), `chat_response`, and `OUT_OF_TOKENS` (auto-stops the session)
+- Receives "say this" events (backend `feature/say-this-lines`; absent on older backends), each routed to a `deps.ui` callback with `{ sinceChunkMs }`, the time since the chunk that triggered it was sent (matched by `timestamp` = that chunk's `timeIntoCall`, otherwise the latest chunk). The overlay only logs them for now:
+  - `say_this` `{ id, trigger, objectionType, line, why, source, timestamp }` → `ui.onSayThis`
+  - `say_this_resolved` `{ id, resolution }` (`used | handled | dismissed | replaced | timeout`) → `ui.onSayThisResolved`
+  - `awaiting_rep_reply` `{ sessionId, questionText, timestamp }` → `ui.onAwaitingRepReply`
 - Auto-reconnects on disconnect (exponential backoff capped at 30s) if session is active
 
 ### Data Persistence
@@ -199,19 +203,24 @@ View switching uses a combination of CSS classes and `!important` rules:
 
 ### Audio Chunk Timing
 
-Audio is recorded continuously but sent in discrete chunks:
-- 30-second intervals controlled by `setInterval()`
+Audio is recorded continuously but sent in short chunks, so the backend hears each utterance within about a second (needed for "say this" lines). All thresholds are `cfg` values in `capture-session.js`:
+- Every `vadPollMs` (50ms) each channel's level is read from its own AnalyserNode (fftSize 2048, separate from the 32-bar visualizer). RMS ≥ `speechRms` (0.01) counts as speech.
+- A chunk ends when **either** channel has spoken and then been quiet for `silenceMs` (700ms), even if the other side is still talking. Waiting for both to be quiet would hold an objection until the cap, because replies usually start within 700ms.
+- Never shorter than `minChunkMs` (1.5s) on a pause, and always cut at `maxChunkMs` (8s) during a monologue or silence. Silent chunks are still sent, as before.
+- At most `maxChunksPerMinute` (24) per trailing minute. The backend allows 30 `monitoring_data` + `chat_message` per minute per user and answers overflow with a `retry` ack, and a retried chunk is a replay that never gets live coaching. While the budget is used up the chunk keeps recording, so it can run past 8s.
+- Each flush stops and restarts both recorders, so every chunk is a complete, independently decodable webm file. Cutting at pauses puts the stop/start gap in silence.
 - Each chunk includes `timeIntoCall` metadata
 - Rep and prospect recorders are flushed together via a serialized flush queue (`enqueueFlush`) to avoid races on stop and to keep both channels aligned
 - A final flush runs on session stop so the tail of the call is not dropped
 - MediaRecorder state checked before operations to prevent errors
+- With `npm start`, the overlay's DevTools console shows `[capture] chunk pause|cap <ms> rep peak … prospect peak …`, `sent seq N` and `ack seq N <status>` (peaks help tune `speechRms`), plus `[say-this] …` lines for the events above.
 
 ### Screen Capture Implementation
 
 - The overlay tells main exactly what it wants right before each `getDisplayMedia` call (`set-capture-intent`: `{screenSourceId|null, systemAudio}`). `src/displayMediaIntent.js` turns that into the display-media answer; an intent is single-use and expires after 30s, and a request without one is denied. There is **no fallback to the first screen**.
 - "Screen" off or "skip — call audio only": no window is watched and no screenshots are taken, but the computer's call audio is still recorded (product rule). Chromium needs a video source anyway, so the overlay window is used as the carrier and its video track is stopped at once.
 - Turning Screen back on mid-call goes through the picker and requests video only.
-- Screenshots: every 4th audio chunk (~2 minutes), only while a picked window's video track is live; downscaled to max 960×540 JPEG.
+- Screenshots: one every ~2 minutes of elapsed time (`screenshotMs`), on the next audio chunk, only while a picked window's video track is live; downscaled to max 960×540 JPEG.
 
 ### Session Lifecycle
 
@@ -223,7 +232,7 @@ Audio is recorded continuously but sent in discrete chunks:
 4. Auth and API URL are read now and snapshotted for the whole session
 5. `POST /live/start` → `sessionId`; then the mic (failure → `/live/cancel` and a real message)
 6. WebSocket `{type:'auth', token, client}`; the `connected` reply may list `capabilities: ['chunk_ack']`
-7. Every 30s the rep + prospect chunks go into `renderer/capture/chunk-outbox.js` with a per-session `seq`; unacked chunks are replayed in order after a reconnect (memory only, max 20)
+7. Each time someone stops talking (1.5–8s chunks, see Audio Chunk Timing) the rep + prospect chunks go into `renderer/capture/chunk-outbox.js` with a per-session `seq`; unacked chunks are replayed in order after a reconnect (memory only, max 150, `maxPendingChunks`)
 8. Stop: final flush → wait for every chunk to be acked (20s; old backends without acks get an 8s grace) → `POST /live/end {sessionId, lastSeq}` (90s timeout, one retry) → socket closed
 
 Stop at any step cancels cleanly: a generation counter is checked after every await, a late `/live/start` is cancelled with `/live/cancel`, and a late mic grant is released. Close code 4001 (token revoked) ends the session instead of reconnecting. Out-of-tokens / subscription errors end the session and show the server's message.

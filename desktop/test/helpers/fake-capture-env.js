@@ -10,6 +10,40 @@ function deferred() {
 
 const tick = (ms = 0) => new Promise((r) => setTimeout(r, ms));
 
+// Fake time for now/setInterval only, so tests can drive the chunking poll.
+// setTimeout stays real, which keeps the fake sockets and recorders working.
+function createClock() {
+  let now = 1000000;
+  let nextId = 1;
+  const intervals = new Map();
+  return {
+    timers: {
+      now: () => now,
+      setInterval: (fn, ms) => {
+        const id = nextId++;
+        intervals.set(id, { fn, ms, due: now + ms });
+        return id;
+      },
+      clearInterval: (id) => { intervals.delete(id); }
+    },
+    // Moves time forward, firing every interval that comes due, in order.
+    advance(ms) {
+      const end = now + ms;
+      for (;;) {
+        let next = null;
+        for (const timer of intervals.values()) {
+          if (timer.due <= end && (!next || timer.due < next.due)) next = timer;
+        }
+        if (!next) break;
+        now = next.due;
+        next.due += next.ms;
+        next.fn();
+      }
+      now = end;
+    }
+  };
+}
+
 class FakeTrack {
   constructor(kind) {
     this.kind = kind;
@@ -98,6 +132,14 @@ function createEnv(overrides) {
     stoppedResults: [],
     intents: [],
     screenshots: 0,
+    logs: [],
+    sayThis: [],
+    resolved: [],
+    awaiting: [],
+    // signal level (RMS) each channel's meter reads; above ~0.01 is speech
+    repLevel: 0,
+    prospectLevel: 0,
+    clock: opts.clock ? createClock() : null,
     token: 'token-A',
     apiUrl: 'https://api.test',
     // backend behaviour
@@ -183,8 +225,16 @@ function createEnv(overrides) {
     createStream: (tracks) => new FakeStream(tracks),
     createBlob: (parts) => ({ size: parts.reduce((n, p) => n + (p.size || 0), 0) }),
     createAudioContext: () => ({
-      createAnalyser: () => ({ fftSize: 0, frequencyBinCount: 32, getByteFrequencyData() {} }),
-      createMediaStreamSource: () => ({ connect() {} }),
+      createAnalyser: () => ({
+        fftSize: 0,
+        frequencyBinCount: 32,
+        stream: null,
+        getByteFrequencyData() {},
+        getFloatTimeDomainData(data) {
+          data.fill(this.stream === env.micStream ? env.repLevel : env.prospectLevel);
+        }
+      }),
+      createMediaStreamSource: (stream) => ({ connect(node) { node.stream = stream; } }),
       close() { this.closed = true; }
     }),
     blobToBase64: async (blob) => (blob ? `b64:${blob.size}` : null),
@@ -211,7 +261,10 @@ function createEnv(overrides) {
     chat: () => {},
     connection: (state, stats) => env.connections.push([state, stats && stats.pending]),
     live: (info) => { env.liveInfo = info; },
-    stopped: (result) => env.stoppedResults.push(result)
+    stopped: (result) => env.stoppedResults.push(result),
+    onSayThis: (card, timing) => env.sayThis.push([card, timing]),
+    onSayThisResolved: (info, timing) => env.resolved.push([info, timing]),
+    onAwaitingRepReply: (info, timing) => env.awaiting.push([info, timing])
   };
 
   env.createWebSocket = (url) => {
@@ -226,18 +279,24 @@ function createEnv(overrides) {
     media: env.media,
     fetch: env.fetch,
     createWebSocket: env.createWebSocket,
+    log: (...args) => env.logs.push(args),
+    timers: env.clock ? env.clock.timers : undefined,
     config: Object.assign({
-      chunkMs: 60 * 60 * 1000, // tests flush explicitly via stop
       drainMs: 200,
       legacyGraceMs: 20,
       endTimeoutMs: 1000,
       endRetryDelayMs: 10,
       startTimeoutMs: 1000
-    }, config || {})
+    },
+    // On real time the chunk cap is pushed out so tests flush only via stop;
+    // with the fake clock, tests drive chunking with the shipped thresholds.
+    env.clock ? {} : { maxChunkMs: 60 * 60 * 1000 },
+    config || {})
   });
 
   env.requestsTo = (path) => env.requests.filter((r) => r.path === path);
   env.monitoringMessages = () => env.sockets.flatMap((s) => s.sent.filter((m) => m.type === 'monitoring_data'));
+  env.chunkLogs = () => env.logs.filter((entry) => entry[0] === 'chunk');
   return env;
 }
 

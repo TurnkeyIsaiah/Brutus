@@ -418,6 +418,7 @@
     },
     fetch: (url, init) => window.fetch(url, init),
     createWebSocket: (url) => new WebSocket(url),
+    log: (...args) => console.log('[capture]', ...args),
     media: {
       getUserMedia: (constraints) => navigator.mediaDevices.getUserMedia(constraints),
       getDisplayMedia: (constraints) => navigator.mediaDevices.getDisplayMedia(constraints),
@@ -442,6 +443,13 @@
         $('chat-send-btn').disabled = false;
       },
       connection: showConnection,
+      // "say this" events: logged with their timing until the card UI exists.
+      onSayThis: (card, timing) =>
+        console.log('[say-this] say_this', `${timing.sinceChunkMs}ms after its chunk was sent`, card),
+      onSayThisResolved: (info, timing) =>
+        console.log('[say-this] say_this_resolved', `${timing.sinceChunkMs}ms after the latest chunk was sent`, info),
+      onAwaitingRepReply: (info, timing) =>
+        console.log('[say-this] awaiting_rep_reply', `${timing.sinceChunkMs}ms after its chunk was sent`, info),
       live: ({ analyser, screen, startedAt }) => {
         $('screen-capture-toggle').checked = !!screen;
         liveStartedAt = startedAt || Date.now();
