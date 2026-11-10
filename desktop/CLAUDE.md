@@ -113,7 +113,7 @@ Every backend request carries an `X-Brutus-Client: brutus-desktop` header so the
   - `timeIntoCall`: Seconds elapsed since monitoring started
   - `aiNotesEnabled`: whether the AI notes toggle is on
 - Receives `brutus_feedback` (shown only when `payload.coach === true`), `chat_response`, and `OUT_OF_TOKENS` (auto-stops the session)
-- Receives "say this" events (backend `feature/say-this-lines`; absent on older backends), each routed to a `deps.ui` callback with `{ sinceChunkMs }`, the time since the chunk that triggered it was sent (matched by `timestamp` = that chunk's `timeIntoCall`, otherwise the latest chunk). The overlay only logs them for now:
+- Receives "say this" events (backend `feature/say-this-lines`; absent on older backends), each routed to a `deps.ui` callback with `{ sinceChunkMs }`, the time since the chunk that triggered it was sent (matched by `timestamp` = that chunk's `timeIntoCall`, otherwise the latest chunk). The overlay logs each one and drives the "say this" card from them (`renderer/say-this-card.js`: one card at a time, a newer one replaces it, cleared by a matching `say_this_resolved`, the × (`POST /live/say-this/:id/dismiss {sessionId}` via `session.post`, 404 = already cleared), 60s locally, or a stop). The card is the one Cluely-style element in the overlay (smoked glass, system sans) and is pinned under the header:
   - `say_this` `{ id, trigger, objectionType, line, why, source, timestamp }` → `ui.onSayThis`
   - `say_this_resolved` `{ id, resolution }` (`used | handled | dismissed | replaced | timeout`) → `ui.onSayThisResolved`
   - `awaiting_rep_reply` `{ sessionId, questionText, timestamp }` → `ui.onAwaitingRepReply`

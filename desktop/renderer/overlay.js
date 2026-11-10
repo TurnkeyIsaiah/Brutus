@@ -405,6 +405,51 @@
     if (pendingPicker) pendingPicker(null);
   }
 
+  // ==================== SAY THIS CARD ====================
+
+  const SAY_THIS_REVEAL_MS = 300; // the line streams in word by word over this
+  const SAY_THIS_REVEAL_START_MS = 120; // once the card has mostly dropped in
+
+  function renderSayThis(card) {
+    const el = $('say-this-card');
+    const line = $('say-this-line');
+    const why = $('say-this-why');
+    const words = card.line.trim().split(/\s+/);
+    const step = words.length > 1 ? SAY_THIS_REVEAL_MS / (words.length - 1) : 0;
+    line.textContent = '';
+    words.forEach((word, i) => {
+      if (i) line.appendChild(document.createTextNode(' '));
+      const span = document.createElement('span');
+      span.className = 'say-this-word';
+      span.style.animationDelay = `${SAY_THIS_REVEAL_START_MS + Math.round(i * step)}ms`;
+      span.textContent = word;
+      line.appendChild(span);
+    });
+    const reason = typeof card.why === 'string' ? card.why.trim() : '';
+    why.textContent = reason ? `why: ${reason}` : '';
+    why.hidden = !reason;
+    // Restart the entrance when a newer card replaces the one on screen.
+    el.hidden = false;
+    el.scrollTop = 0;
+    el.classList.remove('is-entering');
+    void el.offsetWidth;
+    el.classList.add('is-entering');
+  }
+
+  function hideSayThis() {
+    const el = $('say-this-card');
+    el.hidden = true;
+    el.classList.remove('is-entering');
+  }
+
+  const sayThisCard = window.BrutusSayThisCard.createSayThisCard({
+    view: { show: renderSayThis, hide: hideSayThis },
+    post: (path, body) => session.post(path, body),
+    sessionId: () => session.sessionId,
+    ping: playFeedbackPing,
+    log: (...args) => console.warn('[say-this]', ...args)
+  });
+
   // ==================== SESSION ====================
 
   const session = window.BrutusCaptureSession.createCaptureSession({
@@ -432,7 +477,11 @@
     ui: {
       consent: showConsentNotice,
       pickSource: showSourcePicker,
-      cancelPrompts,
+      // Called as a stop begins: the card goes with the consent and picker.
+      cancelPrompts: () => {
+        cancelPrompts();
+        sayThisCard.clear();
+      },
       resetMetrics,
       feedback: (type, text, short) => {
         addFeedback(type, text, short || null);
@@ -443,11 +492,15 @@
         $('chat-send-btn').disabled = false;
       },
       connection: showConnection,
-      // "say this" events: logged with their timing until the card UI exists.
-      onSayThis: (card, timing) =>
-        console.log('[say-this] say_this', `${timing.sinceChunkMs}ms after its chunk was sent`, card),
-      onSayThisResolved: (info, timing) =>
-        console.log('[say-this] say_this_resolved', `${timing.sinceChunkMs}ms after the latest chunk was sent`, info),
+      // "say this" events, logged with their timing.
+      onSayThis: (card, timing) => {
+        console.log('[say-this] say_this', `${timing.sinceChunkMs}ms after its chunk was sent`, card);
+        if (session.state === 'live') sayThisCard.show(card);
+      },
+      onSayThisResolved: (info, timing) => {
+        console.log('[say-this] say_this_resolved', `${timing.sinceChunkMs}ms after the latest chunk was sent`, info);
+        sayThisCard.resolve(info);
+      },
       onAwaitingRepReply: (info, timing) =>
         console.log('[say-this] awaiting_rep_reply', `${timing.sinceChunkMs}ms after its chunk was sent`, info),
       live: ({ analyser, screen, startedAt }) => {
@@ -459,6 +512,7 @@
         addFeedback('insight', "monitoring started. let's see what you've got.");
       },
       stopped: (result) => {
+        sayThisCard.clear();
         stopVisualization();
         setStopping(false);
         showConnection('offline', null);
@@ -487,6 +541,8 @@
   // ==================== CONTROLS ====================
 
   function wireControls() {
+    $('say-this-close').addEventListener('click', () => { sayThisCard.dismiss(); });
+
     $('tts-btn').addEventListener('click', () => {
       if (!headphonesConnected) {
         showFlash('warning', 'connect headphones first');
