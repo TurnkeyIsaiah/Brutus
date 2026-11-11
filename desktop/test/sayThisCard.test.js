@@ -10,16 +10,22 @@ const cardA = { id: 'card-a', trigger: 'objection', objectionType: 'price', line
 const cardB = { id: 'card-b', trigger: 'buying_signal', objectionType: null, line: 'want me to walk you through onboarding?', why: 'they asked how it starts', source: 'generated', timestamp: 40 };
 
 function harness(overrides) {
-  const view = { shown: [], hides: 0 };
+  const view = { shown: [], hides: 0, archived: [] };
   const pings = [];
   const posts = [];
+  let clock = 1000;
   const card = createSayThisCard(Object.assign({
-    view: { show: (c) => view.shown.push(c), hide: () => { view.hides += 1; } },
+    view: {
+      show: (c) => view.shown.push(c),
+      hide: () => { view.hides += 1; },
+      archive: (c, shownAt) => view.archived.push([c, shownAt])
+    },
     post: async (path, body) => { posts.push({ path, body }); return { ok: true, status: 200 }; },
     sessionId: () => 'sess-1',
-    ping: () => pings.push(1)
+    ping: () => pings.push(1),
+    now: () => clock
   }, overrides || {}));
-  return { card, view, pings, posts };
+  return { card, view, pings, posts, advance: (ms) => { clock += ms; } };
 }
 
 test('a say_this card is shown with a ping; one without an id or line is ignored', () => {
@@ -33,57 +39,40 @@ test('a say_this card is shown with a ping; one without an id or line is ignored
   assert.equal(h.card.show({ line: 'no id' }), false);
   assert.equal(h.card.show(null), false);
   assert.equal(h.view.shown.length, 1);
-  h.card.clear();
-});
-
-test('only a resolution for the card on screen clears it', () => {
-  const h = harness();
-  h.card.show(cardA);
-  h.card.resolve({ id: 'some-other-card', resolution: 'used' });
-  assert.equal(h.view.hides, 0);
   assert.equal(h.card.current, cardA);
-
-  h.card.resolve({ id: 'card-a', resolution: 'handled' });
-  assert.equal(h.view.hides, 1);
-  assert.equal(h.card.current, null);
 });
 
-test('a newer card replaces the one on screen', () => {
+test('the card stays up: nothing times it out', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
   const h = harness();
   h.card.show(cardA);
+  t.mock.timers.tick(10 * 60 * 1000);
+  assert.equal(h.card.current, cardA);
+  assert.equal(h.view.hides, 0);
+  assert.equal(typeof h.card.resolve, 'undefined', 'say_this_resolved has nothing to clear');
+});
+
+test('a newer card replaces the one on screen and moves the old line into the feed', () => {
+  const h = harness();
+  h.card.show(cardA);
+  h.advance(5000);
   h.card.show(cardB);
   assert.deepEqual(h.view.shown, [cardA, cardB]);
   assert.equal(h.card.current, cardB);
   assert.equal(h.view.hides, 0, 'replaced in place, not hidden first');
+  assert.deepEqual(h.view.archived, [[cardA, 1000]], 'old line in the feed with the time it was shown');
 
-  h.card.resolve({ id: 'card-a', resolution: 'replaced' }); // the old card's late resolution
-  assert.equal(h.card.current, cardB);
-  h.card.clear();
+  h.card.show(cardB); // the same card again is not a replacement
+  assert.equal(h.view.archived.length, 1);
 });
 
-test('the card clears itself after 60 seconds, counted from the newest card', (t) => {
-  t.mock.timers.enable({ apis: ['setTimeout'] });
-  const h = harness();
-  h.card.show(cardA);
-  t.mock.timers.tick(40000);
-  h.card.show(cardB); // restarts the clock
-  t.mock.timers.tick(59999);
-  assert.equal(h.card.current, cardB);
-  assert.equal(h.view.hides, 0);
-  t.mock.timers.tick(1);
-  assert.equal(h.card.current, null);
-  assert.equal(h.view.hides, 1);
-});
-
-test('stop clears the card and its timer', (t) => {
-  t.mock.timers.enable({ apis: ['setTimeout'] });
+test('stop clears the card without moving it into the feed', () => {
   const h = harness();
   h.card.show(cardA);
   h.card.clear();
   assert.equal(h.view.hides, 1);
   assert.equal(h.card.current, null);
-  t.mock.timers.tick(60000);
-  assert.equal(h.view.hides, 1, 'the 60s timer was cancelled');
+  assert.deepEqual(h.view.archived, []);
   h.card.clear();
   assert.equal(h.view.hides, 1, 'clearing with nothing on screen is a no-op');
 });
@@ -112,6 +101,7 @@ test('× posts the dismiss with the sessionId through the session, then hides th
   assert.equal(req.token, 'token-A');
   assert.equal(h.card.current, null);
   assert.equal(h.view.hides, 1);
+  assert.deepEqual(h.view.archived, [], 'a dismissed card does not go into the feed');
   await session.stop({});
 });
 
@@ -134,6 +124,7 @@ test('a failed dismiss still hides the card, and a newer card is left alone', as
   release(new Error('offline'));
   await dismissing;
   assert.equal(h.card.current, cardB, 'the newer card stays');
+  assert.deepEqual(h.view.archived, [], 'the line being dismissed does not go into the feed');
 
   const failing = harness({ post: async () => { throw new Error('offline'); } });
   failing.card.show(cardA);

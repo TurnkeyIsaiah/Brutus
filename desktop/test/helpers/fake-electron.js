@@ -42,6 +42,8 @@ function createFakes(options) {
       this.destroyed = false;
       this.visible = false;
       this.contentProtection = false;
+      this.bounds = { x: 0, y: 0, width: 380, height: 620 };
+      this.calls = []; // placement and z-order calls, in order
       windows.push(this);
     }
     loadFile(file) {
@@ -50,7 +52,7 @@ function createFakes(options) {
     }
     on(name, fn) { this.events.set(name, fn); }
     once(name, fn) { this.events.set(name, fn); }
-    show() { this.visible = true; }
+    show() { this.visible = true; this.calls.push(['show']); }
     showInactive() { this.visible = true; }
     hide() { this.visible = false; }
     focus() {}
@@ -64,13 +66,23 @@ function createFakes(options) {
     setMaximumSize() {}
     setContentSize() {}
     setResizable() {}
-    setAlwaysOnTop() {}
-    moveTop() {}
+    setAlwaysOnTop(flag, level) { this.calls.push(['setAlwaysOnTop', flag, level]); }
+    moveTop() { this.calls.push(['moveTop']); }
+    // Windows at 125% reports a frameless window a pixel or two wider than it
+    // was set to; fakes.reportedWidthOffset simulates that.
+    setBounds(b) {
+      this.calls.push(['setBounds', { ...b }]);
+      this.bounds = { ...b, width: b.width + (fakes.reportedWidthOffset || 0) };
+    }
+    setPosition(x, y) {
+      this.calls.push(['setPosition', x, y]);
+      this.bounds = { ...this.bounds, x, y, width: this.bounds.width + (fakes.reportedWidthOffset || 0) };
+    }
     setIgnoreMouseEvents() {}
     setOpacity() {}
     hookWindowMessage() {}
     getMediaSourceId() { return 'window:overlay:0'; }
-    getBounds() { return { x: 0, y: 0, width: 380, height: 620 }; }
+    getBounds() { return { ...this.bounds }; }
     getContentBounds() { return { x: 0, y: 0, width: 168, height: 95 }; }
     getContentSize() { return [168, 95]; }
     static getAllWindows() { return windows.filter((w) => !w.destroyed); }
@@ -108,7 +120,7 @@ function createFakes(options) {
         getPrimaryDisplay: () => ({ workAreaSize: { width: 1920, height: 1080 }, workArea: { x: 0, y: 0, width: 1920, height: 1080 } }),
         getDisplayMatching: () => ({ workAreaSize: { width: 1920, height: 1080 }, workArea: { x: 0, y: 0, width: 1920, height: 1080 } }),
         getAllDisplays: () => [],
-        getCursorScreenPoint: () => ({ x: 0, y: 0 })
+        getCursorScreenPoint: () => ({ ...(fakes.cursor || { x: 0, y: 0 }) })
       },
       nativeImage: { createFromPath: () => ({ isEmpty: () => true }), createFromBuffer: () => ({}) },
       shell: { openExternal: async (url) => { (fakes.opened = fakes.opened || []).push(url); } },

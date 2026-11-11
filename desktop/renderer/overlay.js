@@ -82,43 +82,75 @@
     if (emptyState) emptyState.style.display = 'none';
   }
 
-  function addFeedback(type, text, short) {
-    if (short) {
-      showFlash(type, short);
-      if (ttsEnabled && headphonesConnected) speakFeedback(short);
-    }
+  function feedTime(date) {
+    return (date || new Date()).toLocaleTimeString('en-US', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    });
+  }
+
+  // One feed entry: a label row (type + time) over its body, newest first,
+  // keeping the last 10.
+  function pushFeedItem(type, label, timeStr, body) {
     hideEmptyState();
     const visualizer = $('audio-visualizer');
     if (visualizer) visualizer.classList.remove('is-listening');
     const container = $('feedback-container');
-    const timeStr = new Date().toLocaleTimeString('en-US', {
-      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-    });
 
     const item = document.createElement('div');
     item.className = 'feedback-item p-settle';
     const header = document.createElement('div');
     header.className = 'feedback-header';
-    const typeSpan = document.createElement('span');
-    typeSpan.className = `feedback-type type-${type}`;
-    typeSpan.textContent = type === 'brutus' ? 'Brutus' : type;
+    header.appendChild(label);
     const timeSpan = document.createElement('span');
     timeSpan.className = 'feedback-time';
     timeSpan.textContent = timeStr;
-    header.appendChild(typeSpan);
     header.appendChild(timeSpan);
-    const textDiv = document.createElement('div');
-    textDiv.className = 'feedback-text';
-    textDiv.textContent = text;
     item.appendChild(header);
-    item.appendChild(textDiv);
+    body.forEach((el) => item.appendChild(el));
     container.insertBefore(item, container.firstChild);
 
-    feedbackItems.unshift({ type, text, time: timeStr });
+    feedbackItems.unshift({ type, time: timeStr });
     if (feedbackItems.length > 10) {
       feedbackItems.pop();
       if (container.children.length > 10) container.removeChild(container.lastChild);
     }
+  }
+
+  function addFeedback(type, text, short) {
+    if (short) {
+      showFlash(type, short);
+      if (ttsEnabled && headphonesConnected) speakFeedback(short);
+    }
+    const typeSpan = document.createElement('span');
+    typeSpan.className = `feedback-type type-${type}`;
+    typeSpan.textContent = type === 'brutus' ? 'Brutus' : type;
+    const textDiv = document.createElement('div');
+    textDiv.className = 'feedback-text';
+    textDiv.textContent = text;
+    pushFeedItem(type, typeSpan, feedTime(), [textDiv]);
+  }
+
+  // A "say this" line that a newer card replaced stays readable in the feed.
+  function addSayThisToFeed(card, shownAt) {
+    const label = document.createElement('span');
+    label.className = 'feedback-type type-say-this';
+    const dot = document.createElement('span');
+    dot.className = 'say-this-feed-dot';
+    dot.setAttribute('aria-hidden', 'true');
+    label.appendChild(dot);
+    label.appendChild(document.createTextNode('Say this'));
+    const line = document.createElement('div');
+    line.className = 'feedback-text';
+    line.textContent = card.line.trim();
+    const body = [line];
+    const reason = typeof card.why === 'string' ? card.why.trim() : '';
+    if (reason) {
+      const why = document.createElement('div');
+      why.className = 'feedback-why';
+      why.textContent = `why: ${reason}`;
+      body.push(why);
+    }
+    pushFeedItem('say-this', label, feedTime(shownAt ? new Date(shownAt) : null), body);
   }
 
   function addChatMessage(sender, text) {
@@ -443,7 +475,7 @@
   }
 
   const sayThisCard = window.BrutusSayThisCard.createSayThisCard({
-    view: { show: renderSayThis, hide: hideSayThis },
+    view: { show: renderSayThis, hide: hideSayThis, archive: addSayThisToFeed },
     post: (path, body) => session.post(path, body),
     sessionId: () => session.sessionId,
     ping: playFeedbackPing,
@@ -497,10 +529,9 @@
         console.log('[say-this] say_this', `${timing.sinceChunkMs}ms after its chunk was sent`, card);
         if (session.state === 'live') sayThisCard.show(card);
       },
-      onSayThisResolved: (info, timing) => {
-        console.log('[say-this] say_this_resolved', `${timing.sinceChunkMs}ms after the latest chunk was sent`, info);
-        sayThisCard.resolve(info);
-      },
+      // Logged only: the card stays up until replaced, dismissed or stopped.
+      onSayThisResolved: (info, timing) =>
+        console.log('[say-this] say_this_resolved', `${timing.sinceChunkMs}ms after the latest chunk was sent`, info),
       onAwaitingRepReply: (info, timing) =>
         console.log('[say-this] awaiting_rep_reply', `${timing.sinceChunkMs}ms after its chunk was sent`, info),
       live: ({ analyser, screen, startedAt }) => {

@@ -61,7 +61,9 @@ The application uses two separate Electron windows:
    - Shows metrics: talk ratio, interrupts, duration
    - Audio visualizer bars (32 bars, FFT visualization)
    - Only visible when monitoring is active
-   - Draggable and resizable
+   - Draggable and resizable. Moves keep the remembered size (`overlaySize` in `src/main.js`) and never write the live size back: at 125% DPI the frameless window reports its width a pixel or two off, and `setPosition` (= `setBounds` with the live size) grew the panel on every drag
+   - On top at the `'screen-saver'` level, set explicitly after creation and on every show (the `alwaysOnTop` constructor option alone does not take on Windows)
+   - Has its own button in the Brutus taskbar group (`skipTaskbar: false`) so the taskbar preview can show it
 
 Each window has its own preload (`src/preload-main.js`, `src/preload-overlay.js`, `src/preload-mascot.js`) exposing only the `window.brutus.*` functions that window uses. A third window, Lil Brutus (`renderer/lil-brutus.html`), is the always-on-top mascot.
 
@@ -113,7 +115,7 @@ Every backend request carries an `X-Brutus-Client: brutus-desktop` header so the
   - `timeIntoCall`: Seconds elapsed since monitoring started
   - `aiNotesEnabled`: whether the AI notes toggle is on
 - Receives `brutus_feedback` (shown only when `payload.coach === true`), `chat_response`, and `OUT_OF_TOKENS` (auto-stops the session)
-- Receives "say this" events (backend `feature/say-this-lines`; absent on older backends), each routed to a `deps.ui` callback with `{ sinceChunkMs }`, the time since the chunk that triggered it was sent (matched by `timestamp` = that chunk's `timeIntoCall`, otherwise the latest chunk). The overlay logs each one and drives the "say this" card from them (`renderer/say-this-card.js`: one card at a time, a newer one replaces it, cleared by a matching `say_this_resolved`, the × (`POST /live/say-this/:id/dismiss {sessionId}` via `session.post`, 404 = already cleared), 60s locally, or a stop). The card is the one Cluely-style element in the overlay (smoked glass, system sans) and is pinned under the header:
+- Receives "say this" events (backend `feature/say-this-lines`; absent on older backends), each routed to a `deps.ui` callback with `{ sinceChunkMs }`, the time since the chunk that triggered it was sent (matched by `timestamp` = that chunk's `timeIntoCall`, otherwise the latest chunk). The overlay logs each one and drives the "say this" card from them (`renderer/say-this-card.js`). The card stays up like feedback, so a slow reader can still use it: a newer card replaces it and the old line moves into the feed as a "Say this" entry (line, why, time); the × (`POST /live/say-this/:id/dismiss {sessionId}` via `session.post`, 404 = already cleared) or a stop clears it without adding it to the feed. `say_this_resolved` is only logged. The card is the one Cluely-style element in the overlay (smoked glass, system sans) and is pinned under the header:
   - `say_this` `{ id, trigger, objectionType, line, why, source, timestamp }` → `ui.onSayThis`
   - `say_this_resolved` `{ id, resolution }` (`used | handled | dismissed | replaced | timeout`) → `ui.onSayThisResolved`
   - `awaiting_rep_reply` `{ sessionId, questionText, timestamp }` → `ui.onAwaitingRepReply`
@@ -187,7 +189,7 @@ Hardware acceleration is disabled to prevent GPU-related crashes:
 - **Content-Security-Policy** `<meta>` on every page: scripts only from local files (no inline scripts or handlers anywhere), connections only to the API (plus localhost for dev) and PostHog ingest/config in the main window, fonts from Google Fonts. Images the Paper design used to load from app.paper.design ship locally (`renderer/app/logo.png`, `renderer/app/auth-photo.jpg`).
 - **Analytics**: PostHog runs in the main window only, from the local `posthog-js/dist/array.full.no-external.js` bundle with `disable_external_dependency_loading`; autocapture and session replay mask all text and inputs; events are tagged `app: 'desktop'`; dev builds are marked internal. The overlay has no analytics.
 - **Settings**: `src/settingsPolicy.js` allow-lists the keys `set-settings` accepts. The installed app only ever uses `https://api.brutusai.coach` (the API URL field is hidden); dev builds may also use `http://localhost:*`.
-- **Overlay**: `setContentProtection(true)` keeps it out of screen shares and out of Brutus's own screenshots.
+- **Overlay**: `setContentProtection(true)` keeps it out of screen shares and out of Brutus's own screenshots. Checked on Windows 11: a DWM thumbnail of the overlay (what the taskbar preview draws) captures as empty, so a full-screen share that catches the preview does not show the coaching.
 
 ### CSS View Switching
 
