@@ -88,9 +88,18 @@
       setInterval: (fn, ms) => setInterval(fn, ms),
       clearInterval: (id) => clearInterval(id)
     }, deps.timers || {});
+    const log = deps.log || function () {};
     const cfg = Object.assign({
-      chunkMs: 30000,
-      screenshotEvery: 4,
+      // A chunk ends when either side stops talking, so the backend hears each
+      // utterance within a second or so instead of every 30s.
+      vadPollMs: 50,          // how often both channels' levels are read
+      speechRms: 0.01,        // RMS (float samples) at or above which a channel counts as speech
+      silenceMs: 700,         // silence after speech that ends an utterance
+      minChunkMs: 1500,       // a pause never flushes a shorter chunk
+      maxChunkMs: 8000,       // hard cap for a long monologue
+      maxChunksPerMinute: 24, // the server allows 30 messages/min, shared with chat and replays
+      screenshotMs: 120000,
+      maxPendingChunks: 150,  // ~10 minutes offline at typical chunk sizes
       drainMs: 20000,
       legacyGraceMs: 8000,
       startTimeoutMs: 20000,
@@ -118,11 +127,17 @@
     let prospectStream = null;
     let videoStream = null;
     let displayStreams = [];
+    let repMeter = null;
+    let prospectMeter = null;
     let chunkTimer = null;
     let flushChain = Promise.resolve();
     let captureStopping = false;
-    let chunkCounter = 0;
     let startedAt = 0;
+    let chunkStartedAt = 0;
+    let flushTimes = [];
+    let lastShotAt = 0;
+    let chunkSentAt = new Map(); // timeIntoCall -> when that chunk was first sent
+    let lastChunkSentAt = 0;
 
     let ws = null;
     let wsId = 0;
@@ -136,6 +151,7 @@
 
     const outbox = Outbox.createChunkOutbox({
       send: sendRaw,
+      maxPending: cfg.maxPendingChunks,
       setTimeout: T.setTimeout,
       clearTimeout: T.clearTimeout,
       onFatal: () => {
@@ -228,10 +244,27 @@
       if (!ws || !wsConnected || ws.readyState !== 1) return false;
       try {
         ws.send(JSON.stringify(message));
-        return true;
       } catch (_) {
         return false;
       }
+      if (message.type === 'monitoring_data') {
+        const p = message.payload;
+        log('sent', `seq ${p.seq}`, p.replay ? 'replay' : '');
+        if (!p.replay) {
+          lastChunkSentAt = T.now();
+          chunkSentAt.set(p.timeIntoCall, lastChunkSentAt);
+          if (chunkSentAt.size > 20) chunkSentAt.delete(chunkSentAt.keys().next().value);
+        }
+      }
+      return true;
+    }
+
+    // How long after its chunk went out a "say this" event arrived. The server
+    // stamps say_this and awaiting_rep_reply with the chunk's timeIntoCall;
+    // anything else is measured from the latest chunk.
+    function eventTiming(payload) {
+      const sentAt = chunkSentAt.get(payload.timestamp) || lastChunkSentAt;
+      return { sinceChunkMs: sentAt ? T.now() - sentAt : null };
     }
 
     function clearReconnect() {
@@ -363,7 +396,20 @@
         return;
       }
       if (msg.type === 'chunk_ack') {
+        log('ack', `seq ${payload.seq}`, payload.status);
         outbox.onAck(payload);
+        return;
+      }
+      if (msg.type === 'say_this') {
+        ui.onSayThis(payload, eventTiming(payload));
+        return;
+      }
+      if (msg.type === 'say_this_resolved') {
+        ui.onSayThisResolved(payload, eventTiming(payload));
+        return;
+      }
+      if (msg.type === 'awaiting_rep_reply') {
+        ui.onAwaitingRepReply(payload, eventTiming(payload));
         return;
       }
       if ((msg.type === 'brutus_feedback' || msg.type === 'error') &&
@@ -410,7 +456,61 @@
       });
     }
 
-    // Periodic flushes and the final flush share one chain so they never overlap.
+    // A level meter per channel, separate from the visualizer's analyser, with
+    // a window long enough (~43ms) for a stable energy reading.
+    function createMeter(source) {
+      const node = audioCtx.createAnalyser();
+      node.fftSize = 2048;
+      source.connect(node);
+      return { node, data: new Float32Array(node.fftSize), heard: false, lastSpeechAt: 0, peak: 0 };
+    }
+
+    // Reads one level sample. True once this channel spoke and has since been
+    // quiet for silenceMs: that speaker finished an utterance.
+    function utteranceEnded(meter, now) {
+      if (!meter) return false;
+      meter.node.getFloatTimeDomainData(meter.data);
+      let sum = 0;
+      for (let i = 0; i < meter.data.length; i++) sum += meter.data[i] * meter.data[i];
+      const rms = Math.sqrt(sum / meter.data.length);
+      if (rms > meter.peak) meter.peak = rms;
+      if (rms >= cfg.speechRms) {
+        meter.heard = true;
+        meter.lastSpeechAt = now;
+        return false;
+      }
+      return meter.heard && now - meter.lastSpeechAt >= cfg.silenceMs;
+    }
+
+    // Ends a chunk when either side finishes speaking (not when both are quiet:
+    // replies often start within 700ms, which would hold an objection until the
+    // cap), never below minChunkMs, always by maxChunkMs, and never more than
+    // maxChunksPerMinute so no chunk is rate-limited (a retried chunk is not
+    // coached).
+    function checkChunk() {
+      if (captureStopping) return;
+      const now = T.now();
+      const repEnded = utteranceEnded(repMeter, now);
+      const prospectEnded = utteranceEnded(prospectMeter, now);
+      const age = now - chunkStartedAt;
+      let reason = null;
+      if (age >= cfg.maxChunkMs) reason = 'cap';
+      else if ((repEnded || prospectEnded) && age >= cfg.minChunkMs) reason = 'pause';
+      if (!reason) return;
+      flushTimes = flushTimes.filter((t) => now - t < 60000);
+      if (flushTimes.length >= cfg.maxChunksPerMinute) return;
+      flushTimes.push(now);
+      log('chunk', reason, `${age}ms`,
+        `rep peak ${repMeter ? repMeter.peak.toFixed(3) : '-'}`,
+        `prospect peak ${prospectMeter ? prospectMeter.peak.toFixed(3) : '-'}`);
+      chunkStartedAt = now;
+      for (const meter of [repMeter, prospectMeter]) {
+        if (meter) { meter.heard = false; meter.peak = 0; }
+      }
+      enqueueFlush(() => flushChunk(false));
+    }
+
+    // Chunk flushes and the final flush share one chain so they never overlap.
     function enqueueFlush(fn) {
       const run = flushChain.then(fn, fn);
       flushChain = run.catch(() => {});
@@ -445,11 +545,10 @@
         ]);
         if (!repAudio && !prospectAudio) return;
 
-        chunkCounter += 1;
-        const canShoot = videoStream && hasLiveTrack(videoStream.getVideoTracks());
-        const screenshot = canShoot && chunkCounter % cfg.screenshotEvery === 0
-          ? await media.captureScreenshot(videoStream)
-          : null;
+        const shootNow = videoStream && hasLiveTrack(videoStream.getVideoTracks()) &&
+          T.now() - lastShotAt >= cfg.screenshotMs;
+        if (shootNow) lastShotAt = T.now();
+        const screenshot = shootNow ? await media.captureScreenshot(videoStream) : null;
 
         outbox.enqueue({
           repAudio,
@@ -509,10 +608,12 @@
             prospectStream = media.createStream(audioTracks);
             prospectRecorder = media.createRecorder(prospectStream, AUDIO_MIME);
             attachCollector(prospectRecorder);
+            prospectMeter = createMeter(audioCtx.createMediaStreamSource(prospectStream));
             prospectRecorder.start();
             ui.feedback('insight', 'capturing both sides of the conversation.');
           } catch (_) {
             prospectRecorder = null;
+            prospectMeter = null;
             ui.feedback('insight', "couldn't record the call audio. coaching on your voice only.");
           }
         } else {
@@ -545,6 +646,8 @@
       }
       audioCtx = null;
       analyser = null;
+      repMeter = null;
+      prospectMeter = null;
     }
 
     // ---------------- lifecycle ----------------
@@ -621,16 +724,22 @@
       audioCtx = media.createAudioContext();
       analyser = audioCtx.createAnalyser();
       analyser.fftSize = 64;
-      audioCtx.createMediaStreamSource(micStream).connect(analyser);
+      const micSource = audioCtx.createMediaStreamSource(micStream);
+      micSource.connect(analyser);
+      repMeter = createMeter(micSource);
 
       captureStopping = false;
-      chunkCounter = 0;
       flushChain = Promise.resolve();
       repRecorder = media.createRecorder(micStream, AUDIO_MIME);
       attachCollector(repRecorder);
       repRecorder.start();
       startedAt = T.now();
-      chunkTimer = T.setInterval(() => { enqueueFlush(() => flushChunk(false)); }, cfg.chunkMs);
+      chunkStartedAt = startedAt;
+      lastShotAt = startedAt;
+      flushTimes = [];
+      chunkSentAt = new Map();
+      lastChunkSentAt = 0;
+      chunkTimer = T.setInterval(checkChunk, cfg.vadPollMs);
 
       socketWanted = true;
       connectSocket();

@@ -161,6 +161,123 @@
     .tts-btn.locked { color: #766B65; cursor: not-allowed; }
     .tts-btn.active { color: #FF6550; }
 
+    /* "Say this" card: the one place the overlay leaves the Paper look. A
+       smoked-glass answer card in a system sans, faked inside the opaque
+       panel (the window cannot be transparent with GPU acceleration off).
+       Pinned under the header; when the panel is short it takes the space
+       and scrolls rather than being pushed out of view. */
+    .say-this-card {
+      flex-shrink: 0;
+      max-height: calc(100vh - 60px); /* panel border + padding, header, gap */
+      overflow-y: auto;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.015) 45%, rgba(255, 255, 255, 0) 100%),
+        #161618;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 10px 28px rgba(0, 0, 0, 0.55),
+        0 1px 2px rgba(0, 0, 0, 0.6);
+      font-family: system-ui, "Segoe UI Variable", -apple-system, sans-serif;
+    }
+    .say-this-card[hidden] { display: none; }
+
+    .say-this-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .say-this-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      line-height: 14px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .say-this-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 3px;
+      background-color: #FF6550;
+      box-shadow: 0 0 6px rgba(255, 101, 80, 0.55);
+    }
+
+    .say-this-close {
+      background: none;
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 16px;
+      line-height: 14px;
+      padding: 2px 4px;
+      margin: -2px -4px -2px 0;
+      border-radius: 6px;
+      color: rgba(255, 255, 255, 0.40);
+      -webkit-app-region: no-drag;
+    }
+    .say-this-close:hover { color: rgba(255, 255, 255, 0.85); background-color: rgba(255, 255, 255, 0.06); }
+
+    .say-this-line {
+      margin-top: 10px;
+      font-size: 17.5px;
+      line-height: 1.35;
+      font-weight: 500;
+      color: #FFFFFF;
+      letter-spacing: -0.005em;
+      overflow-wrap: anywhere;
+    }
+
+    .say-this-why {
+      margin-top: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: rgba(255, 255, 255, 0.55);
+    }
+    .say-this-why[hidden] { display: none; }
+
+    /* Drops in under the header, then the line streams in word by word.
+       The text is all there; only its appearance is staggered. */
+    .say-this-card.is-entering {
+      animation: say-this-in 180ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+    }
+    .say-this-card.is-entering .say-this-word {
+      animation: say-this-word 160ms ease-out both;
+    }
+
+    @keyframes say-this-in {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @keyframes say-this-word {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .say-this-card.is-entering,
+      .say-this-card.is-entering .say-this-word {
+        animation: none;
+      }
+    }
+
+    /* A panel shrunk toward its 200px minimum: tighter card, so a short line
+       fits without scrolling and more of a long one is in view. */
+    @media (max-height: 300px) {
+      .say-this-card { padding: 11px 12px; }
+      .say-this-line { margin-top: 7px; font-size: 16px; line-height: 1.3; }
+      .say-this-why { margin-top: 5px; }
+    }
+
     /* Feedback Flash Zone */
     .feedback-flash {
       display: none;
@@ -263,6 +380,27 @@
     .type-good       { color: #A9A09A; }
     .type-brutus     { color: #FF6550; }
     .type-suggestion { color: #FF8A78; }
+
+    /* An earlier "say this" line, moved down when a newer card replaced it */
+    .type-say-this {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: #FFF8EF;
+    }
+    .say-this-feed-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 3px;
+      background-color: #FF6550;
+      flex-shrink: 0;
+    }
+    .feedback-why {
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 16px;
+      color: #8E837D;
+    }
 
     .feedback-time {
       font-size: 11px;
@@ -689,6 +827,16 @@
       <button class="close-btn" id="close-btn" title="End session and close overlay" aria-label="End session and close overlay">x</button>
     </div>
 
+    <!-- "Say this" card (filled by overlay.js) -->
+    <div class="say-this-card" id="say-this-card" role="status" hidden>
+      <div class="say-this-head">
+        <div class="say-this-label"><span class="say-this-dot" aria-hidden="true"></span>Say this</div>
+        <button class="say-this-close" id="say-this-close" title="Dismiss" aria-label="Dismiss this line">×</button>
+      </div>
+      <div class="say-this-line" id="say-this-line"></div>
+      <div class="say-this-why" id="say-this-why"></div>
+    </div>
+
     <!-- Feedback Flash -->
     <div class="feedback-flash" id="feedback-flash">
       <div class="flash-text" id="flash-text"></div>
@@ -799,6 +947,7 @@
 
   <script src="capture/chunk-outbox.js"></script>
   <script src="capture/capture-session.js"></script>
+  <script src="say-this-card.js"></script>
   <script src="overlay.js"></script>
 </body>
 </html>
