@@ -48,8 +48,22 @@ class FakeTrack {
   constructor(kind) {
     this.kind = kind;
     this.readyState = 'live';
+    this.constraints = null;
+    this.clones = [];
   }
   stop() { this.readyState = 'ended'; }
+  // A clone shares the source: when the shared window closes, both end.
+  clone() {
+    const copy = new FakeTrack(this.kind);
+    copy.cloneOf = this;
+    this.clones.push(copy);
+    return copy;
+  }
+  async applyConstraints(c) { this.constraints = c; }
+  sourceEnded() {
+    this.stop();
+    this.clones.forEach((c) => c.stop());
+  }
 }
 
 class FakeStream {
@@ -61,17 +75,26 @@ class FakeStream {
 
 // Emits one data chunk per recording window, then 'stop'.
 class FakeRecorder {
-  constructor(stream, env) {
+  constructor(stream, env, mimeType, options) {
     this.stream = stream;
+    this.mimeType = mimeType;
+    this.options = options || {};
     this.env = env;
     this.state = 'inactive';
     this.listeners = {};
     this.ondataavailable = null;
     env.recorders.push(this);
   }
-  start() {
+  start(timeslice) {
     if (this.stream.getTracks().every((t) => t.readyState !== 'live')) throw new Error('tracks ended');
     this.state = 'recording';
+    this.timeslice = timeslice;
+    this.startedAt = this.env.clock ? this.env.clock.timers.now() : Date.now();
+    if (typeof this.onstart === 'function') setTimeout(() => this.onstart(), 0);
+  }
+  // test control: a timeslice worth of data (the call recording's pieces)
+  emitPiece(size) {
+    if (this.ondataavailable) this.ondataavailable({ data: { size } });
   }
   stop() {
     if (this.state === 'inactive') throw new Error('not recording');
@@ -80,6 +103,7 @@ class FakeRecorder {
       if (this.ondataavailable) this.ondataavailable({ data: { size: this.env.chunkBytes } });
       (this.listeners.stop || []).forEach((fn) => fn());
       this.listeners.stop = [];
+      if (typeof this.onstop === 'function') this.onstop();
     }, 0);
   }
   addEventListener(name, fn) {
@@ -157,7 +181,10 @@ function createEnv(overrides) {
     displayGate: null,
     micError: null,
     displayVideo: true,
-    displayAudio: true
+    displayAudio: true,
+    // call recording (opt in with createEnv({ recording: {...} }))
+    recording: opts.recording || null,
+    recordingCalls: []
   };
 
   env.onSocketMessage = (sock, msg) => {
@@ -205,6 +232,18 @@ function createEnv(overrides) {
     overlayStopped: (info) => env.ipcCalls.push(['overlayStopped', info]),
     stopMonitoring: () => env.ipcCalls.push(['stopMonitoring'])
   };
+  if (env.recording) {
+    env.ipc.getSettings = async () => Object.assign({ apiUrl: env.apiUrl }, env.recording.settings || {});
+    env.ipc.recordingBegin = async (req) => {
+      env.recordingCalls.push(['begin', req]);
+      if (env.recording.beginGate) await env.recording.beginGate.promise;
+      return env.recording.refuse
+        ? { ok: false, reason: env.recording.refuse }
+        : { ok: true, id: req.sessionId, video: env.recording.allowVideo !== false && !!req.wantVideo };
+    };
+    env.ipc.recordingData = async (p) => { env.recordingCalls.push(['data', p.data && p.data.size]); return true; };
+    env.ipc.recordingEnd = async (p) => { env.recordingCalls.push(['end', p]); return true; };
+  }
 
   env.media = {
     getUserMedia: async () => {
@@ -221,7 +260,7 @@ function createEnv(overrides) {
       env.displayStream = new FakeStream(tracks);
       return env.displayStream;
     },
-    createRecorder: (stream) => new FakeRecorder(stream, env),
+    createRecorder: (stream, mimeType, options) => new FakeRecorder(stream, env, mimeType, options),
     createStream: (tracks) => new FakeStream(tracks),
     createBlob: (parts) => ({ size: parts.reduce((n, p) => n + (p.size || 0), 0) }),
     createAudioContext: () => ({
@@ -234,7 +273,16 @@ function createEnv(overrides) {
           data.fill(this.stream === env.micStream ? env.repLevel : env.prospectLevel);
         }
       }),
-      createMediaStreamSource: (stream) => ({ connect(node) { node.stream = stream; } }),
+      createMediaStreamSource: (stream) => ({
+        stream,
+        connect(node) { if (node.mixed) node.mixed.push(stream); else node.stream = stream; },
+        disconnect() {}
+      }),
+      createMediaStreamDestination: () => {
+        const dest = { mixed: [], stream: new FakeStream([new FakeTrack('audio')]) };
+        (env.destinations = env.destinations || []).push(dest);
+        return dest;
+      },
       close() { this.closed = true; }
     }),
     blobToBase64: async (blob) => (blob ? `b64:${blob.size}` : null),

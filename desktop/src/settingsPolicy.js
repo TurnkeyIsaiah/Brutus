@@ -33,7 +33,9 @@ const RULES = {
     return Number.isInteger(n) && n >= 5 && n <= 600 ? n : undefined;
   },
   ttsVoice: (v) => (typeof v === 'string' && /^[A-Za-z0-9]{0,40}$/.test(v) ? v : undefined),
-  whiteBackground: (v) => (typeof v === 'boolean' ? v : undefined)
+  whiteBackground: (v) => (typeof v === 'boolean' ? v : undefined),
+  recordCalls: (v) => (typeof v === 'boolean' ? v : undefined),
+  recordVideo: (v) => (typeof v === 'boolean' ? v : undefined)
 };
 
 // Returns { patch, rejected }: the accepted subset and the keys that were refused.

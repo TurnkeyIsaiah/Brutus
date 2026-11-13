@@ -128,6 +128,7 @@ function createMonitoringController(deps) {
     onOverlayGone,
     state,
     isActive: () => active,
+    sessionId: () => capture.sessionId,
     needsStop: () => active || overlayBusy() || !!stopping
   };
 }
