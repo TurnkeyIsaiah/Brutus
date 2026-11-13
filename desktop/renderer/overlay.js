@@ -373,10 +373,88 @@
   let pendingPicker = null;
 
   // Recording-consent disclosure (audit BR-03): the call records a real third
-  // party, so this runs before every session. Resolves true/false.
+  // party, so this runs before every session. Resolves false, or on "i have
+  // consent" a record of what was accepted, which capture-session sends with
+  // /live/start and the server keeps as consent evidence
+  // (backend lib/consentRecords.js).
+  // The notice says what this call will keep: a recording with video, an
+  // audio-only recording, or (recording off) nothing beyond the transcript.
+  //
+  // Bump DISCLOSURE_VERSION whenever this wording or the notice in
+  // overlay.html changes; test/consentNotice.test.js fails until you do.
+  const DISCLOSURE_VERSION = 'REC-2026-11-12';
+  let consentVariant = null;
+  const CONSENT_COPY = {
+    video: {
+      body: 'brutus records and transcribes <strong>both sides</strong> of this call and saves the recording ' +
+        'to your brutus account so you can watch it back. if you share a window, <strong>everything ' +
+        'visible in that window is recorded too</strong>. at the start of the call, tell the other person ' +
+        "they're being recorded and get their consent to continue.",
+      note: 'recording starts when you continue. press record in the overlay to stop or restart it at any point. recordings are kept until you delete them.',
+      picker: 'Brutus watches only this window, and the call recording includes what it shows. The call audio playing on this computer is recorded either way.'
+    },
+    audio: {
+      body: 'brutus records and transcribes <strong>both sides</strong> of this call and saves an audio ' +
+        'recording to your brutus account so you can listen back. the window you share is not recorded. ' +
+        "at the start of the call, tell the other person they're being recorded and get their consent to continue.",
+      note: 'recording starts when you continue. press record in the overlay to stop or restart it at any point. recordings are kept until you delete them.',
+      picker: 'Brutus watches only this window; it is not recorded. The call audio playing on this computer is recorded either way.'
+    },
+    off: {
+      body: 'brutus records and transcribes <strong>both sides</strong> of this call. at the start of ' +
+        "the call, tell the other person they're being recorded and get their consent to continue.",
+      note: 'call recording is off in settings: only the transcript is saved. press record in the overlay to record this call.',
+      picker: 'Brutus watches only this window. The call audio playing on this computer is recorded either way.'
+    }
+  };
+
+  function applyConsentCopy(settings) {
+    const s = settings || {};
+    const variant = s.recordCalls === false ? 'off' : (s.recordVideo === false ? 'audio' : 'video');
+    const copy = CONSENT_COPY[variant];
+    const body = $('consent-body');
+    const note = $('consent-note');
+    const picker = $('source-picker-subtitle');
+    if (body) body.innerHTML = copy.body; // fixed strings above, never user data
+    if (note) note.textContent = copy.note;
+    if (picker) picker.textContent = copy.picker;
+    consentVariant = variant;
+  }
+
+  const oneLine = (el) => ((el && el.textContent) || '').replace(/\s+/g, ' ').trim();
+
+  // The notice exactly as the rep sees it at the click: label, title, body,
+  // warning and note, one per line. The buttons go in `action`.
+  function consentNoticeText() {
+    const modal = $('consent-notice');
+    if (!modal) return '';
+    return Array.from(modal.children)
+      .filter((el) => !el.classList.contains('consent-actions'))
+      .map(oneLine)
+      .filter(Boolean)
+      .join('\n');
+  }
+
+  function consentEvidence(shownAt) {
+    return {
+      accepted: true,
+      version: DISCLOSURE_VERSION,
+      // 'default' if the click beat the settings load: the notice in
+      // overlay.html, which matches the video wording.
+      variant: consentVariant || 'default',
+      text: consentNoticeText(),
+      action: oneLine($('consent-accept')),
+      shownAt,
+      acceptedAt: new Date().toISOString()
+    };
+  }
+
   function showConsentNotice() {
+    consentVariant = null;
+    brutus.getSettings().then(applyConsentCopy).catch(() => {});
     return new Promise((resolve) => {
       const modal = $('consent-notice');
+      const shownAt = new Date().toISOString();
       const finish = (value) => {
         modal.classList.remove('active');
         $('consent-accept').onclick = null;
@@ -385,7 +463,7 @@
         resolve(value);
       };
       pendingConsent = finish;
-      $('consent-accept').onclick = () => finish(true);
+      $('consent-accept').onclick = () => finish(consentEvidence(shownAt));
       $('consent-decline').onclick = () => finish(false);
       modal.classList.add('active');
     });
@@ -489,6 +567,9 @@
       getAuth: () => brutus.getAuth(),
       getSettings: () => brutus.getSettings(),
       setCaptureIntent: (intent) => brutus.setCaptureIntent(intent),
+      recordingBegin: brutus.recordingBegin ? (request) => brutus.recordingBegin(request) : undefined,
+      recordingData: (payload) => brutus.recordingData(payload),
+      recordingEnd: (payload) => brutus.recordingEnd(payload),
       reportCaptureState: (state) => brutus.reportCaptureState(state),
       overlayStopped: (info) => brutus.overlayStopped(info),
       stopMonitoring: () => { brutus.stopMonitoring(); }
@@ -499,7 +580,7 @@
     media: {
       getUserMedia: (constraints) => navigator.mediaDevices.getUserMedia(constraints),
       getDisplayMedia: (constraints) => navigator.mediaDevices.getDisplayMedia(constraints),
-      createRecorder: (stream, mimeType) => new MediaRecorder(stream, { mimeType }),
+      createRecorder: (stream, mimeType, options) => new MediaRecorder(stream, Object.assign({ mimeType }, options || {})),
       createStream: (tracks) => new MediaStream(tracks),
       createBlob: (parts, type) => new Blob(parts, { type }),
       createAudioContext: () => new (window.AudioContext || window.webkitAudioContext)(),
@@ -515,6 +596,7 @@
         sayThisCard.clear();
       },
       resetMetrics,
+      recording: showRecording,
       feedback: (type, text, short) => {
         addFeedback(type, text, short || null);
         if (type === 'brutus') playFeedbackPing();
@@ -536,6 +618,7 @@
         console.log('[say-this] awaiting_rep_reply', `${timing.sinceChunkMs}ms after its chunk was sent`, info),
       live: ({ analyser, screen, startedAt }) => {
         $('screen-capture-toggle').checked = !!screen;
+        $('record-toggle').disabled = false;
         liveStartedAt = startedAt || Date.now();
         if (durationTimer) clearInterval(durationTimer);
         durationTimer = setInterval(updateDuration, 1000);
@@ -544,6 +627,7 @@
       },
       stopped: (result) => {
         sayThisCard.clear();
+        resetRecordToggle();
         stopVisualization();
         setStopping(false);
         showConnection('offline', null);
@@ -562,6 +646,63 @@
       }
     }
   });
+
+  // ==================== RECORD BUTTON ====================
+  // Each call starts recorded (when "Record calls" is on in Settings); the
+  // rep can switch it off and on again at any point in the call. Off means the
+  // rest of the call is not recorded until it is switched back on.
+
+  const RECORDING_REFUSED = {
+    off: 'recording is off in settings. press record to record this call.',
+    disk: "not recording: this computer is almost out of disk space.",
+    signed_out: "not recording: you're signed out.",
+    error: "couldn't start the recording. press record to try again."
+  };
+
+  function setRecordToggle(on, opts) {
+    const o = opts || {};
+    const wrap = $('record-toggle-wrap');
+    const box = $('record-toggle');
+    // A server or build without recordings: no button at all.
+    wrap.hidden = !!o.hide;
+    box.checked = !!on;
+    wrap.classList.toggle('is-blocked', !!o.blocked);
+    const title = on
+      ? 'recording this call. click to stop recording.'
+      : (o.blocked ? o.blocked : 'not recording. click to record the rest of this call.');
+    wrap.title = title;
+    box.setAttribute('aria-label', on ? 'Recording this call. Stop recording' : 'Not recording. Record this call');
+  }
+
+  function resetRecordToggle() {
+    const wrap = $('record-toggle-wrap');
+    wrap.classList.remove('is-busy');
+    $('record-toggle').disabled = true;
+    setRecordToggle(false, { hide: true });
+  }
+
+  function showRecording(info) {
+    const i = info || {};
+    if (i.on) {
+      setRecordToggle(true);
+      if (i.toggled) addFeedback('insight', 'recording again.');
+      else if (i.manual) addFeedback('insight', i.video ? 'recording the rest of this call (video of the shared window + audio).' : 'recording the rest of this call (audio only).');
+      else addFeedback('insight', i.video ? 'recording this call (video of the shared window + audio).' : 'recording this call (audio only).');
+      return;
+    }
+    if (i.toggled) {
+      setRecordToggle(false);
+      addFeedback('insight', "recording off. the rest of this call isn't recorded until you press record again.");
+      return;
+    }
+    if (i.reason === 'unavailable' || i.reason === 'unsupported' || i.reason === 'invalid' || i.reason === 'refused') {
+      setRecordToggle(false, { hide: true });
+      return;
+    }
+    const text = RECORDING_REFUSED[i.reason] || RECORDING_REFUSED.error;
+    setRecordToggle(false, { blocked: i.reason === 'off' ? null : text });
+    addFeedback(i.reason === 'off' ? 'insight' : 'warning', text);
+  }
 
   function setStopping(on) {
     $('close-btn').disabled = on;
@@ -583,6 +724,21 @@
       updateTtsBtn();
     });
     navigator.mediaDevices.addEventListener('devicechange', checkHeadphonesConnected);
+
+    const recordToggle = $('record-toggle');
+    recordToggle.addEventListener('change', async () => {
+      const want = recordToggle.checked;
+      if (session.state !== 'live') { recordToggle.checked = !want; return; }
+      const wrap = $('record-toggle-wrap');
+      recordToggle.disabled = true;
+      wrap.classList.add('is-busy');
+      try {
+        recordToggle.checked = await session.setRecording(want);
+      } finally {
+        wrap.classList.remove('is-busy');
+        recordToggle.disabled = session.state !== 'live';
+      }
+    });
 
     const screenToggle = $('screen-capture-toggle');
     screenToggle.addEventListener('change', async () => {

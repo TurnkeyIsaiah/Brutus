@@ -12,13 +12,15 @@
 // - Audio chunks go through the outbox, which replays them after a reconnect,
 //   and stop waits for delivery before POST /live/end.
 // - Failures are reported as failures.
+// - The call recording (call-recorder.js) runs beside the coaching chunks and
+//   never blocks or breaks them: if it cannot start or write, the call goes on.
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
-    module.exports = factory(require('./chunk-outbox.js'));
+    module.exports = factory(require('./chunk-outbox.js'), require('./call-recorder.js'));
   } else {
-    root.BrutusCaptureSession = factory(root.BrutusChunkOutbox);
+    root.BrutusCaptureSession = factory(root.BrutusChunkOutbox, root.BrutusCallRecorder);
   }
-})(typeof self !== 'undefined' ? self : this, function (Outbox) {
+})(typeof self !== 'undefined' ? self : this, function (Outbox, CallRecorder) {
   'use strict';
 
   const DEFAULT_API_URL = 'https://api.brutusai.coach';
@@ -125,7 +127,12 @@
     let repRecorder = null;
     let prospectRecorder = null;
     let prospectStream = null;
+    let prospectSource = null;
     let videoStream = null;
+    let callRecorder = null;
+    let recordingStart = null; // a startRecording still asking main
+    let micSourceNode = null;  // kept for a recording started mid-call
+    let liveSettings = null;
     let displayStreams = [];
     let repMeter = null;
     let prospectMeter = null;
@@ -134,6 +141,11 @@
     let captureStopping = false;
     let startedAt = 0;
     let chunkStartedAt = 0;
+    // When each channel's current chunk began recording (ms, T.now() clock).
+    // A line's time in the call = its chunk's start - startedAt + Whisper's
+    // segment start, so the chunk start is sent with every chunk.
+    let repChunkAudioAt = 0;
+    let prospectChunkAudioAt = 0;
     let flushTimes = [];
     let lastShotAt = 0;
     let chunkSentAt = new Map(); // timeIntoCall -> when that chunk was first sent
@@ -518,6 +530,8 @@
     }
 
     async function flushChunk(isFinal) {
+      const repStartAt = repChunkAudioAt;
+      const prospectStartAt = prospectChunkAudioAt || repChunkAudioAt;
       try {
         const [repBlob, prospectBlob] = await Promise.all([
           stopAndGetBlob(repRecorder),
@@ -529,10 +543,12 @@
         if (!isFinal && !captureStopping) {
           if (repRecorder && repRecorder.state === 'inactive') {
             try { repRecorder.start(); } catch (_) {}
+            repChunkAudioAt = T.now();
           }
           if (prospectRecorder && prospectRecorder.state === 'inactive') {
             if (prospectStream && hasLiveTrack(prospectStream.getAudioTracks())) {
               try { prospectRecorder.start(); } catch (_) { prospectRecorder = null; }
+              prospectChunkAudioAt = T.now();
             } else {
               prospectRecorder = null; // system audio ended; continue with the rep only
             }
@@ -556,12 +572,18 @@
           screenshot,
           timestamp: T.now(),
           timeIntoCall: Math.floor((T.now() - startedAt) / 1000),
+          // When this chunk's audio began, in ms from the start of the call
+          // (timeIntoCall is when it was sent). The prospect channel can start
+          // later than the rep's, in the chunk where call audio was attached.
+          chunkStartMs: Math.max(0, repStartAt - startedAt),
+          prospectStartMs: Math.max(0, prospectStartAt - startedAt),
           mimeType: 'audio/webm',
           aiNotesEnabled: aiNotes
         });
       } catch (_) {
         if (!isFinal && !captureStopping && repRecorder && repRecorder.state === 'inactive') {
           try { repRecorder.start(); } catch (__) {}
+          repChunkAudioAt = T.now();
         }
       }
     }
@@ -608,8 +630,11 @@
             prospectStream = media.createStream(audioTracks);
             prospectRecorder = media.createRecorder(prospectStream, AUDIO_MIME);
             attachCollector(prospectRecorder);
-            prospectMeter = createMeter(audioCtx.createMediaStreamSource(prospectStream));
+            prospectSource = audioCtx.createMediaStreamSource(prospectStream);
+            prospectMeter = createMeter(prospectSource);
             prospectRecorder.start();
+            prospectChunkAudioAt = T.now();
+            if (callRecorder) callRecorder.addSource(prospectSource);
             ui.feedback('insight', 'capturing both sides of the conversation.');
           } catch (_) {
             prospectRecorder = null;
@@ -627,6 +652,13 @@
     function stopCapture() {
       captureStopping = true;
       if (chunkTimer) { T.clearInterval(chunkTimer); chunkTimer = null; }
+      // Only a call that never went live, or was cancelled, still has a
+      // recording here (a normal end stops it first): it is thrown away.
+      if (callRecorder) {
+        const dropped = callRecorder;
+        callRecorder = null;
+        dropped.abandon().catch(() => {});
+      }
       for (const recorder of [repRecorder, prospectRecorder]) {
         if (recorder && recorder.state !== 'inactive') {
           try { recorder.stop(); } catch (_) {}
@@ -634,10 +666,12 @@
       }
       repRecorder = null;
       prospectRecorder = null;
+      micSourceNode = null;
       stopTracks(micStream);
       micStream = null;
       stopTracks(prospectStream);
       prospectStream = null;
+      prospectSource = null;
       stopVideo();
       displayStreams.forEach(stopTracks);
       displayStreams = [];
@@ -648,6 +682,95 @@
       analyser = null;
       repMeter = null;
       prospectMeter = null;
+    }
+
+    // ---------------- call recording ----------------
+
+    function reportRecording(g, info) {
+      if (g === gen && typeof ui.recording === 'function') ui.recording(info);
+    }
+
+    // Starts the call recording once the window (if any) is known. Off in
+    // Settings, refused by main (disk, account) or unsupported: no recording,
+    // and the call carries on exactly as before. manual: the rep pressed
+    // record in the overlay mid-call (Settings off does not stop that).
+    function startRecording(g, settings, micSource, manual) {
+      if (!CallRecorder || !ipc.recordingBegin) {
+        reportRecording(g, { on: false, reason: 'unsupported' });
+        return Promise.resolve(false);
+      }
+      if (!manual && settings && settings.recordCalls === false) {
+        reportRecording(g, { on: false, reason: 'off' });
+        return Promise.resolve(false);
+      }
+      const rec = CallRecorder.createCallRecorder({ ipc, media, log, timers: T, config: deps.recordingConfig });
+      callRecorder = rec;
+      const videoTrack = videoStream ? (videoStream.getVideoTracks()[0] || null) : null;
+      const run = (async () => {
+        let ok = false;
+        try {
+          ok = await rec.start({
+            audioCtx,
+            sources: [micSource, prospectSource].filter(Boolean),
+            videoTrack,
+            sessionId,
+            startedAt,
+            wantVideo: !(settings && settings.recordVideo === false),
+            manual: !!manual
+          });
+        } catch (_) {
+          ok = false;
+        }
+        if (callRecorder !== rec) {
+          // Stopped meanwhile (stopCapture threw it away): close what started.
+          if (ok) rec.abandon().catch(() => {});
+          return false;
+        }
+        if (!ok) callRecorder = null;
+        reportRecording(g, ok
+          ? { on: true, video: rec.hasVideo, manual: !!manual }
+          : { on: false, reason: rec.lastReason || 'error', manual: !!manual });
+        return ok;
+      })();
+      recordingStart = run;
+      run.finally(() => { if (recordingStart === run) recordingStart = null; }).catch(() => {});
+      return run;
+    }
+
+    function isRecording() {
+      return !!(callRecorder && callRecorder.active && !callRecorder.paused);
+    }
+
+    // The overlay's record button. Off: the rest of the call is not recorded
+    // until it is turned back on (the file keeps its place in time, so the
+    // transcript still lines up). On with no recording yet (off in Settings,
+    // or main refused at the start): starts one now, for the rest of the call.
+    async function setRecording(on) {
+      if (state !== 'live') return isRecording();
+      if (recordingStart) { try { await recordingStart; } catch (_) {} }
+      const g = gen;
+      if (state !== 'live') return false;
+      if (callRecorder && callRecorder.active) {
+        const recording = callRecorder.setPaused(!on);
+        reportRecording(g, { on: recording, video: callRecorder.hasVideo, toggled: true });
+        return recording;
+      }
+      if (!on) return false;
+      const ok = await startRecording(g, liveSettings, micSourceNode, true);
+      return ok && g === gen && state === 'live' && isRecording();
+    }
+
+    // Ends the recording at Stop, before the tracks are released. Never
+    // throws; a recording that cannot be finished is simply not uploaded.
+    async function finishRecording() {
+      const rec = callRecorder;
+      callRecorder = null;
+      if (!rec) return null;
+      try {
+        return await rec.stop();
+      } catch (_) {
+        return null;
+      }
     }
 
     // ---------------- lifecycle ----------------
@@ -674,6 +797,9 @@
         ipc.stopMonitoring();
         return false;
       }
+      // What the rep accepted (version, the notice text, the click). The
+      // server keeps it as consent evidence for this session.
+      const consentRecord = typeof consented === 'object' ? consented : null;
 
       let sourceId = null;
       if (screen) {
@@ -687,6 +813,7 @@
       const auth = await ipc.getAuth();
       const settings = await ipc.getSettings();
       if (!alive()) return false;
+      liveSettings = settings;
       if (!auth || !auth.token) {
         return abortStart(g, "you're signed out. log in to Brutus, then start monitoring.");
       }
@@ -696,7 +823,7 @@
       // so a stop waits for the id and cancels exactly that session.
       let res;
       try {
-        res = await api('/live/start', {}, { timeoutMs: cfg.startTimeoutMs });
+        res = await api('/live/start', consentRecord ? { consent: consentRecord } : {}, { timeoutMs: cfg.startTimeoutMs });
       } catch (_) {
         if (!alive()) return false;
         return abortStart(g, networkError());
@@ -725,6 +852,7 @@
       analyser = audioCtx.createAnalyser();
       analyser.fftSize = 64;
       const micSource = audioCtx.createMediaStreamSource(micStream);
+      micSourceNode = micSource;
       micSource.connect(analyser);
       repMeter = createMeter(micSource);
 
@@ -735,6 +863,8 @@
       repRecorder.start();
       startedAt = T.now();
       chunkStartedAt = startedAt;
+      repChunkAudioAt = startedAt;
+      prospectChunkAudioAt = 0;
       lastShotAt = startedAt;
       flushTimes = [];
       chunkSentAt = new Map();
@@ -744,7 +874,17 @@
       socketWanted = true;
       connectSocket();
 
+      // An audio-only recording starts with the call (the computer's audio
+      // joins the mix when it attaches). A recording with the window's video
+      // has to wait for that window.
+      const recordWindow = !!sourceId && !(settings && settings.recordVideo === false);
+      const audioRecording = recordWindow ? null : startRecording(g, settings, micSource);
+
       const screenOn = await attachDisplay(g, sourceId, true);
+      if (!alive()) { if (audioRecording) await audioRecording; return false; }
+
+      if (audioRecording) await audioRecording;
+      else await startRecording(g, settings, micSource);
       if (!alive()) return false;
 
       setState('live');
@@ -800,6 +940,8 @@
         captureStopping = true;
         if (chunkTimer) { T.clearInterval(chunkTimer); chunkTimer = null; }
         try { await enqueueFlush(() => flushChunk(true)); } catch (_) {}
+        if (recordingStart) { try { await recordingStart; } catch (_) {} }
+        await finishRecording();
         stopCapture();
 
         if (!wsConnected && socketWanted && !reconnectTimer) connectSocket();
@@ -838,6 +980,7 @@
       if (state !== 'live') return !!on;
       if (!on) {
         stopVideo();
+        if (callRecorder) callRecorder.stopVideo();
         ui.feedback('insight', 'screen capture off. Brutus still hears the call.');
         return false;
       }
@@ -857,6 +1000,8 @@
       start,
       stop,
       setScreen,
+      setRecording,
+      get recording() { return isRecording(); },
       setAiNotes(on) { aiNotes = !!on; },
       sendChat(text) {
         return sendRaw({ type: 'chat_message', payload: { message: text } });

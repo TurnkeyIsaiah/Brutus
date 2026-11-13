@@ -52,6 +52,35 @@ test('declining consent stops monitoring without contacting the server', async (
   assert.ok(env.ipcCalls.some(([name]) => name === 'stopMonitoring'));
 });
 
+test('the notice the rep accepted goes to /live/start as consent evidence', async () => {
+  const notice = {
+    accepted: true,
+    version: 'REC-2026-11-12',
+    variant: 'audio',
+    text: 'recording notice\nget consent before you record',
+    action: 'i have consent — continue',
+    shownAt: '2026-11-12T10:00:00.000Z',
+    acceptedAt: '2026-11-12T10:00:04.000Z'
+  };
+  const env = createEnv({ autoConsent: false });
+  const session = createCaptureSession(env.deps());
+  const started = session.start({ screen: false });
+  await waitFor(() => env.consent, 'consent prompt');
+  env.consent.resolve(notice);
+  await started;
+
+  assert.equal(session.state, 'live');
+  assert.deepEqual(env.requestsTo('/live/start')[0].body, { consent: notice });
+  await session.stop({});
+});
+
+test('a plain yes from the consent prompt starts with an empty body', async () => {
+  const env = createEnv();
+  const session = await startLive(env);
+  assert.deepEqual(env.requestsTo('/live/start')[0].body, {});
+  await session.stop({});
+});
+
 test('stop during the source picker starts nothing', async () => {
   const env = createEnv();
   const session = createCaptureSession(env.deps());

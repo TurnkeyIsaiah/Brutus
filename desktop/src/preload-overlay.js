@@ -15,6 +15,11 @@ contextBridge.exposeInMainWorld('brutus', {
   getScreenSources: () => ipcRenderer.invoke('get-screen-sources'),
   setCaptureIntent: (intent) => ipcRenderer.invoke('set-capture-intent', intent),
 
+  // Call recording: pieces go to main, which writes the file and uploads it.
+  recordingBegin: (request) => ipcRenderer.invoke('recording-begin', request || {}),
+  recordingData: (payload) => ipcRenderer.invoke('recording-data', payload || {}),
+  recordingEnd: (payload) => ipcRenderer.invoke('recording-end', payload || {}),
+
   stopMonitoring: () => ipcRenderer.invoke('stop-monitoring'),
   onMonitoringStarted: (callback) => subscribe('monitoring-started', callback),
   onMonitoringStopped: (callback) => subscribe('monitoring-stopped', callback),

@@ -648,7 +648,25 @@ function paperAnnotateTurns(call, turns) {
   }));
 }
 
+/* Live calls saved since call recordings carry transcriptLines: the same
+ * turns as the text transcript, each with its start on the call clock. */
+function paperTimedTurns(call) {
+  const lines = window.BrutusCallPlayer ? window.BrutusCallPlayer.callLines(call) : null;
+  if (!lines || !lines.length) return null;
+  return lines.map((l) => {
+    const turn = { speaker: l.speaker, text: l.text };
+    if (l.startSec != null) turn.offsetSec = l.startSec;
+    return turn;
+  });
+}
+
+function paperRecordingReady(call) {
+  return !!(window.BrutusCallPlayer && window.BrutusCallPlayer.recordingState(call) === 'ready');
+}
+
 function paperTranscriptTurns(call) {
+  const timed = paperTimedTurns(call);
+  if (timed) return timed;
   const raw = call && call.transcript;
   if (Array.isArray(raw)) return raw;
   if (raw && typeof raw === 'object' && Array.isArray(raw.turns)) return raw.turns;
@@ -685,13 +703,16 @@ function paperCallTranscript(call) {
   const f = paperCdFacts(call);
   const turns = paperAnnotateTurns(call, paperTranscriptTurns(call));
 
+  const canJump = paperRecordingReady(call);
   const turnRows = turns
     .map((row) => {
       const t = row.turn;
       const isRep = t.speaker === 'rep';
       const jump = row.seconds == null
         ? ''
-        : `<button type="button" class="p-ts-jump" data-seek-sec="${row.seconds}">${esc(paperFormatOffset(row.seconds))}</button>`;
+        : canJump
+          ? `<button type="button" class="p-ts-jump" data-seek-sec="${row.seconds}" aria-label="Play from ${esc(paperFormatOffset(row.seconds))}">${esc(paperFormatOffset(row.seconds))}</button>`
+          : `<span class="p-ts-stamp">${esc(paperFormatOffset(row.seconds))}</span>`;
       return `
         <div class="p-ts-turn p-ts-turn--${isRep ? 'rep' : 'prospect'}${t.flag ? ' p-ts-turn--flag' : ''}" data-speaker="${isRep ? 'rep' : 'prospect'}">
           <div class="p-ts-label"><span>${isRep ? 'REP' : 'PROSPECT'}</span>${jump}</div>
@@ -860,11 +881,47 @@ function paperCallNotes(call) {
  * Recording / player block — 07-call-recording.jsx
  * The 74-bar waveform reproduces the JSX sequence exactly: heights run
  * 16 + ((7 * (i + 1)) % 52) px and every 9th bar (i % 9 === 8) is #FF6550.
+ *
+ * Calls with a stored recording get a real player (call-player.js wires it
+ * when the panel opens): a <video> when the rep shared a window, otherwise
+ * the waveform with an <audio>. The media src is a short-lived signed URL
+ * fetched on open, never baked into the markup. Calls without a recording
+ * say so instead of showing an empty player.
  * ---------------------------------------------------------------------- */
+function paperRecordingUpload(call) {
+  const list = Array.isArray(window.__brutusRecordingUploads) ? window.__brutusRecordingUploads : [];
+  if (!call || !call.sessionId) return null;
+  return list.find((u) => u && u.sessionId === call.sessionId) || null;
+}
+
+function paperRecordingUploadText(upload) {
+  if (!upload) return '';
+  const pct = upload.total > 0 ? Math.min(100, Math.floor((upload.sent / upload.total) * 100)) : 0;
+  if (upload.state === 'uploading') return `uploading from this computer: ${pct}%`;
+  if (upload.state === 'finishing' || upload.state === 'recording') return 'saving the recording on this computer...';
+  if (upload.reason === 'offline') return `waiting for a connection to upload (${pct}% sent). it picks up again by itself.`;
+  if (upload.reason === 'signed out') return 'sign in to upload this recording.';
+  if (upload.reason) return `waiting to upload (${upload.reason}). it retries by itself.`;
+  return 'waiting to upload...';
+}
+
 function paperCallRecording(call) {
   const f = paperCdFacts(call);
-  const rec = call.recording || {};
+  const rec = call.recording && typeof call.recording === 'object' ? call.recording : {};
+  const state = window.BrutusCallPlayer ? window.BrutusCallPlayer.recordingState(call) : 'none';
+  const ready = state === 'ready';
+  const hasVideo = ready && !!rec.hasVideo;
+  const local = paperRecordingUpload(call);
+  const durationMs = Number(rec.durationMs) || (Number(call.durationSeconds) || 0) * 1000;
+  const offsetMs = Number(rec.startOffsetMs) || 0;
+  // Stretches the rep switched recording off: "startMs-endMs,..." for the player.
+  const pausesAttr = (Array.isArray(rec.pauses) ? rec.pauses : [])
+    .map((p) => [Math.round(Number(p && p.startMs)), Math.round(Number(p && p.endMs))])
+    .filter(([a, b]) => Number.isFinite(a) && Number.isFinite(b) && b > a)
+    .map(([a, b]) => `${a}-${b}`)
+    .join(',');
   const turns = paperTranscriptTurns(call);
+  const clock = window.BrutusCallPlayer ? window.BrutusCallPlayer.formatClock : paperFormatOffset;
 
   let bars = '';
   for (let i = 0; i < 74; i++) {
@@ -872,27 +929,80 @@ function paperCallRecording(call) {
     bars += `<div class="p-rec-bar${i % 9 === 8 ? ' p-rec-bar--hot' : ''}" style="height:${h}px"></div>`;
   }
 
-  const progress = Math.max(0, Math.min(100, Number(rec.progressPct) || 0));
-  const audioSrc = rec.src || rec.url || call.audioUrl || call.recordingUrl || '';
-  const audio = `<audio class="p-rec-audio" preload="metadata" data-duration="${Number(call.durationSeconds) || 0}"${audioSrc ? ` src="${esc(audioSrc)}"` : ''}></audio>`;
+  let stage;
+  if (hasVideo) {
+    stage = `
+      <div class="p-rec-stage">
+        <video class="p-rec-video" preload="metadata" playsinline disablepictureinpicture controlslist="nodownload noremoteplayback"></video>
+      </div>`;
+  } else if (ready) {
+    stage = `
+      <div class="p-rec-wave" role="img" aria-label="Audio recording">${bars}</div>
+      <audio class="p-rec-audio" preload="metadata"></audio>`;
+  } else if (state === 'uploading' || local) {
+    stage = `
+      <div class="p-rec-empty">
+        <div class="p-rec-empty-title">The recording isn't ready yet</div>
+        <div class="p-rec-empty-text p-rec-upload" data-session-id="${esc(String(call.sessionId || ''))}">${esc(paperRecordingUploadText(local) || 'it is still uploading from the computer that recorded the call.')}</div>
+      </div>`;
+  } else {
+    stage = `
+      <div class="p-rec-empty">
+        <div class="p-rec-empty-title">No recording for this call</div>
+        <div class="p-rec-empty-text">Calls are recorded from the desktop app when recording is on in Settings. Calls from before call recordings, uploaded files and cancelled calls have no recording.</div>
+      </div>`;
+  }
 
+  const controls = ready
+    ? `
+      <div class="p-rec-controls">
+        <button type="button" class="p-rec-play" aria-label="Play recording">
+          <svg class="p-rec-icon-play" width="15" height="17" viewBox="0 0 15 17" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <path d="M2 1L14 8.5L2 16Z" fill="#FF6550"/>
+          </svg>
+          <svg class="p-rec-icon-pause" width="14" height="16" viewBox="0 0 14 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <rect x="1" y="1" width="4" height="14" fill="#FF6550"/><rect x="9" y="1" width="4" height="14" fill="#FF6550"/>
+          </svg>
+        </button>
+        <div class="p-rec-track-wrap">
+          <div class="p-rec-track">
+            <div class="p-rec-fill" style="width:0%"></div>
+            <div class="p-rec-knob"></div>
+          </div>
+          <div class="p-rec-times">
+            <div class="p-rec-pos">0:00</div>
+            <div class="p-rec-dur">${durationMs > 0 ? esc(clock(durationMs / 1000)) : ''}</div>
+          </div>
+        </div>
+      </div>
+      <div class="p-rec-status" role="status" hidden></div>`
+    : '';
+
+  const timed = ready && turns.some((t) => typeof t.offsetSec === 'number');
   const turnRows = turns
     .map((t) => {
       const speaker = t.speaker === 'rep' ? 'REP' : 'PROSPECT';
+      const at = typeof t.offsetSec === 'number' && Number.isFinite(t.offsetSec) ? t.offsetSec : null;
+      const stamp = at != null ? `<span class="p-rec-stamp">${esc(clock(at))}</span>` : '';
       const label = t.flag && t.time ? `${speaker}\n${esc(t.time)}` : speaker;
       const text = t.flag && t.hotText
         ? `<div>${esc(t.text || '')} </div><div class="p-rec-hot">${esc(t.hotText)}</div>`
         : esc(t.text || '');
+      const seekable = ready && at != null;
       return `
-        <div class="p-rec-turn${t.flag ? ' p-rec-turn--flag' : ''}">
-          <div class="p-rec-speaker">${label}</div>
+        <div class="p-rec-turn${t.flag ? ' p-rec-turn--flag' : ''}${seekable ? ' p-rec-turn--seek' : ''}"${seekable ? ` data-start="${at}" role="button" tabindex="0" aria-label="Play from ${esc(clock(at))}"` : ''}>
+          <div class="p-rec-speaker">${label}${stamp}</div>
           <div class="p-rec-text">${text}</div>
         </div>`;
     })
     .join('');
 
+  const meta = ready
+    ? [hasVideo ? 'video + audio' : 'audio only', durationMs > 0 ? clock(durationMs / 1000) : ''].filter(Boolean).join(' | ')
+    : '';
+
   return `
-    <div class="p-rec">
+    <div class="p-rec${hasVideo ? ' p-rec--video' : ''}" data-call-id="${esc(String(call.id || ''))}" data-rec-state="${state}" data-offset-ms="${offsetMs}" data-duration-ms="${durationMs}" data-pauses="${esc(pausesAttr)}">
       <div class="p-rec-head">
         <div>
           <div class="p-rec-kicker">CALL RECORDING</div>
@@ -900,33 +1010,27 @@ function paperCallRecording(call) {
             <div class="p-rec-title">${esc(f.name)}${rec.when ? ' | ' + esc(rec.when) : ''}</div>
           </div>
         </div>
-        <div class="p-rec-meta">${esc(rec.meta || '')}</div>
+        <div class="p-rec-head-side">
+          <div class="p-rec-meta">${esc(meta)}</div>
+          ${ready ? '<button type="button" class="p-rec-delete" data-action="delete-recording">Delete recording</button>' : ''}
+        </div>
       </div>
-      <div class="p-rec-wave" role="img" aria-label="Audio waveform">${bars}</div>
-      ${audio}
-      <div class="p-rec-controls">
-        <button type="button" class="p-rec-play" aria-label="Play recording">
-          <svg width="15" height="17" viewBox="0 0 15 17" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-            <path d="M2 1L14 8.5L2 16Z" fill="#FF6550"/>
-          </svg>
-        </button>
-        <div class="p-rec-track-wrap">
-          <div class="p-rec-track">
-            <div class="p-rec-fill" style="width:${progress}%"></div>
-            <div class="p-rec-knob"></div>
-          </div>
-          <div class="p-rec-times">
-            <div>${esc(rec.position || '')}</div>
-            <div>${esc(rec.duration || '')}</div>
+      <div class="p-rec-body">
+        <div class="p-rec-left">
+          ${stage}
+          ${controls}
+        </div>
+        <div class="p-rec-right">
+          <div class="p-rec-right-inner">
+            <div class="p-rec-rule"></div>
+            <div class="p-rec-ts-head">
+              <div class="p-rec-ts-title">Transcript</div>
+              <div class="p-rec-ts-hint">${timed ? 'click a line to jump there' : 'scroll to read the full call'}</div>
+            </div>
+            <div class="p-rec-turns">${turnRows}</div>
           </div>
         </div>
       </div>
-      <div class="p-rec-rule"></div>
-      <div class="p-rec-ts-head">
-        <div class="p-rec-ts-title">Transcript</div>
-        <div class="p-rec-ts-hint">scroll to read the full call</div>
-      </div>
-      <div class="p-rec-turns">${turnRows}</div>
     </div>`;
 }
 
@@ -1313,11 +1417,10 @@ if (typeof window.esc !== 'function') {
     };
 }
 
-function paperSeekRecording(seconds) {
-  if (typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds < 0) return;
-  const audio = document.querySelector('#call-recording-panel audio');
+/* Shows the recording panel (hiding the tab panels) and returns it. */
+function paperShowRecordingPanel() {
   const panel = document.getElementById('call-recording-panel');
-  if (!audio || !panel) return;
+  if (!panel) return null;
   ['overview', 'coaching', 'transcript', 'notes'].forEach((name) => {
     const tabPanel = document.getElementById('calltab-' + name);
     if (tabPanel) tabPanel.hidden = true;
@@ -1327,16 +1430,28 @@ function paperSeekRecording(seconds) {
     if (tab.hasAttribute('aria-selected')) tab.setAttribute('aria-selected', 'false');
   });
   panel.hidden = false;
-  try { audio.currentTime = seconds; } catch (_) { /* media not seekable yet */ }
-  const duration = Number(audio.duration) || Number(audio.getAttribute('data-duration')) || 0;
-  const fill = panel.querySelector('.p-rec-fill');
-  if (fill && duration > 0) fill.style.width = Math.min(100, (seconds / duration) * 100) + '%';
-  const position = panel.querySelector('.p-rec-times div');
-  if (position) position.textContent = paperFormatOffset(seconds);
-  if (typeof audio.play === 'function') {
-    const pending = audio.play();
-    if (pending && typeof pending.catch === 'function') pending.catch(() => {});
-  }
+  return panel;
+}
+
+/* The player for the open call (wired once per rendered call). The signed
+   URL comes from app.js (window.brutusRecordingUrl), which owns API calls. */
+function paperRecordingPlayer(panel) {
+  if (!panel || !window.BrutusCallPlayer) return null;
+  const rec = panel.querySelector('.p-rec');
+  if (!rec || rec.getAttribute('data-rec-state') !== 'ready') return null;
+  return window.BrutusCallPlayer.mount(panel, {
+    getUrl: (callId) => (typeof window.brutusRecordingUrl === 'function'
+      ? window.brutusRecordingUrl(callId)
+      : Promise.reject(new Error('no recording url source')))
+  });
+}
+
+/* seconds: on the call clock (a transcript line's time). */
+function paperSeekRecording(seconds) {
+  if (typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds < 0) return;
+  const panel = paperShowRecordingPanel();
+  const player = paperRecordingPlayer(panel);
+  if (player) player.seekCallTime(seconds, true);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1472,6 +1587,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const audio = document.getElementById('desktop-audio-feedback');
                 const interval = document.getElementById('desktop-min-feedback-interval');
                 const voice = document.getElementById('desktop-tts-voice');
+                const recordCalls = document.getElementById('desktop-record-calls');
+                const recordVideo = document.getElementById('desktop-record-video');
                 const apiUrl = (settings && typeof settings.apiUrl === 'string' && settings.apiUrl.trim())
                     ? settings.apiUrl.trim()
                     : 'https://api.brutusai.coach';
@@ -1483,6 +1600,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (opacityValue) opacityValue.textContent = pct + '%';
                 if (audio) audio.checked = !!(settings && settings.audioFeedback);
                 if (interval) interval.value = String((settings && settings.minFeedbackInterval) || 20);
+                if (recordCalls) recordCalls.checked = !(settings && settings.recordCalls === false);
+                if (recordVideo) {
+                    recordVideo.checked = !(settings && settings.recordVideo === false);
+                    recordVideo.disabled = !!(recordCalls && !recordCalls.checked);
+                }
                 if (voice && settings && DESKTOP_VOICES.indexOf(settings.ttsVoice) !== -1) {
                     voice.value = settings.ttsVoice;
                 }
@@ -1530,6 +1652,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const recordCallsBox = document.getElementById('desktop-record-calls');
+    const recordVideoBox = document.getElementById('desktop-record-video');
+    if (recordCallsBox && recordVideoBox) {
+        // Video only means something while recording is on.
+        recordCallsBox.addEventListener('change', () => {
+            recordVideoBox.disabled = !recordCallsBox.checked;
+        });
+    }
+
     const saveSettingsBtn = document.getElementById('desktop-settings-save');
     if (saveSettingsBtn && window.brutus && window.brutus.setSettings) {
         saveSettingsBtn.addEventListener('click', async () => {
@@ -1558,7 +1689,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 audioFeedback: document.getElementById('desktop-audio-feedback').checked,
                 minFeedbackInterval: parseInt(document.getElementById('desktop-min-feedback-interval').value, 10) || 20,
                 ttsVoice: document.getElementById('desktop-tts-voice').value || '',
-                whiteBackground: !!(whiteBgBtn && whiteBgBtn.getAttribute('aria-pressed') === 'true')
+                whiteBackground: !!(whiteBgBtn && whiteBgBtn.getAttribute('aria-pressed') === 'true'),
+                recordCalls: !!document.getElementById('desktop-record-calls')?.checked,
+                recordVideo: !!document.getElementById('desktop-record-video')?.checked
             };
             const apiChanged = apiUrl !== desktopLoadedApiUrl;
             saveSettingsBtn.disabled = true;
@@ -1597,35 +1730,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const showRec = e.target.closest('[data-action="show-recording"]');
         if (showRec) {
-            const panel = document.getElementById('call-recording-panel');
-            const audio = panel && panel.querySelector('audio');
-            if (panel) {
-                ['overview', 'coaching', 'transcript', 'notes'].forEach((name) => {
-                    const tabPanel = document.getElementById('calltab-' + name);
-                    if (tabPanel) tabPanel.hidden = true;
+            const panel = paperShowRecordingPanel();
+            const player = paperRecordingPlayer(panel);
+            if (player && player.media && player.media.paused) {
+                player.load().then((ok) => {
+                    if (!ok) return;
+                    const pending = player.media.play();
+                    if (pending && typeof pending.catch === 'function') pending.catch(() => {});
                 });
-                document.querySelectorAll('[data-calltab]').forEach((tab) => {
-                    tab.classList.remove('active');
-                    if (tab.hasAttribute('aria-selected')) tab.setAttribute('aria-selected', 'false');
-                });
-                panel.hidden = false;
-            }
-            if (audio && typeof audio.play === 'function' && audio.paused) {
-                const pending = audio.play();
-                if (pending && typeof pending.catch === 'function') pending.catch(() => {});
-            }
-            return;
-        }
-
-        const play = e.target.closest('.p-rec-play');
-        if (play) {
-            const audio = document.querySelector('#call-recording-panel audio');
-            if (!audio || typeof audio.play !== 'function') return;
-            if (audio.paused) {
-                const pending = audio.play();
-                if (pending && typeof pending.catch === 'function') pending.catch(() => {});
-            } else if (typeof audio.pause === 'function') {
-                audio.pause();
             }
             return;
         }
@@ -1806,8 +1918,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const recording = document.getElementById('call-recording-panel');
             if (recording) {
                 recording.hidden = true;
-                const audio = recording.querySelector('audio');
-                if (audio && typeof audio.pause === 'function') audio.pause();
+                if (window.BrutusCallPlayer) window.BrutusCallPlayer.stopAll();
             }
         });
     });
