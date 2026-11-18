@@ -68,6 +68,48 @@ test('main process wiring', async (t) => {
     assert.equal(main.invoke('get-monitoring-state', mainContents()), 'live');
   });
 
+  await t.test('the overlay stays on top at the screen-saver level and is in the taskbar, still content-protected', () => {
+    const overlay = main.overlay();
+    assert.equal(overlay.options.skipTaskbar, false, 'its own button in the Brutus taskbar group');
+    assert.equal(overlay.contentProtection, true);
+    const lastShow = overlay.calls.map((c) => c[0]).lastIndexOf('show');
+    const onTop = overlay.calls.map((c, i) => [c, i]).filter(([c]) => c[0] === 'setAlwaysOnTop');
+    assert.ok(onTop.length >= 2, 'set at creation and again on show');
+    assert.deepEqual(onTop.at(-1)[0], ['setAlwaysOnTop', true, 'screen-saver']);
+    assert.ok(onTop.at(-1)[1] > lastShow, 're-applied after show');
+  });
+
+  await t.test('dragging the overlay never changes its size, even when Windows reports it a pixel off', async () => {
+    const overlay = main.overlay();
+    const drag = async (mode, edge, points) => {
+      main.cursor = { x: 500, y: 500 };
+      main.emit('overlay-gesture-begin', overlayContents(), { mode, edge });
+      for (const point of points) {
+        main.cursor = point;
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      main.emit('overlay-gesture-end', overlayContents());
+    };
+    main.reportedWidthOffset = 2;
+    try {
+      overlay.calls.length = 0;
+      for (let i = 0; i < 3; i++) await drag('move', '', [{ x: 520, y: 510 }, { x: 540, y: 530 }]);
+      const moves = overlay.calls.filter((c) => c[0] === 'setBounds').map((c) => c[1]);
+      assert.ok(moves.length >= 3, 'the drags moved the window');
+      assert.ok(moves.every((b) => b.width === 380 && b.height === 620), `size held: ${JSON.stringify(moves)}`);
+      assert.equal(overlay.calls.filter((c) => c[0] === 'setPosition').length, 0, 'no setPosition (it writes the live size back)');
+
+      overlay.calls.length = 0;
+      await drag('resize', 'se', [{ x: 530, y: 520 }]);
+      await drag('move', '', [{ x: 560, y: 560 }]);
+      const sizes = overlay.calls.filter((c) => c[0] === 'setBounds').map((c) => [c[1].width, c[1].height]);
+      assert.deepEqual(sizes[0], [410, 640], 'resize starts from the remembered size, not the reported one');
+      assert.deepEqual(sizes.at(-1), [410, 640], 'the next move keeps the resized size');
+    } finally {
+      main.reportedWidthOffset = 0;
+    }
+  });
+
   await t.test('only the overlay may set a capture intent, and it is used once', async () => {
     const intent = { screenSourceId: 'window:7:0', systemAudio: true };
     assert.equal(main.invoke('set-capture-intent', mainContents(), intent), undefined, 'main window refused');

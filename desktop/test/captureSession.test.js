@@ -309,3 +309,141 @@ test('a socket that never finishes its handshake is replaced', async () => {
   await waitFor(() => env.sockets.length >= 3, 'hung handshake replaced', 3000);
   await session.stop({ mode: 'cancel' });
 });
+
+// ---------------- utterance chunking (fake clock, shipped thresholds) ----------------
+
+const SPEECH = 0.05;
+const CLOCKED = { heartbeatMs: 1e9 }; // keep the heartbeat out of fake time
+
+function say(env, ms, channel = 'rep') {
+  env[`${channel}Level`] = SPEECH;
+  env.clock.advance(ms);
+  env[`${channel}Level`] = 0;
+}
+
+test('a pause after speech ends the chunk; silence and a short pause do not', async () => {
+  const env = createEnv({ clock: true });
+  const session = await startLive(env, { config: CLOCKED });
+
+  env.clock.advance(3000); // nobody talking
+  say(env, 1000);
+  env.clock.advance(500); // a 500ms pause is not the end of the utterance
+  await tick(20);
+  assert.equal(env.monitoringMessages().length, 0);
+
+  say(env, 500);
+  env.clock.advance(700);
+  await waitFor(() => env.monitoringMessages().length === 1, 'chunk after the pause');
+  const chunk = env.monitoringMessages()[0].payload;
+  assert.equal(chunk.seq, 1);
+  assert.ok(chunk.repAudio && chunk.prospectAudio, 'both channels flushed together');
+  assert.deepEqual(env.chunkLogs()[0].slice(0, 3), ['chunk', 'pause', '5700ms']);
+
+  // The final flush, acks and lastSeq work as before.
+  await session.stop({});
+  const chunks = env.monitoringMessages();
+  assert.deepEqual(chunks.map((m) => m.payload.seq), [1, 2]);
+  assert.equal(env.requestsTo('/live/end')[0].body.lastSeq, 2);
+  assert.ok(!env.feedback.some(([, text]) => /could not be sent/.test(text)), 'every chunk acked');
+});
+
+test('a pause never flushes a chunk shorter than 1.5s', async () => {
+  const env = createEnv({ clock: true });
+  const session = await startLive(env, { config: CLOCKED });
+
+  say(env, 300);
+  env.clock.advance(700); // utterance over at 1.0s
+  await tick(20);
+  assert.equal(env.monitoringMessages().length, 0);
+
+  env.clock.advance(500);
+  await waitFor(() => env.monitoringMessages().length === 1, 'chunk at the floor');
+  assert.deepEqual(env.chunkLogs()[0].slice(0, 3), ['chunk', 'pause', '1500ms']);
+  await session.stop({});
+});
+
+test('a long monologue is cut every 8 seconds', async () => {
+  const env = createEnv({ clock: true });
+  const session = await startLive(env, { config: CLOCKED });
+
+  say(env, 20000);
+  await waitFor(() => env.monitoringMessages().length === 2, 'two capped chunks');
+  assert.deepEqual(env.chunkLogs().map((entry) => entry.slice(1, 3)), [['cap', '8000ms'], ['cap', '8000ms']]);
+  await session.stop({});
+});
+
+test('the prospect finishing ends the chunk even while the rep keeps talking', async () => {
+  const env = createEnv({ clock: true });
+  const session = await startLive(env, { config: CLOCKED });
+
+  env.repLevel = SPEECH;
+  say(env, 2000, 'prospect');
+  env.clock.advance(700);
+  env.repLevel = 0;
+  await waitFor(() => env.monitoringMessages().length === 1, 'chunk after the prospect stopped');
+  assert.deepEqual(env.chunkLogs()[0].slice(0, 3), ['chunk', 'pause', '2700ms']);
+  await session.stop({});
+});
+
+test('no more than maxChunksPerMinute chunks go out in any minute', async () => {
+  const env = createEnv({ clock: true });
+  const session = await startLive(env, { config: Object.assign({ maxChunksPerMinute: 3 }, CLOCKED) });
+
+  for (let i = 0; i < 20; i++) { // a pause every 1.7s, for 34s
+    say(env, 1000);
+    env.clock.advance(700);
+  }
+  assert.equal(env.chunkLogs().length, 3);
+
+  env.clock.advance(27000); // 61s in: the first chunk (at 1.7s) is still inside the minute
+  assert.equal(env.chunkLogs().length, 3);
+  env.clock.advance(1000);
+  assert.equal(env.chunkLogs().length, 4, 'budget frees up after a minute');
+
+  await waitFor(() => env.monitoringMessages().length === 4, 'four chunks sent');
+  await session.stop({});
+});
+
+test('screenshots are taken about every 2 minutes, whatever the chunk count', async () => {
+  const env = createEnv({ clock: true, autoPick: 'window:42:0' });
+  const session = await startLive(env, { screen: true, config: CLOCKED });
+
+  for (let i = 1; i <= 38; i++) { // ~5 minutes of 8s chunks
+    env.clock.advance(8000);
+    await waitFor(() => env.monitoringMessages().length === i, `chunk ${i}`);
+  }
+  assert.equal(env.screenshots, 2);
+  const shotSeqs = env.monitoringMessages().filter((m) => m.payload.screenshot).map((m) => m.payload.seq);
+  assert.deepEqual(shotSeqs, [15, 30]);
+  await session.stop({});
+});
+
+// ---------------- "say this" events ----------------
+
+test('say_this, say_this_resolved and awaiting_rep_reply reach the ui with their timing', async () => {
+  const env = createEnv({ clock: true });
+  const session = await startLive(env, { config: CLOCKED });
+
+  say(env, 1000);
+  env.clock.advance(700);
+  await waitFor(() => env.monitoringMessages().length === 1, 'chunk sent');
+  const { timeIntoCall } = env.monitoringMessages()[0].payload;
+
+  const card = {
+    id: 'card-1', trigger: 'objection', objectionType: 'price',
+    line: "what's it costing you to leave this unfixed?", why: 'back to their pain',
+    source: 'generated', timestamp: timeIntoCall
+  };
+  env.clock.advance(1200);
+  env.sockets[0].serverSend({ type: 'say_this', payload: card });
+  env.clock.advance(300);
+  const question = { sessionId: 'sess-1', questionText: 'how long does setup take?', timestamp: timeIntoCall };
+  env.sockets[0].serverSend({ type: 'awaiting_rep_reply', payload: question });
+  env.sockets[0].serverSend({ type: 'say_this_resolved', payload: { id: 'card-1', resolution: 'used' } });
+
+  assert.deepEqual(env.sayThis, [[card, { sinceChunkMs: 1200 }]]);
+  assert.deepEqual(env.awaiting, [[question, { sinceChunkMs: 1500 }]]);
+  assert.deepEqual(env.resolved, [[{ id: 'card-1', resolution: 'used' }, { sinceChunkMs: 1500 }]]);
+  assert.equal(session.state, 'live');
+  await session.stop({});
+});

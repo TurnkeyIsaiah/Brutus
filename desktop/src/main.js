@@ -45,6 +45,11 @@ let mainWindow = null;
 let overlayWindow = null;
 let mascotWindow = null;
 let overlayGesture = null;
+// The size the overlay was last asked to be. Moves keep it and resizes start
+// from it; the live size is not read back for either, because at 125% DPI the
+// frameless window reports a width a pixel or two off what it was given, and
+// writing that back grew the panel on every drag.
+let overlaySize = { width: 380, height: 620 };
 let mascotGesture = null;
 let mascotWanted = false;
 let appIsQuitting = false;
@@ -233,15 +238,20 @@ function openInAppSettings() {
 function createOverlayWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   
+  overlaySize = { width: 380, height: 620 };
   overlayWindow = new BrowserWindow({
-    width: 380,
-    height: 620,
+    width: overlaySize.width,
+    height: overlaySize.height,
     x: width - 400,
     y: 100,
     frame: false,
     backgroundColor: '#000000',
     alwaysOnTop: true,
-    skipTaskbar: true,
+    // Shown in the Brutus taskbar group so hovering it previews the overlay.
+    // Content protection still applies: a DWM thumbnail of the overlay (what
+    // the taskbar preview draws) captures as empty, so a full-screen share
+    // that catches the preview does not show the coaching.
+    skipTaskbar: false,
     resizable: true,
     movable: true,
     minimizable: false,
@@ -249,6 +259,10 @@ function createOverlayWindow() {
     webPreferences: secureWebPreferences('preload-overlay.js', { backgroundThrottling: false })
   });
   lockNavigation(overlayWindow);
+  // The alwaysOnTop option above does not take on Windows (isAlwaysOnTop() is
+  // false right after construction), which left the panel behind browsers.
+  // Set it explicitly, at the mascot's level, and again on every show.
+  keepOverlayOnTop();
 
   // Keeps the coaching panel out of screen shares and out of the screenshots
   // Brutus takes itself.
@@ -261,6 +275,14 @@ function createOverlayWindow() {
   });
   overlayWindow.on('show', () => {
     applyOverlayOpacity();
+    keepOverlayOnTop();
+  });
+  // A resize by the window's own edges (not one of ours: setBounds does not
+  // emit this) becomes the size later moves keep.
+  overlayWindow.on('resized', () => {
+    if (overlayGesture || !overlayWindow || overlayWindow.isDestroyed()) return;
+    const { width: w, height: h } = overlayWindow.getBounds();
+    overlaySize = { width: w, height: h };
   });
 
   overlayWindow.webContents.on('did-start-loading', () => {
@@ -332,8 +354,15 @@ function showOverlay() {
   applyOverlayOpacity();
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.show();
+    keepOverlayOnTop();
+    overlayWindow.moveTop();
     overlayWindow.focus();
   }
+}
+
+function keepOverlayOnTop() {
+  if (!overlayWindow || overlayWindow.isDestroyed()) return;
+  overlayWindow.setAlwaysOnTop(true, 'screen-saver');
 }
 
 function hideOverlay() {
@@ -683,7 +712,12 @@ function tickOverlayGesture(session) {
     const y = Math.round(session.originBounds.y + (point.y - session.originCursor.y));
     const current = overlayWindow.getBounds();
     if (current.x !== x || current.y !== y) {
-      try { overlayWindow.setPosition(x, y, false); } catch (_) { endOverlayGesture(); }
+      // setPosition on Windows is setBounds with the live size, and at 125%
+      // DPI each call adds about a pixel, so a held drag grew the panel (178px
+      // over a 2s drag). Moving passes the remembered size instead and never
+      // writes the live size back (same fix as placeLilBrutus).
+      const size = { width: session.originBounds.width, height: session.originBounds.height };
+      try { overlayWindow.setBounds({ x, y, ...size }, false); } catch (_) { endOverlayGesture(); }
     }
     return;
   }
@@ -692,7 +726,10 @@ function tickOverlayGesture(session) {
   if (current.x === next.x && current.y === next.y && current.width === next.width && current.height === next.height) {
     return;
   }
-  try { overlayWindow.setBounds(next, false); } catch (_) { endOverlayGesture(); }
+  try {
+    overlayWindow.setBounds(next, false);
+    overlaySize = { width: next.width, height: next.height };
+  } catch (_) { endOverlayGesture(); }
 }
 
 function startOverlayGesture(mode, edge) {
@@ -704,11 +741,12 @@ function startOverlayGesture(mode, edge) {
   } catch (_) {
     return;
   }
+  const { x, y } = overlayWindow.getBounds();
   const session = {
     mode,
     edge,
     originCursor,
-    originBounds: overlayWindow.getBounds(),
+    originBounds: { x, y, width: overlaySize.width, height: overlaySize.height },
     timer: null
   };
   session.timer = setInterval(() => tickOverlayGesture(session), 16);
