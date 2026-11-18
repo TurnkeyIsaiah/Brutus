@@ -212,6 +212,14 @@ test('against an old backend (no acks) the final chunk is sent, then a grace per
   assert.equal(result.ok, true);
 });
 
+test('every chunk tells the server this app shows "say this" cards', async () => {
+  const env = createEnv({ ackMode: false });
+  const session = await startLive(env);
+  await session.stop({});
+  const [chunk] = env.monitoringMessages();
+  assert.equal(chunk.payload.sayThisCards, true);
+});
+
 test('audio recorded while offline is delivered after the socket reconnects', async () => {
   const env = createEnv();
   const session = await startLive(env, { config: { drainMs: 3000 } });

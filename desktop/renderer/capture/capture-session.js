@@ -578,7 +578,11 @@
           chunkStartMs: Math.max(0, repStartAt - startedAt),
           prospectStartMs: Math.max(0, prospectStartAt - startedAt),
           mimeType: 'audio/webm',
-          aiNotesEnabled: aiNotes
+          aiNotesEnabled: aiNotes,
+          // This build shows "say this" cards. The server only makes cards
+          // for apps that say so: an older app can't show one, and a card it
+          // never sees would still hold back its coaching cue.
+          sayThisCards: true
         });
       } catch (_) {
         if (!isFinal && !captureStopping && repRecorder && repRecorder.state === 'inactive') {
