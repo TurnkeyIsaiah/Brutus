@@ -23,6 +23,7 @@ const { createIntentStore, resolveDisplayMedia } = require('./displayMediaIntent
 const { createMonitoringController } = require('./monitoringController');
 const { guardHandle, guardOn, isOwnPage } = require('./ipcGuard');
 const { validateSettingsPatch, isAllowedApiUrl, PRODUCTION_API_URL } = require('./settingsPolicy');
+const { createRecordingService } = require('./recordings/recordingService');
 
 // Dev builds can run beside the installed app (which holds the single-instance
 // lock on the shared userData folder) by pointing at their own profile.
@@ -294,6 +295,7 @@ function createOverlayWindow() {
     overlayReady = false;
     endOverlayGesture();
     monitoring.onOverlayGone();
+    recordings.overlayGone().catch(() => {});
     // A dead renderer cannot be reused; the next Start builds a fresh overlay.
     const dead = overlayWindow;
     overlayWindow = null;
@@ -312,7 +314,9 @@ function createOverlayWindow() {
       callback({});
       return;
     }
-    desktopCapturer.getSources({ types: ['screen', 'window'] }).then((sources) => {
+    // No thumbnails: only ids are needed here, and drawing a thumbnail of
+    // every open window delayed the call audio (and the recording) by seconds.
+    desktopCapturer.getSources({ types: ['screen', 'window'], thumbnailSize: { width: 0, height: 0 } }).then((sources) => {
       callback(resolveDisplayMedia(intent, sources, carrierSourceId));
     }).catch(() => {
       callback({});
@@ -498,10 +502,34 @@ const monitoring = createMonitoringController({
   onFinished: (info) => {
     sendToMainWindow('monitoring-finished', info || {});
     showPendingUpdatePrompt();
+    recordings.callFinished();
   }
 });
 
+// ==================== CALL RECORDINGS ====================
+// Written to <userData>/recordings while the call runs, uploaded after it is
+// saved (src/recordings/). The upload status goes to the main window.
+
+function apiUrlForRecordings() {
+  return String(readSettings().apiUrl || PRODUCTION_API_URL).replace(/\/+$/, '');
+}
+
+const recordings = createRecordingService({
+  dir: path.join(app.getPath('userData'), 'recordings'),
+  fetch: (...args) => fetch(...args),
+  readSettings: () => readSettings(),
+  getAuth: () => {
+    const token = readAuthToken();
+    const user = store.get('user');
+    return token ? { token, userId: (user && user.id) || null } : null;
+  },
+  getApiUrl: apiUrlForRecordings,
+  isLiveSession: (id) => monitoring.needsStop() && monitoring.sessionId && monitoring.sessionId() === id,
+  onStatus: (status) => sendToMainWindow('recording-uploads', status)
+});
+
 function startMonitoring() {
+  recordings.warm();
   const result = monitoring.start();
   if (!result.ok && result.reason === 'signed_out') {
     // Tray Start while signed out: bring up the window so they can log in.
@@ -557,6 +585,7 @@ handle('set-auth', [MAIN], (event, { token, user }) => {
     store.set('authToken', encrypted);
   }
   store.set('user', user);
+  recordings.authChanged();
   return true;
 });
 
@@ -568,6 +597,7 @@ handle('clear-auth', [MAIN], async () => {
   store.delete('authToken');
   store.delete('user');
   if (overlayWindow && !overlayWindow.isDestroyed()) overlayWindow.webContents.send('auth-cleared');
+  recordings.authChanged();
   return true;
 });
 
@@ -619,6 +649,29 @@ listen('overlay-stopped', [OVERLAY], (event, info) => {
 handle('set-capture-intent', [OVERLAY], (event, intent) => {
   if (!overlaySender(event)) return false;
   return captureIntents.set(intent);
+});
+
+// Call recording: the overlay records, main writes the file and uploads it.
+handle('recording-begin', [OVERLAY], (event, request) => {
+  if (!overlaySender(event)) return { ok: false, reason: 'refused' };
+  return recordings.begin(request);
+});
+
+handle('recording-data', [OVERLAY], (event, payload) => {
+  if (!overlaySender(event)) return false;
+  return recordings.data(payload);
+});
+
+handle('recording-end', [OVERLAY], (event, payload) => {
+  if (!overlaySender(event)) return false;
+  return recordings.end(payload);
+});
+
+handle('get-recording-uploads', [MAIN], () => recordings.status());
+
+handle('retry-recording-uploads', [MAIN], () => {
+  recordings.retry();
+  return true;
 });
 
 const OVERLAY_MIN_W = 280;
@@ -1138,7 +1191,11 @@ const SETTINGS_DEFAULTS = {
   apiUrl: 'https://api.brutusai.coach',
   autoStart: false,
   overlayOpacity: 0.95,
-  whiteBackground: false
+  whiteBackground: false,
+  // Call recordings (watch a call back with its transcript). Video is only
+  // ever recorded from a window the rep picked to share.
+  recordCalls: true,
+  recordVideo: true
 };
 
 function applyAutoStart(enabled) {
@@ -1304,6 +1361,8 @@ app.whenReady().then(() => {
   createMainWindow();
   createTray();
   setupAutoUpdate();
+  // Finish recordings a crash left behind, then upload anything waiting.
+  recordings.init();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -1326,6 +1385,7 @@ app.on('before-quit', (event) => {
     return;
   }
   appIsQuitting = true;
+  recordings.stop(); // an unfinished upload resumes on the next launch
   endOverlayGesture();
   endLilBrutusGesture(true);
   destroyLilBrutus();

@@ -379,6 +379,9 @@
                     method: 'POST',
                     body: JSON.stringify({
                         name, email, password,
+                        // The form can't submit without the box ticked; the
+                        // server saves the acceptance with the new account.
+                        acceptedTerms: document.getElementById('signup-terms').checked === true,
                         posthogAnonymousId: window.brutusAnonymousId ? window.brutusAnonymousId() : null
                     })
                 });
@@ -3396,13 +3399,52 @@
 
         // ==================== CALL DETAIL MODAL ====================
         let openCallId = null;
+        let openCallSessionId = null;
+
+        // ---- Call recordings ----
+        // The player (call-player.js) asks for a short-lived signed URL when
+        // the recording panel opens. Owner-only on the server.
+        window.brutusRecordingUrl = (callId) => apiCall(`/calls/${encodeURIComponent(callId)}/recording`);
+
+        // Recordings still on this computer (saving / waiting / uploading),
+        // from the desktop main process. The open call's panel shows its line.
+        window.__brutusRecordingUploads = [];
+        function onRecordingUploads(list) {
+            const previous = window.__brutusRecordingUploads || [];
+            window.__brutusRecordingUploads = Array.isArray(list) ? list : [];
+            document.querySelectorAll('.p-rec-upload[data-session-id]').forEach((el) => {
+                const sid = el.getAttribute('data-session-id');
+                const entry = window.__brutusRecordingUploads.find((u) => u.sessionId === sid);
+                if (entry && typeof paperRecordingUploadText === 'function') el.textContent = paperRecordingUploadText(entry);
+            });
+            // The open call's recording just finished uploading: show it.
+            const overlayEl = document.getElementById('call-modal-overlay');
+            if (openCallId && openCallSessionId && overlayEl && !overlayEl.classList.contains('hidden')) {
+                const had = previous.some((u) => u.sessionId === openCallSessionId);
+                const has = window.__brutusRecordingUploads.some((u) => u.sessionId === openCallSessionId);
+                const panel = document.getElementById('call-recording-panel');
+                const waiting = panel && panel.querySelector('.p-rec[data-rec-state]:not([data-rec-state="ready"])');
+                if (had && !has && waiting) {
+                    const reopenPanel = !panel.hidden;
+                    openCallModal(openCallId).then(() => {
+                        if (reopenPanel) document.querySelector('[data-action="show-recording"]')?.click();
+                    });
+                }
+            }
+        }
+        if (window.brutus && typeof window.brutus.onRecordingUploads === 'function') {
+            window.brutus.onRecordingUploads(onRecordingUploads);
+            window.brutus.getRecordingUploads().then(onRecordingUploads).catch(() => {});
+        }
 
         async function openCallModal(id) {
             const overlay = document.getElementById('call-modal-overlay');
             const body = document.getElementById('call-modal-body');
             const meta = document.getElementById('call-modal-meta');
 
+            if (window.BrutusCallPlayer) window.BrutusCallPlayer.stopAll();
             openCallId = id;
+            openCallSessionId = null;
             document.getElementById('call-delete-overlay')?.classList.add('hidden');
             paintCallHeadingSkeleton();
             body.innerHTML = columnsSkeletonHtml();
@@ -3411,6 +3453,7 @@
             try {
                 const data = await apiCall(`/calls/${id}`);
                 const call = data.call;
+                if (openCallId === id) openCallSessionId = call.sessionId || null;
 
                 const scoreClass = call.overallScore >= 70 ? 'good' : call.overallScore >= 50 ? 'warning' : 'bad';
                 const scoreColors = { good: '#4caf50', warning: '#ff9800', bad: '#ff5050' };
@@ -3583,7 +3626,28 @@
             }
         }
 
+        // Deletes only the recording of the open call (file and link); the
+        // transcript, coaching and notes stay.
+        async function deleteOpenCallRecording(btn) {
+            if (!openCallId) return;
+            const ok = window.confirm("Delete this call's recording? The transcript and coaching stay. This can't be undone.");
+            if (!ok) return;
+            const callId = openCallId;
+            if (btn) btn.disabled = true;
+            try {
+                if (window.BrutusCallPlayer) window.BrutusCallPlayer.stopAll();
+                await apiCall(`/calls/${encodeURIComponent(callId)}/recording`, { method: 'DELETE' });
+                await openCallModal(callId);
+                document.querySelector('[data-action="show-recording"]')?.click();
+            } catch (err) {
+                console.error('Failed to delete recording:', err);
+                if (btn) btn.disabled = false;
+                window.alert("Couldn't delete the recording. Try again in a minute.");
+            }
+        }
+
         function closeCallModal() {
+            if (window.BrutusCallPlayer) window.BrutusCallPlayer.stopAll();
             document.getElementById('call-modal-overlay').classList.add('hidden');
             document.getElementById('call-delete-overlay')?.classList.add('hidden');
         }
@@ -4678,6 +4742,9 @@
                 switch (el.dataset.action) {
                     case 'open-call':
                         openCallModal(el.dataset.id);
+                        break;
+                    case 'delete-recording':
+                        deleteOpenCallRecording(el);
                         break;
                     case 'open-cold-call-session':
                         openColdCallSessionModal(el.dataset.id);

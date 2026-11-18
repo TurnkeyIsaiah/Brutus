@@ -12,10 +12,10 @@ const { _electron: electron } = require('playwright-core');
 
 const APP_DIR = path.resolve(__dirname, '../..');
 const MAIN_BRIDGE = [
-  'appInfo', 'clearAuth', 'endMonitoring', 'getAuth', 'getMonitoringState', 'getSettings',
-  'isMonitoring', 'onAuthCleared', 'onMonitoringFinished', 'onMonitoringStarted',
-  'onMonitoringStopped', 'openExternal', 'setAuth', 'setLilBrutusSession',
-  'setLilBrutusVisible', 'setSettings', 'startMonitoring', 'stopMonitoring'
+  'appInfo', 'clearAuth', 'endMonitoring', 'getAuth', 'getMonitoringState', 'getRecordingUploads',
+  'getSettings', 'isMonitoring', 'onAuthCleared', 'onMonitoringFinished', 'onMonitoringStarted',
+  'onMonitoringStopped', 'onRecordingUploads', 'openExternal', 'retryRecordingUploads', 'setAuth',
+  'setLilBrutusSession', 'setLilBrutusVisible', 'setSettings', 'startMonitoring', 'stopMonitoring'
 ];
 
 // Signed-out pages call the API and get 401s; that is expected here.

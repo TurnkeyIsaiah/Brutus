@@ -148,6 +148,25 @@
       line-height: 16px;
     }
 
+    .capture-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    /* Record button: lit (and slowly pulsing) while this call is recorded. */
+    .rec-toggle[hidden] { display: none; }
+    .rec-toggle input:checked + .toggle-dot {
+      background-color: #FF3B30;
+      box-shadow: 0 0 0 3px #FF3B3033;
+      animation: rec-pulse 1.8s ease-in-out infinite;
+    }
+    .rec-toggle.is-busy { opacity: 0.5; cursor: progress; }
+    .rec-toggle.is-blocked .toggle-name { color: #766B65; }
+    @keyframes rec-pulse { 50% { opacity: 0.45; } }
+    @media (prefers-reduced-motion: reduce) {
+      .rec-toggle input:checked + .toggle-dot { animation: none; }
+    }
+
     .tts-btn {
       background: none;
       border: 0;
@@ -704,6 +723,12 @@
       padding: 10px 12px;
       margin-bottom: 18px;
     }
+    .consent-note {
+      margin-bottom: 6px;
+      font-size: 11px;
+      line-height: 15px;
+      color: #A9A09A;
+    }
     .consent-actions {
       display: flex;
       flex-direction: column;
@@ -844,11 +869,18 @@
 
     <!-- Capture row: screen-capture toggle + Brutus speech (TTS) toggle -->
     <div class="capture-row">
-      <label class="dot-toggle header-toggle" title="toggle screen capture">
-        <input type="checkbox" id="screen-capture-toggle" checked>
-        <span class="toggle-dot" aria-hidden="true"></span>
-        <span class="toggle-name">Screen</span>
-      </label>
+      <div class="capture-left">
+        <label class="dot-toggle header-toggle" title="toggle screen capture">
+          <input type="checkbox" id="screen-capture-toggle" checked>
+          <span class="toggle-dot" aria-hidden="true"></span>
+          <span class="toggle-name">Screen</span>
+        </label>
+        <label class="dot-toggle rec-toggle" id="record-toggle-wrap" hidden>
+          <input type="checkbox" id="record-toggle" aria-describedby="record-toggle-name">
+          <span class="toggle-dot" aria-hidden="true"></span>
+          <span class="toggle-name" id="record-toggle-name">Record</span>
+        </label>
+      </div>
       <button class="tts-btn locked" id="tts-btn">Enable Brutus speech</button>
     </div>
 
@@ -920,17 +952,23 @@
   </div>
 
 
-  <!-- Recording Consent Notice (shown when the overlay opens, before each session) -->
+  <!-- Recording Consent Notice (shown when the overlay opens, before each session).
+       overlay.js swaps in the body and note for the rep's settings and saves
+       the text shown with each "i have consent": bump DISCLOSURE_VERSION in
+       overlay.js when any wording here changes. -->
   <div class="consent-overlay" id="consent-notice" role="dialog" aria-modal="true" aria-label="Recording notice">
     <div class="consent-label">recording notice</div>
     <div class="consent-title">get consent before you record</div>
-    <div class="consent-body">
-      brutus records and transcribes <strong>both sides</strong> of this call. at the start of
-      the call, tell the other person they're being recorded and get their consent to continue.
+    <div class="consent-body" id="consent-body">
+      brutus records and transcribes <strong>both sides</strong> of this call and saves the recording
+      to your brutus account so you can watch it back. if you share a window, <strong>everything
+      visible in that window is recorded too</strong>. at the start of the call, tell the other person
+      they're being recorded and get their consent to continue.
     </div>
     <div class="consent-warning">
       if the prospect does not consent, close brutus and do not record.
     </div>
+    <div class="consent-note" id="consent-note">recording starts when you continue. press record in the overlay to stop or restart it at any point. recordings are kept until you delete them.</div>
     <div class="consent-actions">
       <button class="consent-btn consent-btn-primary" id="consent-accept">i have consent — continue</button>
       <button class="consent-btn consent-btn-secondary" id="consent-decline">no consent — close brutus</button>
@@ -940,12 +978,13 @@
   <!-- Source Picker Modal -->
   <div class="source-picker-overlay" id="source-picker" role="dialog" aria-modal="true" aria-label="Choose your call window">
     <div class="source-picker-title">choose your call window</div>
-    <div class="source-picker-subtitle">Brutus watches only this window. The call audio playing on this computer is recorded either way.</div>
+    <div class="source-picker-subtitle" id="source-picker-subtitle">Brutus watches only this window, and the call recording includes what it shows. The call audio playing on this computer is recorded either way.</div>
     <div class="source-picker-grid" id="source-picker-grid"></div>
     <button class="source-picker-skip" id="source-picker-skip">skip — call audio only</button>
   </div>
 
   <script src="capture/chunk-outbox.js"></script>
+  <script src="capture/call-recorder.js"></script>
   <script src="capture/capture-session.js"></script>
   <script src="say-this-card.js"></script>
   <script src="overlay.js"></script>

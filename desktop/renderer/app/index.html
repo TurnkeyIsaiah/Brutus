@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; worker-src 'self' blob:; connect-src 'self' https://api.brutusai.coach wss://api.brutusai.coach https://us.i.posthog.com https://us-assets.i.posthog.com http://localhost:* ws://localhost:*; object-src 'none'; base-uri 'none'; form-action 'self'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https: http://localhost:*; worker-src 'self' blob:; connect-src 'self' https://api.brutusai.coach wss://api.brutusai.coach https://us.i.posthog.com https://us-assets.i.posthog.com http://localhost:* ws://localhost:*; object-src 'none'; base-uri 'none'; form-action 'self'; frame-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Brutus</title>
 <link rel="icon" href="favicon.png" type="image/png">
@@ -64,6 +64,12 @@
       <input id="signup-name" class="p-input" type="text" placeholder="Name" autocomplete="name" required>
       <input id="signup-email" class="p-input" type="email" placeholder="Email" autocomplete="email" required>
       <input id="signup-password" class="p-input" type="password" placeholder="Password (min 8 characters)" autocomplete="new-password" minlength="8" required>
+      <!-- Required. The server saves the acceptance (version, time, IP) as a
+           consent record with the new account: backend/src/lib/consentRecords.js. -->
+      <div class="p-ob-checkrow">
+        <input id="signup-terms" class="p-ob-check" type="checkbox" required>
+        <label for="signup-terms" class="p-t-14 p-c-3">I agree to the <a class="p-auth-link" href="https://www.brutusai.coach/terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a class="p-auth-link" href="https://www.brutusai.coach/privacy.html" target="_blank" rel="noopener">Privacy Policy</a></label>
+      </div>
       <button id="signup-btn" class="p-auth-submit" type="submit">Create account</button>
       <div class="p-t-14 p-c-3">Already have an account? <button type="button" class="p-auth-link auth-tab" data-tab="login">Sign in</button></div>
     </form>
@@ -819,6 +825,26 @@
           </label>
         </section>
 
+        <section class="p-acct-card" aria-labelledby="desktop-recording-label">
+          <div class="p-acct-label" id="desktop-recording-label">CALL RECORDINGS</div>
+          <label class="p-acct-toggle-row">
+            <span class="p-acct-toggle-text">
+              <span class="p-acct-t15">Record calls</span>
+              <span class="p-acct-t12">Start recording each live call when you confirm consent, so you can watch it back with the transcript highlighting along. The record button in the overlay stops or restarts it during any call. Recordings are uploaded to your Brutus account, deleted from this computer once uploaded, and kept until you delete the call, the recording, or your account.</span>
+            </span>
+            <input type="checkbox" id="desktop-record-calls" class="p-switch-input">
+            <span class="p-switch-track" aria-hidden="true"><span class="p-switch-knob"></span></span>
+          </label>
+          <label class="p-acct-toggle-row">
+            <span class="p-acct-toggle-text">
+              <span class="p-acct-t15">Include video of the shared window</span>
+              <span class="p-acct-t12">When you pick a window at the start of a call, record what it shows. Everything visible in that window is recorded. Off, or no window picked: audio only.</span>
+            </span>
+            <input type="checkbox" id="desktop-record-video" class="p-switch-input">
+            <span class="p-switch-track" aria-hidden="true"><span class="p-switch-knob"></span></span>
+          </label>
+        </section>
+
         <section class="p-acct-card" aria-labelledby="desktop-overlay-label">
           <div class="p-acct-label" id="desktop-overlay-label">OVERLAY</div>
           <div class="p-acct-field">
@@ -930,7 +956,7 @@
     <!-- Danger zone (21 lines 141–155): #E23B2F border card. -->
     <div class="p-acct-danger">
       <div class="p-acct-danger-title">Danger zone</div>
-      <div class="p-acct-danger-copy">Deleting the account permanently removes the profile, calls, and tokens, and cancels the subscription.</div>
+      <div class="p-acct-danger-copy">Deleting the account permanently removes the profile, calls, call recordings, and tokens, and cancels the subscription.</div>
       <button type="button" id="delete-account-btn" class="p-acct-danger-btn">Delete account</button>
     </div>
   </section>
@@ -1332,7 +1358,7 @@
   <div class="p-del-modal" role="alertdialog" aria-modal="true"
        aria-labelledby="call-delete-title" aria-describedby="call-delete-text">
     <div class="p-del-title" id="call-delete-title">Delete this call?</div>
-    <div class="p-del-text" id="call-delete-text"><span id="call-delete-name"></span> and her transcript, analysis, outcome, notes, and feedback will be permanently removed.</div>
+    <div class="p-del-text" id="call-delete-text"><span id="call-delete-name"></span>: the call's transcript, recording, analysis, outcome, notes, and feedback will be permanently removed.</div>
     <div class="p-del-warn">This cannot be undone.</div>
     <div class="p-del-actions">
       <button type="button" class="p-del-cancel" id="call-delete-cancel">Cancel</button>
@@ -1801,7 +1827,7 @@
       <button type="button" class="pd-close" id="delete-account-close" aria-label="Close">✕</button>
     </div>
 
-    <div class="pd-copy">Deleting the account permanently removes the profile, calls, and tokens, and cancels the subscription.</div>
+    <div class="pd-copy">Deleting the account permanently removes the profile, calls, call recordings, and tokens, and cancels the subscription.</div>
 
     <label class="pd-label" for="delete-account-password">Enter your password to confirm</label>
     <input type="password" id="delete-account-password" class="pd-input" placeholder="Password" autocomplete="current-password">
@@ -1931,6 +1957,7 @@
 <script src="config.js"></script>
 <script src="../../node_modules/posthog-js/dist/array.full.no-external.js"></script>
 <script src="posthog.js"></script>
+<script src="call-player.js"></script>
 <script src="app.js"></script>
 <script src="paper-ui.js"></script>
 </body>

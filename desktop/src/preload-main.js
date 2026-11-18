@@ -42,6 +42,12 @@ contextBridge.exposeInMainWorld('brutus', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
   setSettings: (settings) => ipcRenderer.invoke('set-settings', settings),
 
+  // Call recordings waiting to upload or uploading: [{ sessionId, callId,
+  // state, sent, total, hasVideo, reason }]
+  getRecordingUploads: () => ipcRenderer.invoke('get-recording-uploads'),
+  retryRecordingUploads: () => ipcRenderer.invoke('retry-recording-uploads'),
+  onRecordingUploads: (callback) => subscribe('recording-uploads', callback),
+
   setLilBrutusVisible: (shown) => ipcRenderer.invoke('set-lil-brutus-visible', !!shown),
   setLilBrutusSession: (session) => ipcRenderer.send('lil-brutus-session', session || {}),
 

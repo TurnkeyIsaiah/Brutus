@@ -3108,6 +3108,257 @@ html.p-white-bg .p-calls-page .p-trow {
   color: var(--p-orange);
 }
 
+/* --- Call recording player (call-player.js) ------------------------------
+   Audio-only and no-recording: the original stacked layout (player above,
+   transcript below). Video: the picture on the left and the transcript on
+   the right at the picture's height, scrolling on its own, so the lit line
+   stays visible while the video plays. Narrow windows stack again. */
+.p-rec-body,
+.p-rec-left,
+.p-rec-right,
+.p-rec-right-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.p-rec-body,
+.p-rec-right,
+.p-rec-right-inner {
+  flex: 1 1 0%;
+}
+
+.p-rec--video .p-rec-body {
+  flex-direction: row;
+  align-items: stretch;
+  gap: 28px;
+}
+
+.p-rec--video .p-rec-left {
+  flex: 1.75 1 0%;
+  min-width: 0;
+}
+
+.p-rec--video .p-rec-right {
+  position: relative;
+  min-width: 260px;
+}
+
+.p-rec--video .p-rec-right-inner {
+  position: absolute;
+  inset: 0;
+}
+
+/* Audio-only (and no recording): the transcript scrolls in its own box
+   under the player, so the lit line can always be kept in view. */
+.p-rec:not(.p-rec--video) .p-rec-turns {
+  max-height: max(260px, calc(100vh - 560px));
+}
+
+/* Leaves room above for the call header and below for the controls. */
+.p-rec--video .p-rec-video {
+  max-height: max(220px, calc(100vh - 440px));
+}
+
+@media (max-width: 1000px) {
+  .p-rec--video .p-rec-body {
+    flex-direction: column;
+  }
+
+  .p-rec--video .p-rec-right {
+    min-height: 320px;
+    max-height: 50vh;
+  }
+
+  .p-rec--video .p-rec-right-inner {
+    position: static;
+  }
+}
+
+   Video calls show the shared window above the controls; audio-only calls
+   keep the waveform. The line being spoken is tinted and kept in view. */
+.p-rec-turns {
+  overflow-x: hidden;
+}
+
+.p-rec-head-side {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.p-rec-delete {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  color: #FFF8EF70;
+  cursor: pointer;
+}
+
+.p-rec-delete:hover,
+.p-rec-delete:focus-visible {
+  color: var(--p-orange-text);
+}
+
+html.p-white-bg .p-rec-delete {
+  color: #000000B3;
+}
+
+.p-rec-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 1 auto;
+  min-height: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: #000000;
+}
+
+.p-rec-video {
+  display: block;
+  width: 100%;
+  max-height: 46vh;
+  background-color: #000000;
+  object-fit: contain;
+}
+
+.p-rec-empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 6px;
+  min-height: 100px;
+  padding: 18px 22px;
+  border: 1px solid #FFF8EF20;
+  border-radius: 10px;
+}
+
+.p-rec-empty-title {
+  font-size: 17px;
+  line-height: 22px;
+  color: var(--p-cream);
+}
+
+.p-rec-empty-text {
+  font-size: 13px;
+  line-height: 19px;
+  color: #FFF8EF8F;
+}
+
+.p-rec-status {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--p-orange-text);
+}
+
+.p-rec-play {
+  cursor: pointer;
+  background: none;
+}
+
+.p-rec-play .p-rec-icon-pause,
+.p-rec-play.is-playing .p-rec-icon-play {
+  display: none;
+}
+
+.p-rec-play.is-playing .p-rec-icon-pause {
+  display: block;
+}
+
+.p-rec-track {
+  cursor: pointer;
+  height: 9px;
+  background-color: transparent;
+  background-image: linear-gradient(#FFF8EF24, #FFF8EF24);
+  background-size: 100% 3px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.p-rec-track:focus-visible,
+.p-rec-play:focus-visible,
+.p-rec-turn--seek:focus-visible {
+  outline: 2px solid var(--p-orange);
+  outline-offset: 2px;
+}
+
+.p-rec-stamp {
+  display: block;
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+  color: #FFF8EF5C;
+}
+
+.p-rec-turn--seek {
+  cursor: pointer;
+  padding-inline: 10px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.p-rec-turn--seek:hover {
+  background-color: #FFF8EF0A;
+}
+
+.p-rec-turn.is-active {
+  background-color: var(--p-bg-orange-tint);
+  box-shadow: inset 3px 0 0 var(--p-orange);
+}
+
+.p-rec-turn.is-active .p-rec-text {
+  color: var(--p-cream);
+}
+
+.p-rec-turn.is-active .p-rec-speaker,
+.p-rec-turn.is-active .p-rec-stamp {
+  color: var(--p-orange-text);
+}
+
+/* Said while recording was off (or before it started): dimmed, and a jump
+   there lands where the recording picks up again. */
+.p-rec-turn.is-unrecorded .p-rec-text {
+  opacity: 0.5;
+}
+
+.p-rec-turn.is-unrecorded .p-rec-stamp::after {
+  content: " \00B7  not recorded";
+  letter-spacing: 0;
+}
+
+.p-ts-stamp {
+  letter-spacing: 0.08em;
+  line-height: 14px;
+  color: #FFF8EF70;
+}
+
+html.p-white-bg .p-rec-empty-title {
+  color: #000000;
+}
+
+html.p-white-bg .p-rec-empty-text,
+html.p-white-bg .p-rec-stamp,
+html.p-white-bg .p-ts-stamp {
+  color: #000000B3;
+}
+
+html.p-white-bg .p-rec-empty {
+  border-color: #00000024;
+}
+
+html.p-white-bg .p-rec-turn.is-active {
+  background-color: #FF65501F;
+}
+
+html.p-white-bg .p-rec-turn.is-active .p-rec-text {
+  color: #000000;
+}
+
 /* ==========================================================================
    Delete confirmation — 15-call-delete.jsx (overlay uses .p-overlay,
    whose rgba(0,0,0,.72) equals the JSX #000000B8 scrim)
