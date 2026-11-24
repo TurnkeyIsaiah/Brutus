@@ -30,28 +30,9 @@
       One screen for signup and login. New accounts continue into the six questions.
     </div>
 
-    <button type="button" class="p-oauth p-oauth-google" id="oauth-google">
-      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
-        <path d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.08-1.8 2.72v2.26h2.91c1.7-1.57 2.68-3.87 2.68-6.62z" fill="#4285F4"/>
-        <path d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.91-2.26c-.81.54-1.84.86-3.05.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33C2.44 15.98 5.48 18 9 18z" fill="#34A853"/>
-        <path d="M3.96 10.71A5.4 5.4 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.04l3-2.33z" fill="#FBBC05"/>
-        <path d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z" fill="#EA4335"/>
-      </svg>
-      <span class="p-t-16 p-c-black">Continue with Google</span>
-    </button>
-
-    <button type="button" class="p-oauth p-oauth-apple" id="oauth-apple">
-      <svg width="16" height="18" viewBox="0 0 16 20" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
-        <path d="M13.1 10.4c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.8-3.5.8s-1.8-.8-3-.8c-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.1 0 1.6-.7 3-.7s1.8.7 3 .7 2-1.2 2.7-2.3c.9-1.3 1.2-2.5 1.3-2.6-.1 0-2.4-.9-2.4-3.7zM10.9 3.4c.6-.8 1.1-1.8.9-2.9-1 .1-2.2.7-2.9 1.5-.6.7-1.2 1.8-1 2.8 1.1.1 2.2-.5 3-1.4z" fill="#FFF8EF"/>
-      </svg>
-      <span class="p-t-16 p-c-cream">Continue with Apple</span>
-    </button>
-
-    <div class="p-or p-auth-or">
-      <div class="p-or-line"></div>
-      <div class="p-t-13 p-c-3">or</div>
-      <div class="p-or-line"></div>
-    </div>
+    <!-- Google and Apple sign-in buttons are removed until OAuth is built.
+         Their styles stay in paper.css (.p-oauth*, .p-auth-or); restore the
+         markup from git history to bring them back. -->
 
     <div class="p-auth-tabs">
       <button type="button" class="p-tab-auth active auth-tab" data-tab="signup">Create account</button>
